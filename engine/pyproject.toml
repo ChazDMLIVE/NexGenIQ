@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "osit-index"
+version = "0.2.0"
+description = "NexGenIQ selection-index numerical engine for beef cattle"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = ["numpy>=1.24", "scipy>=1.10"]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools]
+packages = ["osit_index"]
+
+[tool.setuptools.package-data]
+# Ship the versioned reference-data files (USMARC across-breed factors,
+# the consensus genetic-parameter set) inside the package.
+osit_index = ["data/*.json"]

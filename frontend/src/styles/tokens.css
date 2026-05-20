@@ -1,0 +1,118 @@
+/*
+ * NexGenIQ design system — Graphite + Sage.
+ *
+ * The single source of truth for colour, typography, spacing and shape,
+ * implementing the visual system of the Phase 3.5 UI/UX Design
+ * Specification, Part 1. Every component styles itself from these tokens.
+ */
+
+:root {
+  /* --- Graphite + Sage palette (Phase 3.5 Section 1.1) --- */
+  --graphite-900: #2f3a37; /* headings, primary text, top bar */
+  --graphite-700: #4a534f; /* secondary text */
+  --graphite-400: #8a918d; /* hints, placeholder, disabled */
+
+  --sage-900: #264231; /* text on sage fills, pressed */
+  --sage-600: #3d6b4e; /* primary buttons, links, focus */
+  --sage-300: #7d9a82; /* charts, secondary accent */
+  --sage-50: #e7efe7; /* selected rows, sage badges, tints */
+
+  --canvas: #fbfbf9; /* warm off-white app background */
+  --surface: #ffffff; /* cards, panels, inputs */
+  --hairline: #e3e5e0; /* the single border token (~0.5px) */
+
+  /* --- Semantic colours (state only, never decoration) --- */
+  --success-fill: #e7efe7;
+  --success-text: #264231;
+  --warn-fill: #fbeecf;
+  --warn-text: #7a4f0b;
+  --error-fill: #f6e4e2;
+  --error-text: #7a2a22;
+  --info-fill: #e7eced;
+  --info-text: #27465a;
+
+  /* --- Typography --- */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --text-display: 28px;
+  --text-title: 22px;
+  --text-section: 18px;
+  --text-subsection: 16px;
+  --text-body: 15px;
+  --text-label: 13px;
+  --text-caption: 12px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+
+  /* --- Spacing scale (strict 8px base, Phase 3.5 Section 1.3) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Shape --- */
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-modal: 16px;
+}
+
+/* --- Reset and base --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  line-height: 1.6;
+  color: var(--graphite-900);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular figures for any numeric content — columns of numbers align. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: var(--sage-600);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Sage focus ring on every interactive element — visible, accessible. */
+:focus-visible {
+  outline: 2px solid var(--sage-600);
+  outline-offset: 2px;
+}
+
+/* Respect the OS reduce-motion setting (Phase 3.5 Section 1.5). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

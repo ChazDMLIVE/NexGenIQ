@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "osit-sim"
+version = "0.1.0"
+description = "NexGenIQ whole-herd bio-economic simulation engine for beef cattle"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools]
+packages = ["osit_sim"]

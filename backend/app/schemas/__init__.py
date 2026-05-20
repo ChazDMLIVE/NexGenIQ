@@ -1,0 +1,407 @@
+"""
+Pydantic request/response schemas for the NexGenIQ API.
+
+These define the JSON contract of the REST API (Phase 3 Part 3C Section
+3.4). They are deliberately separate from the SQLAlchemy ORM models: the
+API contract can evolve independently of the storage schema, and FastAPI
+uses these for automatic validation and OpenAPI documentation.
+"""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+class UserCreate(BaseModel):
+    """Registration payload."""
+
+    email: EmailStr
+    password: str = Field(min_length=8)
+    full_name: str = ""
+    role: str = "producer"
+
+
+class UserOut(BaseModel):
+    """A user as returned by the API (never includes the password hash)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: EmailStr
+    full_name: str
+    role: str
+    is_active: bool
+
+
+class Token(BaseModel):
+    """An issued JWT access token."""
+
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+# ---------------------------------------------------------------------------
+# Traits and parameters
+# ---------------------------------------------------------------------------
+class TraitOut(BaseModel):
+    """A trait registry entry."""
+
+    code: str
+    name: str
+    category: str
+    units: str
+    higher_is_better: bool
+    is_threshold: bool
+    description: str
+
+
+# ---------------------------------------------------------------------------
+# Breeding goal
+# ---------------------------------------------------------------------------
+class GoalComponentIn(BaseModel):
+    """One trait + economic weight in a breeding goal."""
+
+    trait_code: str
+    economic_weight: float
+
+
+class BreedingGoalIn(BaseModel):
+    """Create/update payload for a breeding goal."""
+
+    name: str
+    basis: str = "per_cow_exposed"
+    components: list[GoalComponentIn]
+    source: str = "manual"
+
+
+class BreedingGoalOut(BreedingGoalIn):
+    """A stored breeding goal."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+
+
+# ---------------------------------------------------------------------------
+# Animals
+# ---------------------------------------------------------------------------
+class EpdIn(BaseModel):
+    """A single EPD value for an animal."""
+
+    trait_code: str
+    value: float
+    bif_accuracy: float | None = None
+    scale: str = "EPD"
+
+
+class AnimalIn(BaseModel):
+    """A candidate animal in an index request."""
+
+    animal_id: str
+    breed: str
+    evaluation_id: str = ""
+    sex: str = ""
+    epds: list[EpdIn]
+
+
+# ---------------------------------------------------------------------------
+# Index build request / response
+# ---------------------------------------------------------------------------
+class IndexBuildRequest(BaseModel):
+    """A full, self-contained request to build an index and rank animals.
+
+    The request carries everything the engine needs, so it can be used
+    statelessly (the researcher batch-run use case) without first creating
+    stored scenario/dataset records.
+    """
+
+    goal: BreedingGoalIn
+    animals: list[AnimalIn]
+    parameter_set_id: str | None = Field(
+        default=None,
+        description="Stored parameter set to use; null = built-in "
+                    "consensus library.",
+    )
+    mode: str = Field(
+        default="economic_weight",
+        description="economic_weight | blup_index",
+    )
+    missing_policy: str = Field(
+        default="exclude", description="exclude | impute"
+    )
+    adjustment_table_id: str | None = None
+    native_multi_breed: bool = False
+
+
+class ValidationIssueOut(BaseModel):
+    """A validation finding surfaced to the client."""
+
+    severity: str
+    code: str
+    message: str
+    fix_hint: str = ""
+    location: str = ""
+
+
+class AnimalScoreOut(BaseModel):
+    """One animal's index result."""
+
+    rank: int
+    animal_id: str
+    breed: str
+    index_value: float
+    std_error: float | None = None
+    ci_low: float | None = None
+    ci_high: float | None = None
+    contributions: dict[str, float]
+    is_partial: bool
+    explanation: str = ""
+
+
+class IndexBuildResponse(BaseModel):
+    """The full response of an index build."""
+
+    ok: bool
+    mode: str
+    weights: dict[str, float]
+    scores: list[AnimalScoreOut]
+    excluded: list[str]
+    validation: list[ValidationIssueOut]
+    adjustment_table_version: str
+    ledger_id: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Sensitivity
+# ---------------------------------------------------------------------------
+class SensitivityRequest(IndexBuildRequest):
+    """An index build plus a perturbation size for tornado sensitivity."""
+
+    variation: float = 0.20
+
+
+class TornadoEntryOut(BaseModel):
+    """Sensitivity of the ranking to one economic weight."""
+
+    trait_code: str
+    rank_corr_low: float
+    rank_corr_high: float
+    top_changed: bool
+
+
+class SensitivityResponse(BaseModel):
+    """The result of a tornado sensitivity analysis."""
+
+    baseline_top: str
+    summary: str
+    entries: list[TornadoEntryOut]
+
+
+# ---------------------------------------------------------------------------
+# Herd-simulation schemas (Milestone 2)
+# ---------------------------------------------------------------------------
+class BreedCompositionIn(BaseModel):
+    """One breed-composition class within the herd or bull battery."""
+
+    fraction: float = Field(ge=0.0, le=1.0)
+    breeds: dict[str, float]
+
+
+class ProductionSystemIn(BaseModel):
+    """A description of the commercial cow-calf enterprise."""
+
+    name: str
+    herd_size: int = Field(default=250, ge=1)
+    conception_rate: float = Field(default=0.92, ge=0.0, le=1.0)
+    calving_loss_rate: float = Field(default=0.06, ge=0.0, le=1.0)
+    replacement_rate: float = Field(default=0.18, ge=0.0, le=1.0)
+    heifer_retention: bool = True
+    cow_breed_composition: list[BreedCompositionIn]
+    bull_breed_composition: list[BreedCompositionIn]
+
+
+class PriceBandIn(BaseModel):
+    """A sale price for one weight range and sex class."""
+
+    sex: str
+    low: float
+    high: float
+    price_per_cwt: float
+
+
+class GridCellIn(BaseModel):
+    """One premium/discount cell of a carcass pricing grid."""
+
+    quality_grade: str
+    yield_grade: int
+    premium: float
+
+
+class EconomicScenarioIn(BaseModel):
+    """The economic environment the herd operates in."""
+
+    name: str
+    sale_endpoint: str = "weaning"
+    price_bands: list[PriceBandIn] = Field(default_factory=list)
+    carcass_base_price: float = 300.0
+    grid: list[GridCellIn] = Field(default_factory=list)
+    cull_cow_price_per_cwt: float = 110.0
+    aum_cost: float = 38.0
+    feed_cost_per_lb_dm: float = 0.16
+    background_days: int = 0
+    days_on_feed: int = 0
+    fixed_cost_per_cow: float = 180.0
+    discount_rate: float = 0.06
+
+
+class SimulationControlsIn(BaseModel):
+    """Controls governing how the simulation is run."""
+
+    burn_in_years: int = Field(default=10, ge=0)
+    planning_horizon_years: int = Field(default=20, ge=1)
+    replicates: int = Field(default=12, ge=1, le=60)
+    seed: int = 20260520
+
+
+class SimulationRequest(BaseModel):
+    """A full, self-contained request to derive economic values."""
+
+    production_system: ProductionSystemIn
+    economic_scenario: EconomicScenarioIn
+    controls: SimulationControlsIn = Field(
+        default_factory=SimulationControlsIn
+    )
+    traits: list[str] = Field(
+        default_factory=list,
+        description="Trait subset to derive MEVs for; empty = all.",
+    )
+
+
+class DerivedMevOut(BaseModel):
+    """One derived marginal economic value."""
+
+    trait_code: str
+    units: str
+    mev: float
+    mc_std_error: float
+    is_precise: bool
+
+
+class SimulationResponse(BaseModel):
+    """The result of an MEV-derivation run.
+
+    The ``mevs`` list converts directly into an Index Builder breeding
+    goal — the integration seam between the two engines.
+    """
+
+    baseline_profit: float
+    replicates: int
+    mevs: list[DerivedMevOut]
+    warnings: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Herd-simulation schemas (Milestone 2)
+# ---------------------------------------------------------------------------
+class BreedCompositionIn(BaseModel):
+    """One breed-composition class within the herd or bull battery."""
+
+    fraction: float = Field(ge=0.0, le=1.0)
+    breeds: dict[str, float]
+
+
+class ProductionSystemIn(BaseModel):
+    """A description of the commercial cow-calf enterprise."""
+
+    name: str
+    herd_size: int = Field(default=250, ge=1)
+    conception_rate: float = Field(default=0.92, ge=0.0, le=1.0)
+    calving_loss_rate: float = Field(default=0.06, ge=0.0, le=1.0)
+    replacement_rate: float = Field(default=0.18, ge=0.0, le=1.0)
+    heifer_retention: bool = True
+    cow_breed_composition: list[BreedCompositionIn]
+    bull_breed_composition: list[BreedCompositionIn]
+
+
+class PriceBandIn(BaseModel):
+    """A sale price for one weight range and sex class."""
+
+    sex: str
+    low: float
+    high: float
+    price_per_cwt: float
+
+
+class GridCellIn(BaseModel):
+    """One premium/discount cell of a carcass pricing grid."""
+
+    quality_grade: str
+    yield_grade: int
+    premium: float
+
+
+class EconomicScenarioIn(BaseModel):
+    """The economic environment the herd operates in."""
+
+    name: str
+    sale_endpoint: str = "weaning"
+    price_bands: list[PriceBandIn] = Field(default_factory=list)
+    carcass_base_price: float = 300.0
+    grid: list[GridCellIn] = Field(default_factory=list)
+    cull_cow_price_per_cwt: float = 110.0
+    aum_cost: float = 38.0
+    feed_cost_per_lb_dm: float = 0.16
+    background_days: int = 0
+    days_on_feed: int = 0
+    fixed_cost_per_cow: float = 180.0
+    discount_rate: float = 0.06
+
+
+class SimulationControlsIn(BaseModel):
+    """Controls governing how the simulation is run."""
+
+    burn_in_years: int = Field(default=10, ge=0)
+    planning_horizon_years: int = Field(default=20, ge=1)
+    replicates: int = Field(default=12, ge=1, le=60)
+    seed: int = 20260520
+
+
+class SimulationRequest(BaseModel):
+    """A full, self-contained request to derive economic values."""
+
+    production_system: ProductionSystemIn
+    economic_scenario: EconomicScenarioIn
+    controls: SimulationControlsIn = Field(
+        default_factory=SimulationControlsIn
+    )
+    traits: list[str] = Field(
+        default_factory=list,
+        description="Trait subset to derive MEVs for; empty = all.",
+    )
+
+
+class DerivedMevOut(BaseModel):
+    """One derived marginal economic value."""
+
+    trait_code: str
+    units: str
+    mev: float
+    mc_std_error: float
+    is_precise: bool
+
+
+class SimulationResponse(BaseModel):
+    """The result of an MEV-derivation run.
+
+    The mevs list converts directly into an Index Builder breeding goal -
+    the integration seam between the two engines.
+    """
+
+    baseline_profit: float
+    replicates: int
+    mevs: list[DerivedMevOut]
+    warnings: list[str]

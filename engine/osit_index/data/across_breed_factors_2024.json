@@ -1,0 +1,40 @@
+{
+  "schema": "nexgeniq.across_breed_factor_table.v1",
+  "version": "USMARC-2024",
+  "year": 2024,
+  "base_breed": "Angus",
+  "source": {
+    "title": "2024 Across-Breed EPD Table and Improvements",
+    "authors": "Larry Kuehn and Mark Thallman",
+    "publisher": "U.S. Meat Animal Research Center (USMARC), USDA-ARS",
+    "url": "https://www.ars.usda.gov/ARSUserFiles/30400505/GPE/2024%20ABEPD%20press%20release%20and%20fact%20sheet.pdf",
+    "table": "Table 1 - January 2024 adjustment factors to add to EPDs of eighteen different breeds to estimate across-breed EPDs",
+    "note": "Official USDA/USMARC data, January 2024 release. Retained for reproducibility of runs made against this version; the current default is the 2026 table. Yearling-weight factors in this release were derived as the sum of weaning-weight and postweaning-gain factors.",
+    "retrieved": "2026-05"
+  },
+  "traits": ["BW", "WW", "YW", "MILK", "MARB", "REA", "FAT", "CW"],
+  "trait_units": {
+    "BW": "lb", "WW": "lb", "YW": "lb", "MILK": "lb",
+    "MARB": "score", "REA": "sq in", "FAT": "in", "CW": "lb"
+  },
+  "factors": {
+    "Angus":          {"BW": 0.0, "WW": 0.0,   "YW": 0.0,   "MILK": 0.0,   "MARB": 0.00,  "REA": 0.00, "FAT": 0.000,  "CW": 0.0},
+    "Hereford":       {"BW": 0.8, "WW": -11.9, "YW": -26.6, "MILK": -11.1, "MARB": -0.30, "REA": 0.06, "FAT": -0.073, "CW": -66.4},
+    "Red Angus":      {"BW": 2.1, "WW": -17.4, "YW": -20.8, "MILK": 1.5,   "MARB": -0.01, "REA": 0.31, "FAT": -0.033, "CW": -5.4},
+    "Shorthorn":      {"BW": 3.9, "WW": -19.1, "YW": -25.1, "MILK": 0.2,   "MARB": -0.07, "REA": 0.35, "FAT": -0.038, "CW": -0.4},
+    "South Devon":    {"BW": 3.0, "WW": -32.9, "YW": -58.0, "MILK": 10.8,  "MARB": -0.08, "REA": 0.41, "FAT": -0.063, "CW": -8.5},
+    "Beefmaster":     {"BW": 3.2, "WW": 27.5,  "YW": 10.0,  "MILK": 4.0},
+    "Brahman":        {"BW": 8.3, "WW": 61.9,  "YW": 18.8,  "MILK": 6.5,   "MARB": -0.65, "REA": 0.17, "FAT": -0.156, "CW": -34.5},
+    "Brangus":        {"BW": 2.9, "WW": 26.1,  "YW": 15.4,  "MILK": 13.7},
+    "Santa Gertrudis":{"BW": 4.4, "WW": 42.9,  "YW": 47.4,  "MILK": 18.2,  "MARB": -0.42, "REA": 0.21, "FAT": -0.072, "CW": 2.3},
+    "Braunvieh":      {"BW": 1.4, "WW": -16.6, "YW": -43.1, "MILK": 17.7,  "MARB": -0.07, "REA": 0.43, "FAT": -0.071, "CW": -7.4},
+    "Charolais":      {"BW": 7.1, "WW": 6.6,   "YW": -12.9, "MILK": -2.5,  "MARB": -0.31, "REA": 0.85, "FAT": -0.190, "CW": 8.7},
+    "Chiangus":       {"BW": 2.5, "WW": -16.4, "YW": -30.6, "MILK": 0.0,   "MARB": -0.40, "REA": 0.47, "FAT": -0.113, "CW": -28.9},
+    "Gelbvieh":       {"BW": 3.0, "WW": -7.5,  "YW": -16.3, "MILK": 7.2,   "MARB": -0.48, "REA": 0.73, "FAT": -0.104, "CW": -14.4},
+    "Limousin":       {"BW": 1.5, "WW": -3.3,  "YW": -16.3, "MILK": -5.4,  "MARB": -0.38, "REA": 0.72, "FAT": -0.080, "CW": -5.3},
+    "Maine-Anjou":    {"BW": 1.7, "WW": -25.5, "YW": -41.4, "MILK": -7.9,  "MARB": -0.46, "REA": 0.97, "FAT": -0.169, "CW": -34.4},
+    "Salers":         {"BW": 2.1, "WW": -11.4, "YW": -20.8, "MILK": 5.3,   "MARB": -0.25, "REA": 0.60, "FAT": -0.077, "CW": -7.7},
+    "Simmental":      {"BW": 1.8, "WW": -10.6, "YW": -18.9, "MILK": 1.2,   "MARB": -0.13, "REA": 0.52, "FAT": -0.064, "CW": -0.2},
+    "Tarentaise":     {"BW": 2.2, "WW": 28.5,  "YW": 8.3,   "MILK": 17.8}
+  }
+}

@@ -1,0 +1,62 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# --- Node / frontend ---
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# --- Databases (local dev) ---
+# The SQLite dev database is never committed; production uses managed
+# PostgreSQL. Real data does not belong in version control.
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Environment / secrets ---
+# .env files hold secrets (the JWT signing key, database URLs). They are
+# never committed. .env.example IS committed as a template.
+.env
+.env.*
+!.env.example
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Build / test artefacts ---
+coverage/
+.coverage
+htmlcov/
+*.log
+
+# --- Repo housekeeping ---
+# A stale duplicate directory left over from an early file move; the live
+# code is in engine/, sim/, backend/, frontend/. Excluded so it is not
+# committed. (Safe to delete from disk whenever convenient.)
+/nexgeniq/
+
+# The planning documents live in docs/. Loose copies at the repo root are
+# excluded to keep the root clean; the docs/ copies ARE committed.
+/Phase1_*.docx
+/Phase2_*.docx
+/Phase3_*.docx
+/Phase3-5_*.docx
+
+# Developer scratch files (not part of the application).
+frontend/shots.mjs
+sim/README_pkg.md
+frontend/README_pkg.md
+
