@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "NexGenIQ frontend — the Index Builder web application.",
+  "description": "NexGenIQ frontend - the Index Builder web application.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -31,10 +31,28 @@ from app.core.database import init_db
 _settings = get_settings()
 
 
+# Records whether database initialisation succeeded, so /health can
+# report it instead of the whole app crashing on a bad DB connection.
+_db_ready = False
+_db_error = ""
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan - create database tables on startup."""
-    init_db()
+    """Application lifespan - create database tables on startup.
+
+    Database initialisation is wrapped so that a connection problem does
+    NOT crash the whole app on startup (which would make the deployment's
+    health check fail with no useful signal). Instead the app still comes
+    up, and /health reports the database as unavailable.
+    """
+    global _db_ready, _db_error
+    try:
+        init_db()
+        _db_ready = True
+    except Exception as exc:  # noqa: BLE001 - report any startup DB failure
+        _db_ready = False
+        _db_error = str(exc)
     yield
 
 
@@ -71,10 +89,21 @@ app.include_router(sim_routes.router, prefix=_prefix)
 
 @app.get("/health", tags=["meta"])
 def health() -> dict:
-    """Liveness check - confirms the API is up and reports versions."""
-    return {
+    """Liveness check - confirms the API is up and reports versions.
+
+    Always returns HTTP 200 when the app process is running, so a
+    deployment health check passes as soon as the API is alive. The
+    ``database`` field reports whether the database connected; if it did
+    not, ``database_error`` carries the reason - this surfaces a
+    misconfigured DATABASE_URL without crashing the whole service.
+    """
+    body = {
         "status": "ok",
         "app": _settings.app_name,
         "api_version": "0.2.0",
         "engine": _settings.engine_version,
+        "database": "connected" if _db_ready else "unavailable",
     }
+    if not _db_ready and _db_error:
+        body["database_error"] = _db_error
+    return body

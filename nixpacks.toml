@@ -1,23 +1,19 @@
 # Nixpacks build configuration for deploying the NexGenIQ BACKEND.
 #
-# This file is used when the backend service is deployed with its root
-# directory set to the REPOSITORY ROOT (not the backend/ subdirectory).
-# Building from the root means the whole repo tree - engine/, sim/ and
-# backend/ - is present, so the two engine packages install cleanly with
-# no relative-path or private-repo-auth problems.
+# The backend service is deployed with its root directory set to the
+# REPOSITORY ROOT (leave the Railway "Root Directory" field empty). The
+# whole repo tree - engine/, sim/ and backend/ - is then present, so the
+# engine packages install cleanly.
 #
 # The frontend is a separate service and uses frontend/railway.json.
 
 providers = ["python"]
 
 [phases.install]
-# Install the two NexGenIQ engines from their in-repo directories, then
-# the backend's own dependencies.
-#
-# The engines are installed EDITABLE (pip install -e): an editable
-# install adds the package to the path without building a wheel, which
-# is faster and avoids wheel-build filesystem issues. Because the build
-# context is the repo root, the paths engine/ and sim/ resolve directly.
+# Install the two NexGenIQ engines from their in-repo directories
+# (editable installs - no wheel build), then the backend's own
+# dependencies. The build context is the repo root, so ./engine and
+# ./sim resolve directly.
 cmds = [
   "python -m venv --copies /opt/venv",
   ". /opt/venv/bin/activate && pip install --upgrade pip",
@@ -26,6 +22,7 @@ cmds = [
 ]
 
 [start]
-# Start the FastAPI backend. uvicorn is run with the app import path
-# relative to the backend/ directory.
-cmd = ". /opt/venv/bin/activate && cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+# Start the FastAPI backend via the root-level entry point main.py,
+# which puts backend/ on the import path. A single command, no directory
+# changes - run from the repo root.
+cmd = ". /opt/venv/bin/activate && uvicorn main:app --host 0.0.0.0 --port $PORT"
