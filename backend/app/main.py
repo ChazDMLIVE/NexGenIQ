@@ -49,14 +49,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS: allow the local React dev server to call the API.
+# CORS: which browser origins may call the API. Configured via
+# NEXGENIQ_CORS_ORIGINS (comma-separated); defaults to the local dev
+# servers. A deployment sets it to the real frontend URL.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=_settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

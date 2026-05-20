@@ -1,8 +1,8 @@
 """
 Application configuration for the NexGenIQ backend.
 
-Settings are read from environment variables (or a local ``.env`` file) so
-the same code runs unchanged in development and in a deployed environment.
+Settings are read from environment variables (or a local .env file) so the
+same code runs unchanged in development and in a deployed environment.
 Reference: NexGenIQ Phase 3 Part 3C.
 """
 
@@ -21,27 +21,48 @@ class Settings(BaseSettings):
     variables. The JWT secret MUST be overridden in any real deployment.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="NEXGENIQ_")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_prefix="NEXGENIQ_"
+    )
 
-    # --- application -------------------------------------------------------
+    # --- application ------------------------------------------------------
     app_name: str = "NexGenIQ"
     api_v1_prefix: str = "/api/v1"
     debug: bool = True
 
-    # --- database ----------------------------------------------------------
-    # SQLite by default for zero-config local development; a deployment sets
-    # this to a PostgreSQL URL (Phase 3 Part 3C Section 3.1).
+    # --- database ---------------------------------------------------------
+    # SQLite by default for zero-config local development; a deployment
+    # sets this to a PostgreSQL URL (Phase 3 Part 3C Section 3.1).
     database_url: str = "sqlite:///./nexgeniq.db"
 
-    # --- security ----------------------------------------------------------
+    # --- security ---------------------------------------------------------
     # CHANGE THIS in any real deployment. JWTs signed with a known secret
     # can be forged.
     jwt_secret: str = "dev-only-insecure-secret-change-me"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 12  # 12 hours
 
-    # --- engine ------------------------------------------------------------
-    engine_version: str = "osit-index 0.1.0"
+    # --- CORS -------------------------------------------------------------
+    # Origins allowed to call the API from a browser. Defaults cover the
+    # local dev servers; a deployment sets NEXGENIQ_CORS_ORIGINS to its
+    # real frontend URL (comma-separated for more than one).
+    cors_origins: str = (
+        "http://localhost:5173,http://localhost:3000,"
+        "http://127.0.0.1:5173"
+    )
+
+    # --- engine -----------------------------------------------------------
+    engine_version: str = "osit-index 0.2.0"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """The CORS origins as a list, parsed from the comma-separated
+        string."""
+        return [
+            origin.strip()
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
+        ]
 
 
 @lru_cache

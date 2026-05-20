@@ -7,7 +7,13 @@
  */
 
 // NexGenIQ API client — covers the Index Builder and Herd Simulation.
-const BASE = "/api/v1";
+//
+// In development the Vite dev server proxies "/api" to the local backend,
+// so a relative base works. In a deployment the frontend and backend are
+// on different hosts, so the backend URL is supplied at build time via
+// VITE_API_BASE_URL (e.g. "https://nexgeniq-api.up.railway.app").
+const API_ROOT = import.meta.env.VITE_API_BASE_URL ?? "";
+const BASE = `${API_ROOT}/api/v1`;
 
 /* In-memory auth token. Not persisted to storage — a page reload requires
  * signing in again. (Token persistence is a later hardening step.) */
