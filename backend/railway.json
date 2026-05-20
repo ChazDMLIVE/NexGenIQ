@@ -1,8 +1,8 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
+  "_comment": "The NexGenIQ backend is deployed with its service Root Directory set to the REPOSITORY ROOT, not this backend/ subdirectory. The active build/start configuration is the root-level nixpacks.toml and railway.json. This file is retained only so a service mistakenly pointed at backend/ still starts; the build, however, must run from the repo root so the engine packages (../engine, ../sim) are present.",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "pip install -r requirements.txt"
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",

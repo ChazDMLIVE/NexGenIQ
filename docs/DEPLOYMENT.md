@@ -43,21 +43,34 @@ You need:
 
 ## Step 2 — Configure the backend service
 
-The backend lives in the `backend/` subdirectory of the repo, so Railway
-must be told to build from there.
+The backend depends on the two engine packages (`engine/`, `sim/`), which
+live in *sibling* directories in the repo. So the backend service must
+build from the **repository root** — not the `backend/` subdirectory — so
+that the whole repo tree is present during the build.
 
 1. Click the service Railway created from your repo (the one that is *not*
    the database). Open its **Settings**.
-2. Under **Source** / **Root Directory**, set the root directory to
+2. Under **Source** / **Root Directory**, leave the root directory
+   **empty** (or set it to `/`) — i.e. the repository root, **not**
    `backend`.
-3. Railway auto-detects Python and uses the `backend/railway.json` and
-   `backend/requirements.txt` already in the repo — these install the web
-   stack and both NexGenIQ engines, and start the API with uvicorn. No
+3. Railway auto-detects Python and uses the root-level `nixpacks.toml` and
+   `railway.json` already in the repo. These install both NexGenIQ engines
+   plus the backend's dependencies, and start the API with uvicorn. No
    build or start command needs to be typed by hand.
+
+> **Why the root, not `backend/`?** An earlier attempt set the root to
+> `backend` and the build failed with
+> `../engine is not a valid editable requirement` — because only the
+> `backend/` folder was present, and the engines are outside it. Building
+> from the repo root fixes this: `nixpacks.toml` then installs the
+> engines from `./engine` and `./sim` and the backend from
+> `backend/requirements.txt`.
 
 ### Backend environment variables
 
-Open the backend service's **Variables** tab and add these:
+Open the backend service's **Variables** tab and add these. They are
+*runtime* variables (read when the app starts) — Railway treats Variables
+this way by default, so nothing extra is needed.
 
 | Variable | Value |
 |----------|-------|
