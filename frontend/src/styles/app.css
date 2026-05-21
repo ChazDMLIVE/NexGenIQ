@@ -1508,6 +1508,101 @@ input[type="range"] {
   display: none;
 }
 
+/* ----------------------------------------------------------------------
+ * Responsive layout - phones and narrow viewports.
+ *
+ * NexGenIQ is built for a desktop two-column layout; this block reflows
+ * it for a phone so a producer can use it at a sale barn. The breakpoint
+ * is 720px - below it the help/context column stacks, the nav wraps,
+ * wide tables scroll, and multi-column grids collapse to one column.
+ * -------------------------------------------------------------------- */
+@media screen and (max-width: 720px) {
+  /* The main area gets less side padding on a phone. */
+  .main-area {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* The two-column "with panel" layout stacks vertically: the
+     explanation panel drops below the main content. */
+  .with-panel {
+    flex-direction: column;
+  }
+
+  .context-panel {
+    width: 100%;
+    flex-shrink: 1;
+  }
+
+  /* The top bar wraps its links instead of overflowing off-screen. */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 14px;
+  }
+
+  .topbar-spacer {
+    display: none;
+  }
+
+  /* Headline metric cards: a 2-up grid instead of 4 crushed columns. */
+  .metric-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Wide data tables scroll sideways inside their container rather than
+     forcing the whole page wide. The table keeps a sensible min-width so
+     columns stay legible; the user swipes to see the rest. */
+  .rank-table,
+  .breed-table,
+  .goal-grid,
+  .map-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Wizard / action button rows wrap instead of overflowing. */
+  .wizard-actions,
+  .export-actions,
+  .example-actions,
+  .precision-options {
+    flex-wrap: wrap;
+  }
+
+  /* Start-from / template cards go single-column. */
+  .start-cards {
+    grid-template-columns: 1fr;
+  }
+
+  /* The economic-value estimator modal fills the small screen. */
+  .estimator-modal {
+    max-width: 100%;
+    padding: 18px 16px;
+  }
+
+  /* Precision preset cards stack full-width. */
+  .precision-card {
+    min-width: 100%;
+  }
+
+  /* The breed-class header wraps so the fraction input does not
+     overflow on a narrow card. */
+  .breed-class-head {
+    flex-wrap: wrap;
+  }
+
+  .breed-class-frac {
+    margin-left: 0;
+  }
+
+  /* Page titles a touch smaller so they do not dominate a phone. */
+  .page-title {
+    font-size: 22px;
+  }
+}
+
 @media print {
   /* --- hide all on-screen chrome --- */
   .topbar,
