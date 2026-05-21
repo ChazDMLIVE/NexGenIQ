@@ -55,16 +55,25 @@ _DYSTOCIA_LOSS_PER_LB_BW = 0.0015
 _SC_MEAN = 37.0
 _CONCEPTION_PER_CM_SC = 0.004
 
-# PAP / high-altitude disease. At full altitude stress (see
-# EconomicScenario.altitude_stress) an animal at the PAP risk threshold
-# carries this annual probability of death; the probability scales with
-# how far the animal's PAP sits above the threshold, and with the
-# altitude-stress factor. Below ~5,000 ft the stress factor is 0 and PAP
-# has no effect at all.
+# PAP / high-altitude disease.
+#
+# A high-PAP animal at altitude is at risk of death from high-altitude
+# (brisket) disease. The RELATIVE risk among animals - how much more a
+# high-PAP cow is at risk than a low-PAP one - is the curve SHAPE below:
+# a model assumption, the per-mmHg slope of risk above a threshold. The
+# ABSOLUTE severity, however, is NOT a fixed constant: it is calibrated
+# each run so the herd's average death loss equals the producer's
+# observed rate (EconomicScenario.pap_death_loss_rate). This way the
+# producer's own data sets how costly PAP is, and the model only decides
+# how that loss is distributed across animals by their PAP genetics.
 _PAP_MEAN = 41.0
 _PAP_RISK_THRESHOLD = 49.0       # mmHg above which animals are high-risk
-_PAP_DEATH_AT_THRESHOLD = 0.04   # annual death prob at threshold, full stress
-_PAP_DEATH_PER_MMHG = 0.012      # added death prob per mmHg above threshold
+# Curve SHAPE (relative risk only - documented model assumptions):
+_PAP_RISK_AT_THRESHOLD = 1.0     # relative risk weight at the threshold
+_PAP_RISK_PER_MMHG = 0.30        # added relative risk weight per mmHg over
+# Proactive culling: a high-PAP cow that the producer would cull rather
+# than risk. Relative cull weight per mmHg above threshold, scaled to a
+# sensible forced-cull probability and by altitude stress.
 _PAP_CULL_PER_MMHG = 0.010       # added forced-cull prob per mmHg, full stress
 # (the dollar loss of a dead cow is the user input
 #  EconomicScenario.value_of_lost_animal, not a constant here)
@@ -197,6 +206,49 @@ def _calf_trait(code, dam, sire_genetics, sire_breeds, genetics, rng):
     het = heterosis_value(code, calf_het)
     residual = rng.normal(0.0, g.residual_sd)
     return g.mean + breed_component + direct + maternal + het + residual
+
+
+def _pap_risk_weight(cow: "_Cow") -> float:
+    """Return a cow's relative PAP death-risk weight (>= 0).
+
+    The weight is the curve SHAPE only: 0 for a cow at or below the PAP
+    risk threshold, then rising with each mmHg above it. It is a relative
+    quantity - it says how much more at risk a high-PAP cow is than a
+    low-PAP one, not an absolute probability. The absolute death
+    probability is this weight times a per-herd calibration multiplier
+    (see :func:`_pap_death_multiplier`).
+    """
+    pap = _PAP_MEAN + cow.genetics.get("PAP", 0.0)
+    excess = max(0.0, pap - _PAP_RISK_THRESHOLD)
+    if excess <= 0.0:
+        return 0.0
+    return _PAP_RISK_AT_THRESHOLD + _PAP_RISK_PER_MMHG * excess
+
+
+def _pap_death_multiplier(herd, economics) -> float:
+    """Return the multiplier that calibrates PAP death loss to the herd.
+
+    The producer supplies an observed annual death-loss rate
+    (``economics.pap_death_loss_rate``). The model scales its relative
+    risk weights so the herd's AVERAGE death probability equals that
+    observed rate, multiplied by the altitude-stress factor (so the loss
+    is full at high elevation and tapers to zero by ~5,000 ft). With this
+    multiplier, a cow's death probability is her risk weight times the
+    multiplier - the producer's own data sets the severity, the genetics
+    set the distribution across animals.
+
+    Returns 0.0 when there is no altitude stress or no at-risk animals.
+    """
+    stress = economics.altitude_stress
+    if stress <= 0.0 or not herd:
+        return 0.0
+    weights = [_pap_risk_weight(c) for c in herd]
+    mean_weight = sum(weights) / len(weights)
+    if mean_weight <= 1e-9:
+        # No animal is above the PAP threshold - no loss to distribute.
+        return 0.0
+    target = economics.pap_death_loss_rate * stress
+    return target / mean_weight
 
 
 def run_simulation(
@@ -394,29 +446,38 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
     survivors: list[_Cow] = []
     cull_revenue = 0.0
     stress = economics.altitude_stress
+    pap_active = stress > 0.0 and "PAP" in genetics
+    # Calibrate the PAP death curve to the producer's observed death-loss
+    # rate: the herd's average death probability will match that rate
+    # (times the altitude-stress factor), with the genetics deciding
+    # which animals carry the risk.
+    pap_multiplier = (
+        _pap_death_multiplier(herd, economics) if pap_active else 0.0
+    )
     for cow in herd:
         cow.age += 1
 
-        # High-altitude disease. Only relevant where the environment is
-        # high enough (stress > 0). An animal whose PAP phenotype sits
-        # above the risk threshold carries an elevation-scaled annual
-        # probability of death; a productive cow lost this way is an
-        # economic loss. Survivors above the threshold are also more
-        # likely to be culled out of the herd.
-        if stress > 0.0 and "PAP" in genetics:
-            pap = _PAP_MEAN + cow.genetics.get("PAP", 0.0)
-            excess = max(0.0, pap - _PAP_RISK_THRESHOLD)
-            death_p = stress * (
-                (_PAP_DEATH_AT_THRESHOLD if pap >= _PAP_RISK_THRESHOLD
-                 else 0.0)
-                + _PAP_DEATH_PER_MMHG * excess
-            )
-            if rng.random() < min(0.95, death_p):
+        # High-altitude disease. A cow's death probability is her PAP
+        # risk weight (from her genetics) times the calibration
+        # multiplier; a productive cow lost this way is an economic loss.
+        # If the producer proactively culls high-PAP animals, survivors
+        # above the threshold also carry an added forced-cull probability.
+        if pap_active:
+            risk_weight = _pap_risk_weight(cow)
+            death_p = min(0.95, risk_weight * pap_multiplier)
+            if rng.random() < death_p:
                 # The cow dies; no cull-cow salvage value, and the herd
                 # bears the loss of a productive animal.
                 cull_revenue -= economics.value_of_lost_animal
                 continue
-            pap_cull = stress * _PAP_CULL_PER_MMHG * excess
+            if economics.pap_proactive_culling and risk_weight > 0.0:
+                excess = (
+                    _PAP_MEAN + cow.genetics.get("PAP", 0.0)
+                    - _PAP_RISK_THRESHOLD
+                )
+                pap_cull = stress * _PAP_CULL_PER_MMHG * max(0.0, excess)
+            else:
+                pap_cull = 0.0
         else:
             pap_cull = 0.0
 

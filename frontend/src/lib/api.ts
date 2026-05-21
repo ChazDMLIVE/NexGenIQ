@@ -213,6 +213,10 @@ export interface EconomicScenarioIn {
   purchased_replacement_cost?: number;
   /** Economic loss when a productive cow dies. */
   value_of_lost_animal?: number;
+  /** Observed annual herd death loss to high-altitude (brisket) disease. */
+  pap_death_loss_rate?: number;
+  /** Whether the producer proactively culls high-PAP animals. */
+  pap_proactive_culling?: boolean;
 }
 
 export interface SimulationControlsIn {

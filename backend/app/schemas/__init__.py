@@ -287,6 +287,11 @@ class EconomicScenarioIn(BaseModel):
     replacement_development_cost: float = Field(default=900.0, ge=0.0)
     purchased_replacement_cost: float = Field(default=1800.0, ge=0.0)
     value_of_lost_animal: float = Field(default=1400.0, ge=0.0)
+    # High-altitude (PAP / brisket) disease economics. The death-loss
+    # rate is the producer's observed annual herd death loss to the
+    # disease; the model calibrates its PAP curve to it.
+    pap_death_loss_rate: float = Field(default=0.02, ge=0.0, le=0.5)
+    pap_proactive_culling: bool = True
 
 
 class SimulationControlsIn(BaseModel):

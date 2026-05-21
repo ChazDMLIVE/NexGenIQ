@@ -124,6 +124,10 @@ export function SimulationWizard({
   const [replacementDevCost, setReplacementDevCost] = useState(900);
   const [purchasedReplCost, setPurchasedReplCost] = useState(1800);
   const [lostAnimalCost, setLostAnimalCost] = useState(1400);
+  /* High-altitude (PAP / brisket) disease economics. Only relevant when
+     the herd grazes at altitude and contains a PAP-evaluated breed. */
+  const [papDeathLossPct, setPapDeathLossPct] = useState(2);
+  const [papProactiveCull, setPapProactiveCull] = useState(true);
   /* Simulation precision - a named preset the producer chooses. More
      replicate herds give a more precise economic value, especially for
      the noisier traits (PAP, stayability, fertility), but take longer. */
@@ -259,6 +263,8 @@ export function SimulationWizard({
           replacement_development_cost: replacementDevCost,
           purchased_replacement_cost: purchasedReplCost,
           value_of_lost_animal: lostAnimalCost,
+          pap_death_loss_rate: papDeathLossPct / 100,
+          pap_proactive_culling: papProactiveCull,
         },
         controls: {
           burn_in_years: 6,
@@ -556,6 +562,74 @@ export function SimulationWizard({
                 </Field>
               </Card>
 
+              {/* High-altitude disease economics - only shown when the
+                  herd grazes at altitude with a PAP-evaluated breed. */}
+              {papAvailable && elevationFt >= 5000 && (
+                <Card title="High-altitude disease (PAP)">
+                  <p className="field-hint" style={{ marginBottom: 12 }}>
+                    Your herd grazes at altitude and includes a
+                    PAP-evaluated breed, so high-altitude (brisket)
+                    disease is a real cost. Tell NexGenIQ what that
+                    disease costs you and it will value the PAP trait
+                    accordingly. If you do not lose cattle to it, set the
+                    death loss to zero.
+                  </p>
+                  <Field
+                    label="Annual death loss to brisket disease (%)"
+                    hint="The share of your herd you lose to high-altitude
+                          heart failure in a typical year. Enter what you
+                          actually observe — the simulation calibrates to
+                          this figure. 2 means 2%."
+                  >
+                    <input
+                      type="number"
+                      step="0.5"
+                      min={0}
+                      max={50}
+                      value={papDeathLossPct}
+                      onChange={(e) =>
+                        setPapDeathLossPct(Number(e.target.value))
+                      }
+                    />
+                  </Field>
+                  <Field
+                    label="Loss when an animal dies of brisket disease ($)"
+                    hint="The economic loss of one productive animal lost
+                          to the disease. This is the same figure as the
+                          'loss when a productive cow dies' below."
+                  >
+                    <input
+                      type="number"
+                      step="25"
+                      value={lostAnimalCost}
+                      onChange={(e) =>
+                        setLostAnimalCost(Number(e.target.value))
+                      }
+                    />
+                  </Field>
+                  <Field
+                    label="Do you cull high-PAP animals before they die?"
+                    hint="If you PAP-test and cull high-reading animals
+                          rather than risk losing them, choose Yes. This
+                          adds the cost of those extra replacements."
+                  >
+                    <select
+                      value={papProactiveCull ? "yes" : "no"}
+                      onChange={(e) =>
+                        setPapProactiveCull(e.target.value === "yes")
+                      }
+                    >
+                      <option value="yes">
+                        Yes — I cull high-PAP animals
+                      </option>
+                      <option value="no">
+                        No — I do not test or cull on PAP
+                      </option>
+                    </select>
+                  </Field>
+                </Card>
+              )}
+
               <Card title="Replacement and herd costs">
                 <p className="field-hint" style={{ marginBottom: 12 }}>
                   These costs determine what fertility and longevity are
@@ -594,9 +668,8 @@ export function SimulationWizard({
                 </Field>
                 <Field
                   label="Loss when a productive cow dies ($)"
-                  hint="The economic loss when a cow dies (for example to
-                        high-altitude disease) rather than being culled
-                        for salvage value."
+                  hint="The economic loss when a cow dies rather than
+                        being culled for salvage value."
                 >
                   <input
                     type="number"
@@ -713,9 +786,27 @@ export function SimulationWizard({
                 </div>
               </Card>
 
+              {running && (
+                <div className="sim-running-banner">
+                  <span className="sim-running-spinner" aria-hidden />
+                  <div>
+                    <p className="sim-running-title">
+                      Running the simulation…
+                    </p>
+                    <p className="sim-running-detail">
+                      {chosenPreset.label} precision &mdash; this takes{" "}
+                      {chosenPreset.time}. NexGenIQ is building and running
+                      many virtual herds. You can leave this screen open;
+                      it will not time out.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="wizard-actions">
                 <Button
                   variant="secondary"
+                  disabled={running}
                   onClick={() => setStep(1)}
                 >
                   Back
@@ -725,16 +816,11 @@ export function SimulationWizard({
                   busy={running}
                   onClick={runSimulation}
                 >
-                  Run the simulation →
+                  {running
+                    ? "Running…"
+                    : "Run the simulation →"}
                 </Button>
               </div>
-              {running && (
-                <p className="field-hint" style={{ marginTop: 8 }}>
-                  Running {chosenPreset.label.toLowerCase()} precision -
-                  this takes {chosenPreset.time}. You can leave this
-                  screen open; it will not time out.
-                </p>
-              )}
               {error && (
                 <p className="auth-error" style={{ marginTop: 12 }}>
                   {error}

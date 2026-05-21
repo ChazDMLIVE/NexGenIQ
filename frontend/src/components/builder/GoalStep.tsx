@@ -193,15 +193,33 @@ export function GoalStep({
                   </td>
                   <td>
                     {trait?.description ?? ""}
-                    {trait?.breeds && trait.breeds.length > 0 && (
+                    {c.trait_code === "PAP_L" ? (
                       <p
-                        className="field-hint"
-                        style={{ marginTop: 4, fontStyle: "italic" }}
+                        className="goal-research-note"
+                        style={{ marginTop: 4 }}
                       >
-                        EPD published only by:{" "}
-                        {trait.breeds.join(", ")}. Make sure your animals
-                        are of one of these breeds.
+                        Research trait. Latent-scale PAP is a
+                        boundary-aware research phenotype — no breed
+                        association currently publishes a latent PAP EPD.
+                        Use it only if you have latent-scale PAP values
+                        from a research evaluation; for routine use,
+                        choose the standard PAP trait instead.
                       </p>
+                    ) : (
+                      trait?.breeds &&
+                      trait.breeds.length > 0 && (
+                        <p
+                          className="field-hint"
+                          style={{
+                            marginTop: 4,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          EPD published only by:{" "}
+                          {trait.breeds.join(", ")}. Make sure your
+                          animals are of one of these breeds.
+                        </p>
+                      )
                     )}
                   </td>
                   <td>

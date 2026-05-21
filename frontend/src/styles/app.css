@@ -1262,3 +1262,58 @@ input[type="range"] {
 .profit-note p:last-child {
   margin-bottom: 0;
 }
+
+/* ----------------------------------------------------------------------
+ * Simulation running banner and research-trait note.
+ * -------------------------------------------------------------------- */
+.sim-running-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--sage-50);
+  border: 1px solid var(--sage-600);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin: 16px 0 8px;
+}
+
+.sim-running-spinner {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border: 3px solid var(--sage-300);
+  border-top-color: var(--sage-900);
+  border-radius: 50%;
+  animation: sim-spin 0.9s linear infinite;
+}
+
+@keyframes sim-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sim-running-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sage-900);
+  margin: 0 0 4px;
+}
+
+.sim-running-detail {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--graphite-700);
+  margin: 0;
+}
+
+.goal-research-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #7A4F0B;
+  background: #FFF8E8;
+  border-left: 3px solid #B8860B;
+  border-radius: 4px;
+  padding: 8px 10px;
+}

@@ -256,6 +256,13 @@ class EconomicScenario:
     value_of_lost_animal:
         Economic loss when a productive cow dies (e.g. to
         high-altitude disease) rather than being culled for salvage.
+    pap_death_loss_rate:
+        The producer's observed annual herd death loss to high-altitude
+        (brisket) disease, as a fraction. The simulation calibrates its
+        PAP death curve to this; it only takes effect at elevations
+        where altitude_stress is above zero.
+    pap_proactive_culling:
+        True if the producer culls high-PAP animals before they die.
     """
 
     name: str
@@ -280,6 +287,19 @@ class EconomicScenario:
     replacement_development_cost: float = 900.0
     purchased_replacement_cost: float = 1800.0
     value_of_lost_animal: float = 1400.0
+    # --- High-altitude disease (PAP) economics ---------------------------
+    # pap_death_loss_rate is the producer's OBSERVED annual death loss to
+    # high-altitude (brisket) disease, as a fraction of the herd (0.03 =
+    # 3%). The simulation calibrates its internal PAP death-probability
+    # curve so the herd's average death loss matches this figure - so the
+    # producer's own data, not a fixed model constant, sets the severity.
+    # It applies only above the elevation where altitude_stress > 0; at
+    # low elevation PAP causes no loss regardless of this value.
+    pap_death_loss_rate: float = 0.02
+    # If True, the producer proactively culls high-PAP animals (after a
+    # PAP test) before they die; this raises the forced-cull rate of
+    # high-PAP cows. If False, high-PAP animals are only lost to death.
+    pap_proactive_culling: bool = True
 
     @property
     def altitude_stress(self) -> float:

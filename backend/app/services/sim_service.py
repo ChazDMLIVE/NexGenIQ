@@ -93,6 +93,8 @@ def economic_scenario_from_schema(
         replacement_development_cost=s.replacement_development_cost,
         purchased_replacement_cost=s.purchased_replacement_cost,
         value_of_lost_animal=s.value_of_lost_animal,
+        pap_death_loss_rate=s.pap_death_loss_rate,
+        pap_proactive_culling=s.pap_proactive_culling,
     )
 
 
