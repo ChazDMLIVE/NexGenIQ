@@ -24,6 +24,7 @@ SimulationControls  Burn-in, planning horizon, replicates, RNG seed.
 TraitGenetics       Per-trait genetic parameters for the simulated herd.
 run_simulation      Simulate the herd and return baseline profit + summary.
 derive_mevs         Derive the marginal economic value of every trait.
+traits_for_herd     Breed-aware list of traits to evaluate for a herd.
 """
 
 from .inputs import (
@@ -35,12 +36,15 @@ from .inputs import (
     PriceBand,
     GridCell,
     SIMULATED_TRAITS,
+    BREED_RESTRICTED_TRAITS,
+    herd_breeds,
+    traits_for_herd,
 )
 from .genetics import TraitGenetics, default_herd_genetics
 from .herd import run_simulation, SimulationResult
 from .mev import derive_mevs, MevResult, DerivedMev
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "ProductionSystem",
@@ -51,6 +55,9 @@ __all__ = [
     "PriceBand",
     "GridCell",
     "SIMULATED_TRAITS",
+    "BREED_RESTRICTED_TRAITS",
+    "herd_breeds",
+    "traits_for_herd",
     "TraitGenetics",
     "default_herd_genetics",
     "run_simulation",

@@ -19,6 +19,70 @@ import numpy as np
 _TOL = 1e-8
 
 
+def nearest_pd_correlation(corr: np.ndarray, eps: float = 0.01) -> np.ndarray:
+    """Return the nearest valid correlation matrix to ``corr``.
+
+    Genetic correlations elicited from the literature are assembled
+    pairwise and need not form a jointly consistent (positive-definite)
+    matrix - one trait can be reported as strongly correlated with several
+    others in ways that cannot all hold at once. A selection index built
+    on such a set would have a singular or indefinite covariance matrix
+    and could not be solved.
+
+    This function projects the supplied symmetric matrix onto the nearest
+    positive-definite correlation matrix: it clips the eigenvalues to a
+    small positive floor, reconstitutes the matrix, and rescales the
+    diagonal back to one. It is a standard, well-documented repair for
+    elicited correlation matrices (Higham, 2002). The repair is small
+    when the input is already close to valid, and the engine records that
+    a repair was applied so the result is never silently changed.
+
+    Parameters
+    ----------
+    corr:
+        A symmetric matrix with a unit diagonal.
+    eps:
+        The positive floor applied to the eigenvalues. The default of
+        0.01 does more than make the matrix barely positive-definite: it
+        keeps it *well-conditioned*. A floor at machine epsilon would
+        leave a near-singular matrix whose inverse (needed for the
+        BLUP-index solve b = P^-1 G a) is numerically unstable and
+        produces meaningless index values. A 0.01 floor caps the
+        condition number in the low hundreds while moving the elicited
+        correlations only marginally more than a machine-epsilon floor
+        would.
+
+    Returns
+    -------
+    numpy.ndarray
+        The nearest well-conditioned positive-definite correlation
+        matrix.
+    """
+    arr = np.asarray(corr, dtype=float)
+    # Symmetrise defensively, then eigen-decompose.
+    sym = 0.5 * (arr + arr.T)
+    eigvals, eigvecs = np.linalg.eigh(sym)
+    if eigvals.min() > eps:
+        return sym  # already positive-definite - nothing to repair
+    # Clip eigenvalues to a positive floor and rebuild.
+    clipped = np.clip(eigvals, eps, None)
+    rebuilt = (eigvecs * clipped) @ eigvecs.T
+    # Rescale so the diagonal is exactly one again (a true correlation
+    # matrix). d^-1/2 R d^-1/2.
+    d = np.sqrt(np.diag(rebuilt))
+    scaled = rebuilt / np.outer(d, d)
+    # Symmetrise once more to remove tiny floating-point asymmetry.
+    return 0.5 * (scaled + scaled.T)
+
+
+def is_positive_definite(matrix: np.ndarray, tol: float = _TOL) -> bool:
+    """Return True if ``matrix`` is symmetric positive-definite."""
+    arr = np.asarray(matrix, dtype=float)
+    if not np.allclose(arr, arr.T, atol=tol):
+        return False
+    return bool(np.linalg.eigvalsh(arr).min() > tol)
+
+
 # ---------------------------------------------------------------------------
 # BIF accuracy scale conversions (Phase 1 Section 1.4)
 # ---------------------------------------------------------------------------
@@ -171,31 +235,8 @@ class GeneticParameterSet:
         )
 
     # -- derived matrices ---------------------------------------------------
-    def genetic_covariance_matrix(self, codes: list[str]) -> np.ndarray:
-        """Build the additive genetic (co)variance matrix G0 for ``codes``.
-
-        Element (j, k) is ``r_g(j,k) * sigma_u,j * sigma_u,k``. The result is
-        symmetric by construction; positive-definiteness is the caller's
-        concern (it is validated in :mod:`validation`).
-
-        Parameters
-        ----------
-        codes:
-            Ordered list of trait codes. The returned matrix follows this
-            order on both axes.
-        """
-        n = len(codes)
-        sd = np.array([self.genetic_sd(c) for c in codes])
-        corr = np.eye(n)
-        for j in range(n):
-            for k in range(j + 1, n):
-                r = self.genetic_correlation(codes[j], codes[k])
-                corr[j, k] = corr[k, j] = r
-        # G0 = D corr D, with D = diag(sigma_u).
-        return np.outer(sd, sd) * corr
-
-    def genetic_correlation_matrix(self, codes: list[str]) -> np.ndarray:
-        """Build the genetic correlation matrix for ``codes`` (diagonal 1)."""
+    def _raw_correlation_matrix(self, codes: list[str]) -> np.ndarray:
+        """Build the genetic correlation matrix exactly as elicited."""
         n = len(codes)
         corr = np.eye(n)
         for j in range(n):
@@ -203,6 +244,63 @@ class GeneticParameterSet:
                 r = self.genetic_correlation(codes[j], codes[k])
                 corr[j, k] = corr[k, j] = r
         return corr
+
+    def correlation_was_repaired(self, codes: list[str]) -> bool:
+        """Return True if the elicited correlation matrix for ``codes`` is
+        not positive-definite and would therefore be repaired before use.
+
+        The validation layer surfaces this to the user as an information
+        note so a repaired matrix is never used silently.
+        """
+        return not is_positive_definite(self._raw_correlation_matrix(codes))
+
+    def genetic_correlation_matrix(
+        self, codes: list[str], repair: bool = True
+    ) -> np.ndarray:
+        """Build the genetic correlation matrix for ``codes`` (diagonal 1).
+
+        Parameters
+        ----------
+        codes:
+            Ordered list of trait codes.
+        repair:
+            If ``True`` (the default) and the elicited matrix is not
+            positive-definite, return the nearest valid correlation
+            matrix (see :func:`nearest_pd_correlation`). Pairwise-elicited
+            literature correlations need not be jointly consistent; the
+            repair guarantees a solvable selection index. Pass ``False``
+            to obtain the unrepaired elicited matrix (e.g. for the
+            validation layer to detect that a repair is needed).
+        """
+        corr = self._raw_correlation_matrix(codes)
+        if repair and not is_positive_definite(corr):
+            return nearest_pd_correlation(corr)
+        return corr
+
+    def genetic_covariance_matrix(
+        self, codes: list[str], repair: bool = True
+    ) -> np.ndarray:
+        """Build the additive genetic (co)variance matrix G0 for ``codes``.
+
+        Element (j, k) is ``r_g(j,k) * sigma_u,j * sigma_u,k``. The result
+        is symmetric by construction.
+
+        Parameters
+        ----------
+        codes:
+            Ordered list of trait codes. The returned matrix follows this
+            order on both axes.
+        repair:
+            If ``True`` (the default), the genetic correlation matrix is
+            repaired to the nearest positive-definite matrix when the
+            elicited values are not jointly consistent, so the resulting
+            G0 is always a valid covariance matrix and the index is
+            always solvable.
+        """
+        sd = np.array([self.genetic_sd(c) for c in codes])
+        corr = self.genetic_correlation_matrix(codes, repair=repair)
+        # G0 = D corr D, with D = diag(sigma_u).
+        return np.outer(sd, sd) * corr
 
     def has_all(self, codes: list[str]) -> list[str]:
         """Return the subset of ``codes`` missing per-trait parameters.

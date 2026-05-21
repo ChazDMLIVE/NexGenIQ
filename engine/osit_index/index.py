@@ -464,6 +464,28 @@ def build_index(
 
     # --- Step 5: build P and G ------------------------------------------
     rels = _reliabilities(working_set, info_codes)
+
+    # Pairwise-elicited genetic correlations need not be jointly
+    # consistent. When the correlation matrix for the goal's traits is not
+    # positive-definite the engine repairs it to the nearest valid matrix
+    # (parameters.nearest_pd_correlation) so the index is always solvable;
+    # this note records that the repair was applied.
+    if params.correlation_was_repaired(info_codes):
+        report.add(
+            Severity.INFO,
+            "correlation_matrix_repaired",
+            "The genetic correlations supplied for the traits in this "
+            "index were not jointly consistent (their matrix was not "
+            "positive-definite). NexGenIQ adjusted them to the nearest "
+            "valid set so the index could be solved. The adjustment is "
+            "small; results are reliable, but for a published analysis "
+            "consider supplying a population-specific, jointly estimated "
+            "parameter set.",
+            fix_hint="Provide a genetic-parameter set whose correlations "
+                     "were estimated jointly (e.g. from a single "
+                     "multivariate analysis) to avoid the repair.",
+        )
+
     P = build_P_matrix(info_codes, params, rels)
     G0 = params.genetic_covariance_matrix(info_codes)
 

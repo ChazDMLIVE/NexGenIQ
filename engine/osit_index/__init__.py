@@ -10,12 +10,21 @@ Reference data (USMARC across-breed factors, consensus genetic parameters)
 ships as versioned data files loaded via the dataloader module.
 """
 
-from .traits import TRAIT_REGISTRY, Trait, TraitCategory, get_trait
+from .traits import (
+    TRAIT_REGISTRY,
+    BREED_RESTRICTED_TRAITS,
+    Trait,
+    TraitCategory,
+    get_trait,
+    traits_available_for_breeds,
+)
 from .parameters import (
     TraitParameters,
     GeneticParameterSet,
     bif_accuracy_to_reliability,
     reliability_to_bif_accuracy,
+    nearest_pd_correlation,
+    is_positive_definite,
 )
 from .goal import BreedingGoal, GoalComponent, EconomicBasis
 from .animal import Animal, AnimalSet
@@ -37,6 +46,14 @@ from .library import (
     usmarc_adjustment_table,
     usmarc_adjustment_source,
 )
+from .econ_estimator import (
+    EstimatorQuestion,
+    EstimatorRecipe,
+    EstimateResult,
+    available_recipes,
+    get_recipe,
+    estimate_economic_value,
+)
 from .dataloader import (
     DataFileError,
     DataSource,
@@ -49,13 +66,17 @@ __version__ = "0.2.0"
 
 __all__ = [
     "TRAIT_REGISTRY",
+    "BREED_RESTRICTED_TRAITS",
     "Trait",
     "TraitCategory",
     "get_trait",
+    "traits_available_for_breeds",
     "TraitParameters",
     "GeneticParameterSet",
     "bif_accuracy_to_reliability",
     "reliability_to_bif_accuracy",
+    "nearest_pd_correlation",
+    "is_positive_definite",
     "BreedingGoal",
     "GoalComponent",
     "EconomicBasis",
@@ -76,13 +97,19 @@ __all__ = [
     "explain_score",
     "consensus_parameter_set",
     "consensus_parameter_source",
+    "example_adjustment_table",
     "usmarc_adjustment_table",
     "usmarc_adjustment_source",
-    "example_adjustment_table",
     "DataFileError",
     "DataSource",
     "available_data_files",
     "load_adjustment_table",
     "load_parameter_set",
+    "EstimatorQuestion",
+    "EstimatorRecipe",
+    "EstimateResult",
+    "available_recipes",
+    "get_recipe",
+    "estimate_economic_value",
     "__version__",
 ]

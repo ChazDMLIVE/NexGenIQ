@@ -56,6 +56,10 @@ class TraitOut(BaseModel):
     units: str
     higher_is_better: bool
     is_threshold: bool
+    # Breed associations that publish this trait's EPD. Empty means
+    # the trait is breed-universal; a non-empty list (e.g. PAP) means
+    # the trait is only offered for herds containing those breeds.
+    breeds: list[str] = Field(default_factory=list)
     description: str
 
 
@@ -256,6 +260,10 @@ class EconomicScenarioIn(BaseModel):
     days_on_feed: int = 0
     fixed_cost_per_cow: float = 180.0
     discount_rate: float = 0.06
+    # Elevation of the production environment, feet above sea level.
+    # Drives the economic importance of PAP (high-altitude / brisket
+    # disease): near-zero effect below ~5,000 ft, rising loss above it.
+    elevation_ft: float = Field(default=0.0, ge=0.0, le=14000.0)
 
 
 class SimulationControlsIn(BaseModel):
@@ -301,107 +309,44 @@ class SimulationResponse(BaseModel):
     baseline_profit: float
     replicates: int
     mevs: list[DerivedMevOut]
-    warnings: list[str]
-
+    warnings: list
 
 # ---------------------------------------------------------------------------
-# Herd-simulation schemas (Milestone 2)
+# Economic-value estimator (for users who do not run the herd simulation)
 # ---------------------------------------------------------------------------
-class BreedCompositionIn(BaseModel):
-    """One breed-composition class within the herd or bull battery."""
+class EstimatorQuestionOut(BaseModel):
+    """One plain-language question in a trait's economic-value recipe."""
 
-    fraction: float = Field(ge=0.0, le=1.0)
-    breeds: dict[str, float]
-
-
-class ProductionSystemIn(BaseModel):
-    """A description of the commercial cow-calf enterprise."""
-
-    name: str
-    herd_size: int = Field(default=250, ge=1)
-    conception_rate: float = Field(default=0.92, ge=0.0, le=1.0)
-    calving_loss_rate: float = Field(default=0.06, ge=0.0, le=1.0)
-    replacement_rate: float = Field(default=0.18, ge=0.0, le=1.0)
-    heifer_retention: bool = True
-    cow_breed_composition: list[BreedCompositionIn]
-    bull_breed_composition: list[BreedCompositionIn]
+    key: str
+    prompt: str
+    help_text: str
+    default: float
+    units: str
+    minimum: float
+    maximum: float
 
 
-class PriceBandIn(BaseModel):
-    """A sale price for one weight range and sex class."""
-
-    sex: str
-    low: float
-    high: float
-    price_per_cwt: float
-
-
-class GridCellIn(BaseModel):
-    """One premium/discount cell of a carcass pricing grid."""
-
-    quality_grade: str
-    yield_grade: int
-    premium: float
-
-
-class EconomicScenarioIn(BaseModel):
-    """The economic environment the herd operates in."""
-
-    name: str
-    sale_endpoint: str = "weaning"
-    price_bands: list[PriceBandIn] = Field(default_factory=list)
-    carcass_base_price: float = 300.0
-    grid: list[GridCellIn] = Field(default_factory=list)
-    cull_cow_price_per_cwt: float = 110.0
-    aum_cost: float = 38.0
-    feed_cost_per_lb_dm: float = 0.16
-    background_days: int = 0
-    days_on_feed: int = 0
-    fixed_cost_per_cow: float = 180.0
-    discount_rate: float = 0.06
-
-
-class SimulationControlsIn(BaseModel):
-    """Controls governing how the simulation is run."""
-
-    burn_in_years: int = Field(default=10, ge=0)
-    planning_horizon_years: int = Field(default=20, ge=1)
-    replicates: int = Field(default=12, ge=1, le=60)
-    seed: int = 20260520
-
-
-class SimulationRequest(BaseModel):
-    """A full, self-contained request to derive economic values."""
-
-    production_system: ProductionSystemIn
-    economic_scenario: EconomicScenarioIn
-    controls: SimulationControlsIn = Field(
-        default_factory=SimulationControlsIn
-    )
-    traits: list[str] = Field(
-        default_factory=list,
-        description="Trait subset to derive MEVs for; empty = all.",
-    )
-
-
-class DerivedMevOut(BaseModel):
-    """One derived marginal economic value."""
+class EstimatorRecipeOut(BaseModel):
+    """A trait's economic-value recipe: its questions and its formula."""
 
     trait_code: str
-    units: str
-    mev: float
-    mc_std_error: float
-    is_precise: bool
+    questions: list[EstimatorQuestionOut]
+    formula_text: str
+    basis_note: str
 
 
-class SimulationResponse(BaseModel):
-    """The result of an MEV-derivation run.
+class EstimateRequest(BaseModel):
+    """A request to estimate the economic value of one trait."""
 
-    The mevs list converts directly into an Index Builder breeding goal -
-    the integration seam between the two engines.
-    """
+    trait_code: str
+    answers: dict[str, float] = Field(default_factory=dict)
 
-    baseline_profit: float
-    replicates: int
-    mevs: list[DerivedMevOut]
-    warnings: list[str]
+
+class EstimateResultOut(BaseModel):
+    """The estimated economic value for one trait."""
+
+    trait_code: str
+    economic_value: float
+    formula_text: str
+    basis_note: str
+    inputs_used: dict[str, float]

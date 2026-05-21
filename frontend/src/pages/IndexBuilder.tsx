@@ -40,13 +40,16 @@ const TEMPLATES: GoalTemplate[] = [
     id: "maternal",
     name: "Self-replacing herd",
     desc: "You keep your own replacement heifers and sell the rest at " +
-      "weaning. Rewards fertility, calving ease and moderate growth.",
+      "weaning. Rewards fertility, calving ease, longevity and moderate " +
+      "growth.",
     basis: "per_cow_exposed",
     components: [
       { trait_code: "WW", economic_weight: 0.85 },
       { trait_code: "CED", economic_weight: 12.0 },
       { trait_code: "STAY", economic_weight: 6.4 },
+      { trait_code: "HP", economic_weight: 7.0 },
       { trait_code: "MILK", economic_weight: 0.3 },
+      { trait_code: "MW", economic_weight: -0.25 },
     ],
   },
   {
@@ -57,9 +60,41 @@ const TEMPLATES: GoalTemplate[] = [
     basis: "per_calf",
     components: [
       { trait_code: "CW", economic_weight: 1.2 },
-      { trait_code: "MARB", economic_weight: 55.0 },
-      { trait_code: "REA", economic_weight: 38.0 },
+      { trait_code: "MARB", economic_weight: 26.0 },
+      { trait_code: "REA", economic_weight: 11.0 },
+      { trait_code: "FAT", economic_weight: -200.0 },
+      { trait_code: "YW", economic_weight: 0.35 },
       { trait_code: "CED", economic_weight: 8.0 },
+    ],
+  },
+  {
+    id: "feedlot",
+    name: "Retained ownership / feedlot",
+    desc: "Calves are retained through the feedlot and sold on liveweight. " +
+      "Rewards post-weaning growth and feed efficiency.",
+    basis: "per_calf",
+    components: [
+      { trait_code: "YW", economic_weight: 0.40 },
+      { trait_code: "PWG", economic_weight: 0.35 },
+      { trait_code: "DMI", economic_weight: -2.9 },
+      { trait_code: "RFI", economic_weight: -3.0 },
+      { trait_code: "DOC", economic_weight: 7.0 },
+    ],
+  },
+  {
+    id: "high_altitude",
+    name: "High-altitude / brisket disease",
+    desc: "For herds grazing at elevation, where high-altitude (brisket) " +
+      "disease is a real cost. Pairs PAP selection with a sound maternal " +
+      "and growth base. PAP EPDs are published by Angus, Red Angus and " +
+      "Simmental.",
+    basis: "per_cow_exposed",
+    components: [
+      { trait_code: "PAP", economic_weight: -8.9 },
+      { trait_code: "WW", economic_weight: 0.85 },
+      { trait_code: "CED", economic_weight: 12.0 },
+      { trait_code: "STAY", economic_weight: 6.4 },
+      { trait_code: "MW", economic_weight: -0.25 },
     ],
   },
 ];

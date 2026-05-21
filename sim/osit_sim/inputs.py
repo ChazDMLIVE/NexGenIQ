@@ -18,26 +18,47 @@ from enum import Enum
 # ---------------------------------------------------------------------------
 # The traits the simulation tracks.
 #
-# A deliberately compact set covering the economically important traits of a
-# commercial cow-calf enterprise. Each is simulated with a direct and/or
-# maternal genetic component; the MEV engine perturbs these.
+# The full economically relevant EPD set for a beef enterprise. Each trait
+# is simulated with a direct and/or maternal genetic component, is wired
+# into the herd dynamics or the economic layer so it actually moves profit,
+# and is perturbed by the MEV engine. Trait codes match the osit-index
+# registry so a derived MEV vector maps straight onto a breeding goal.
 # ---------------------------------------------------------------------------
-#: Trait codes the simulation models, with units, matching osit-index codes
-#: where they overlap so derived MEVs map straight onto a breeding goal.
+#: Trait codes the simulation models, with units.
 SIMULATED_TRAITS: dict[str, str] = {
-    "BW": "lb",        # birth weight
+    # --- Growth -----------------------------------------------------------
+    "BW": "lb",        # birth weight (dystocia driver)
     "WW": "lb",        # weaning weight (calf's direct growth)
-    "MILK": "lb",      # maternal milk (dam contribution to calf WW)
     "YW": "lb",        # yearling weight
-    "MW": "lb",        # mature cow weight
+    "PWG": "lb",       # post-weaning gain (weaning -> yearling)
+    # --- Maternal ---------------------------------------------------------
+    "MILK": "lb",      # maternal milk (dam contribution to calf WW)
+    "MW": "lb",        # mature cow weight (pasture-cost driver)
+    # --- Fertility / longevity -------------------------------------------
+    "CED": "%",        # calving ease direct (calf's effect)
+    "CEM": "%",        # calving ease maternal (daughter's effect)
+    "HP": "%",         # heifer pregnancy
+    "SC": "cm",        # scrotal circumference (sire fertility)
+    "STAY": "%",       # stayability (cow remains productive)
+    # --- Carcass ----------------------------------------------------------
     "CW": "lb",        # carcass weight
     "MARB": "score",   # marbling score
     "REA": "sq in",    # ribeye area
     "FAT": "in",       # backfat thickness
-    "CED": "%",        # calving ease direct (probability unassisted)
-    "STAY": "%",       # stayability (cow remains productive)
-    "HP": "%",         # heifer pregnancy
+    # --- Feed efficiency --------------------------------------------------
     "DMI": "lb/day",   # dry-matter intake (feed cost driver)
+    "RFI": "lb/day",   # residual feed intake (efficiency)
+    # --- Temperament ------------------------------------------------------
+    "DOC": "score",    # docility (shrink / performance / handling)
+    # --- Health -----------------------------------------------------------
+    "PAP": "mmHg",     # pulmonary arterial pressure (altitude disease)
+}
+
+#: Traits whose EPD is published only by certain breed associations. A
+#: simulation only perturbs a restricted trait when the herd contains a
+#: breed that publishes it (see ``traits_for_herd``).
+BREED_RESTRICTED_TRAITS: dict[str, tuple[str, ...]] = {
+    "PAP": ("Angus", "Red Angus", "Simmental"),
 }
 
 
@@ -219,6 +240,14 @@ class EconomicScenario:
         Annual non-feed fixed cost per cow (labour, health, overhead).
     discount_rate:
         Annual discount rate for net-present-value accumulation.
+    elevation_ft:
+        Elevation of the production environment, in feet above sea level.
+        This drives the economic importance of PAP (pulmonary arterial
+        pressure): high-altitude disease (brisket disease / bovine
+        pulmonary hypertension) causes essentially no loss at low
+        elevation and rising death loss and forced culling above roughly
+        5,000 ft. At low elevation PAP's marginal economic value is near
+        zero; in a high-mountain environment it can dominate the goal.
     """
 
     name: str
@@ -233,6 +262,25 @@ class EconomicScenario:
     days_on_feed: int = 0
     fixed_cost_per_cow: float = 180.0
     discount_rate: float = 0.06
+    elevation_ft: float = 0.0
+
+    @property
+    def altitude_stress(self) -> float:
+        """Return the altitude-stress factor in [0, 1] for PAP economics.
+
+        High-altitude disease is negligible below ~5,000 ft, then its
+        pressure on the herd rises with elevation. The factor ramps
+        linearly from 0 at 5,000 ft to 1 at 10,000 ft and is clamped
+        outside that band. PAP's economic effects (death loss, culling)
+        are all scaled by this factor, so PAP carries weight only where
+        the environment makes it matter.
+        """
+        low, high = 5000.0, 10000.0
+        if self.elevation_ft <= low:
+            return 0.0
+        if self.elevation_ft >= high:
+            return 1.0
+        return (self.elevation_ft - low) / (high - low)
 
     def price_for(self, sex: str, weight: float) -> float:
         """Return the per-cwt price for a live animal of ``sex``/``weight``.
@@ -294,3 +342,30 @@ class SimulationControls:
             raise ValueError("planning_horizon_years must be >= 1.")
         if self.replicates < 1:
             raise ValueError("replicates must be >= 1.")
+
+
+def herd_breeds(system: "ProductionSystem") -> set[str]:
+    """Return the set of breed names present anywhere in the herd or bulls."""
+    breeds: set[str] = set()
+    for comps in (system.cow_breed_composition,
+                  system.bull_breed_composition):
+        for comp in comps:
+            breeds.update(comp.breeds)
+    return breeds
+
+
+def traits_for_herd(system: "ProductionSystem") -> list[str]:
+    """Return the trait codes a simulation should perturb for this herd.
+
+    Every breed-universal trait is included. A breed-restricted trait
+    (e.g. PAP) is included only when the herd contains a breed that
+    publishes an EPD for it - so a goal built for an all-Charolais herd
+    will not contain PAP, which Charolais does not evaluate.
+    """
+    breeds = herd_breeds(system)
+    available: list[str] = []
+    for code in SIMULATED_TRAITS:
+        restricted = BREED_RESTRICTED_TRAITS.get(code)
+        if restricted is None or breeds & set(restricted):
+            available.append(code)
+    return available

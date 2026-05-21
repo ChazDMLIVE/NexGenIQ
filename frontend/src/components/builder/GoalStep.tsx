@@ -4,11 +4,17 @@
  * Lets the user start from a template, then edit the economic-weight grid:
  * one row per goal trait with an editable weight and a slider. Implements
  * Phase 3.5 Section 4.1.
+ *
+ * Each row also offers a guided economic-value estimator (the "Help me
+ * price this" action), so a user who does not run the Herd Simulation can
+ * still arrive at a defensible economic weight.
  */
 
+import { useState } from "react";
 import type { GoalComponent, Trait } from "../../lib/api";
 import { Card, Field } from "../UI";
 import { InfoTip } from "../Help";
+import { EconEstimator } from "./EconEstimator";
 
 interface GoalTemplate {
   id: string;
@@ -30,6 +36,13 @@ interface GoalStepProps {
   onComponents: (c: GoalComponent[]) => void;
 }
 
+/* The trait codes the economic-value estimator has a recipe for. Kept in
+   step with the osit-index econ_estimator module. */
+const ESTIMATOR_TRAITS = new Set([
+  "WW", "YW", "CW", "MARB", "REA", "FAT", "CED", "HP", "STAY",
+  "MW", "MILK", "DOC", "DMI", "PAP", "PAP_L",
+]);
+
 export function GoalStep({
   templates,
   onApplyTemplate,
@@ -42,6 +55,11 @@ export function GoalStep({
   onComponents,
 }: GoalStepProps) {
   const traitByCode = new Map(traits.map((t) => [t.code, t]));
+
+  /* When set, the economic-value estimator modal is open for this trait. */
+  const [estimatorTrait, setEstimatorTrait] = useState<string | null>(
+    null,
+  );
 
   function updateWeight(code: string, weight: number) {
     onComponents(
@@ -105,6 +123,12 @@ export function GoalStep({
           </select>
         </Field>
 
+        <p className="field-hint" style={{ marginBottom: 4 }}>
+          Not sure what a trait is worth? Use “Help me price this” on any
+          row for a guided estimate — or run the Herd Simulation for a
+          full economic-value derivation.
+        </p>
+
         <table className="goal-grid">
           <thead>
             <tr>
@@ -120,6 +144,7 @@ export function GoalStep({
           <tbody>
             {components.map((c) => {
               const trait = traitByCode.get(c.trait_code);
+              const canEstimate = ESTIMATOR_TRAITS.has(c.trait_code);
               return (
                 <tr key={c.trait_code}>
                   <td>{trait?.name ?? c.trait_code}</td>
@@ -154,8 +179,31 @@ export function GoalStep({
                         aria-label={`Weight for ${trait?.name}`}
                       />
                     </div>
+                    {canEstimate && (
+                      <button
+                        type="button"
+                        className="goal-estimate-link"
+                        onClick={() =>
+                          setEstimatorTrait(c.trait_code)
+                        }
+                      >
+                        Help me price this
+                      </button>
+                    )}
                   </td>
-                  <td>{trait?.description ?? ""}</td>
+                  <td>
+                    {trait?.description ?? ""}
+                    {trait?.breeds && trait.breeds.length > 0 && (
+                      <p
+                        className="field-hint"
+                        style={{ marginTop: 4, fontStyle: "italic" }}
+                      >
+                        EPD published only by:{" "}
+                        {trait.breeds.join(", ")}. Make sure your animals
+                        are of one of these breeds.
+                      </p>
+                    )}
+                  </td>
                   <td>
                     <button
                       type="button"
@@ -183,6 +231,9 @@ export function GoalStep({
                 {available.map((t) => (
                   <option key={t.code} value={t.code}>
                     {t.name} ({t.category})
+                    {t.breeds && t.breeds.length > 0
+                      ? ` — ${t.breeds.join("/")} only`
+                      : ""}
                   </option>
                 ))}
               </select>
@@ -190,6 +241,20 @@ export function GoalStep({
           </div>
         )}
       </Card>
+
+      {estimatorTrait && (
+        <EconEstimator
+          traitCode={estimatorTrait}
+          traitName={
+            traitByCode.get(estimatorTrait)?.name ?? estimatorTrait
+          }
+          onApply={(value) => {
+            updateWeight(estimatorTrait, Number(value.toFixed(3)));
+            setEstimatorTrait(null);
+          }}
+          onClose={() => setEstimatorTrait(null)}
+        />
+      )}
     </>
   );
 }

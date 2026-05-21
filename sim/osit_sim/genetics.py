@@ -68,20 +68,36 @@ class TraitGenetics:
 #: commercial values; SDs and heritabilities are literature consensus
 #: figures (consistent with the osit-index parameter library).
 _DEFAULT_GENETICS: dict[str, TraitGenetics] = {
+    # --- Growth -----------------------------------------------------------
     "BW":   TraitGenetics("BW",   85.0,  4.0,  0.40),
     "WW":   TraitGenetics("WW",  545.0, 22.0,  0.25,
                           has_maternal=True, maternal_sd=14.0),
-    "MILK": TraitGenetics("MILK", 0.0,  14.0,  0.20),
     "YW":   TraitGenetics("YW",  850.0, 35.0,  0.40),
+    "PWG":  TraitGenetics("PWG", 305.0, 20.0,  0.30),
+    # --- Maternal ---------------------------------------------------------
+    "MILK": TraitGenetics("MILK", 0.0,  14.0,  0.20),
     "MW":   TraitGenetics("MW", 1300.0, 70.0,  0.50),
+    # --- Fertility / longevity -------------------------------------------
+    "CED":  TraitGenetics("CED", 92.0,   6.0,  0.22),
+    "CEM":  TraitGenetics("CEM", 92.0,   5.0,  0.18),
+    "HP":   TraitGenetics("HP",  90.0,   7.0,  0.13),
+    "SC":   TraitGenetics("SC",  37.0,   1.1,  0.45),
+    "STAY": TraitGenetics("STAY", 55.0,  8.0,  0.12),
+    # --- Carcass ----------------------------------------------------------
     "CW":   TraitGenetics("CW",  800.0, 30.0,  0.40),
     "MARB": TraitGenetics("MARB", 5.0,   0.55, 0.38),
     "REA":  TraitGenetics("REA", 13.0,   0.60, 0.40),
     "FAT":  TraitGenetics("FAT",  0.50,  0.07, 0.35),
-    "CED":  TraitGenetics("CED", 92.0,   6.0,  0.22),
-    "STAY": TraitGenetics("STAY", 55.0,  8.0,  0.12),
-    "HP":   TraitGenetics("HP",  90.0,   7.0,  0.13),
+    # --- Feed efficiency --------------------------------------------------
     "DMI":  TraitGenetics("DMI", 22.0,   1.4,  0.35),
+    "RFI":  TraitGenetics("RFI",  0.0,   0.55, 0.40),
+    # --- Temperament ------------------------------------------------------
+    "DOC":  TraitGenetics("DOC", 22.0,   3.0,  0.25),
+    # --- Health -----------------------------------------------------------
+    # PAP: pulmonary arterial pressure, mmHg. Mean ~41 mmHg; an animal
+    # above ~49 mmHg is considered high-risk for high-altitude disease.
+    # Moderately heritable (literature estimates 0.20-0.35).
+    "PAP":  TraitGenetics("PAP", 41.0,   3.2,  0.30),
 }
 
 
@@ -99,28 +115,36 @@ def default_herd_genetics() -> dict[str, TraitGenetics]:
 # ---------------------------------------------------------------------------
 # Breed additive effects, expressed as deviations from an Angus base.
 # Illustrative figures of the structure of USMARC germplasm estimates.
+#
+# PAP breed effects: Angus is the base. Simmental and Red Angus carry a
+# small positive (worse) PAP deviation in the illustrative figures;
+# breeds with no PAP evaluation are simply absent and contribute 0.
 # ---------------------------------------------------------------------------
 _BREED_EFFECTS: dict[str, dict[str, float]] = {
     "Angus":    {},  # the base breed — all zero
     "Hereford": {
         "BW": 4.0, "WW": -20.0, "MILK": -18.0, "YW": -28.0,
-        "MW": -40.0, "CW": -55.0, "MARB": -0.9, "REA": -0.3,
-        "CED": -3.0,
+        "PWG": -8.0, "MW": -40.0, "CW": -55.0, "MARB": -0.9,
+        "REA": -0.3, "FAT": 0.02, "CED": -3.0, "CEM": -2.0,
+        "DMI": -0.6, "DOC": -1.5,
     },
     "Simmental": {
         "BW": 5.0, "WW": 18.0, "MILK": 8.0, "YW": 22.0,
-        "MW": 60.0, "CW": 35.0, "MARB": -1.1, "REA": 0.9,
-        "CED": -5.0,
+        "PWG": 4.0, "MW": 60.0, "CW": 35.0, "MARB": -1.1,
+        "REA": 0.9, "FAT": -0.06, "CED": -5.0, "CEM": -3.0,
+        "DMI": 0.9, "DOC": -2.5, "PAP": 1.5,
     },
     "Red Angus": {
         "BW": 0.0, "WW": -8.0, "MILK": 4.0, "YW": -10.0,
-        "MW": -20.0, "CW": -6.0, "MARB": -0.2, "REA": -0.1,
-        "CED": 1.0,
+        "PWG": -2.0, "MW": -20.0, "CW": -6.0, "MARB": -0.2,
+        "REA": -0.1, "FAT": 0.01, "CED": 1.0, "CEM": 1.0,
+        "DMI": -0.2, "DOC": 0.5, "PAP": 0.6,
     },
     "Charolais": {
         "BW": 7.0, "WW": 22.0, "MILK": -6.0, "YW": 30.0,
-        "MW": 75.0, "CW": 50.0, "MARB": -1.4, "REA": 1.2,
-        "CED": -8.0,
+        "PWG": 8.0, "MW": 75.0, "CW": 50.0, "MARB": -1.4,
+        "REA": 1.2, "FAT": -0.08, "CED": -8.0, "CEM": -4.0,
+        "DMI": 1.1, "DOC": -3.0,
     },
 }
 
@@ -145,11 +169,17 @@ _F1_HETEROSIS: dict[str, float] = {
     "WW": 18.0,
     "MILK": 8.0,
     "YW": 26.0,
+    "PWG": 8.0,
     "MW": 30.0,
     "CW": 14.0,
     "CED": 2.0,
+    "CEM": 2.5,
     "STAY": 4.0,
     "HP": 3.5,
+    "SC": 0.5,
+    "DOC": 0.8,
+    # PAP shows modest favourable heterosis (lower pressure in crosses).
+    "PAP": -1.0,
 }
 
 

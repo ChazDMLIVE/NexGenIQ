@@ -45,6 +45,9 @@ export interface Trait {
   units: string;
   higher_is_better: boolean;
   is_threshold: boolean;
+  /** Breed associations that publish this trait's EPD. Empty = universal;
+      a non-empty list (e.g. PAP) means the trait is breed-restricted. */
+  breeds: string[];
   description: string;
 }
 
@@ -124,6 +127,32 @@ export interface TornadoEntry {
   top_changed: boolean;
 }
 
+/* ---- economic-value estimator ---- */
+export interface EstimatorQuestion {
+  key: string;
+  prompt: string;
+  help_text: string;
+  default: number;
+  units: string;
+  minimum: number;
+  maximum: number;
+}
+
+export interface EstimatorRecipe {
+  trait_code: string;
+  questions: EstimatorQuestion[];
+  formula_text: string;
+  basis_note: string;
+}
+
+export interface EstimateResult {
+  trait_code: string;
+  economic_value: number;
+  formula_text: string;
+  basis_note: string;
+  inputs_used: Record<string, number>;
+}
+
 /* ---- herd simulation (Milestone 2) ---- */
 export interface BreedCompositionIn {
   fraction: number;
@@ -135,6 +164,12 @@ export interface PriceBandIn {
   low: number;
   high: number;
   price_per_cwt: number;
+}
+
+export interface GridCellIn {
+  quality_grade: string;
+  yield_grade: number;
+  premium: number;
 }
 
 export interface ProductionSystemIn {
@@ -152,10 +187,17 @@ export interface EconomicScenarioIn {
   name: string;
   sale_endpoint: string;
   price_bands: PriceBandIn[];
+  carcass_base_price?: number;
+  grid?: GridCellIn[];
   cull_cow_price_per_cwt: number;
   aum_cost: number;
+  feed_cost_per_lb_dm?: number;
+  background_days?: number;
+  days_on_feed?: number;
   fixed_cost_per_cow: number;
   discount_rate: number;
+  /** Ranch elevation, ft above sea level. Drives PAP's economic weight. */
+  elevation_ft?: number;
 }
 
 export interface SimulationControlsIn {
@@ -304,6 +346,22 @@ export const api = {
     return request<SimulationResponse>("/simulation/derive-mevs", {
       method: "POST",
       body: JSON.stringify(req),
+    });
+  },
+
+  /** Fetch the economic-value estimator recipes (questions + formulas). */
+  async econEstimatorRecipes(): Promise<EstimatorRecipe[]> {
+    return request<EstimatorRecipe[]>("/library/econ-estimator/recipes");
+  },
+
+  /** Estimate the economic value of one trait from plain-language answers. */
+  async estimateEconValue(
+    traitCode: string,
+    answers: Record<string, number>,
+  ): Promise<EstimateResult> {
+    return request<EstimateResult>("/library/econ-estimator/estimate", {
+      method: "POST",
+      body: JSON.stringify({ trait_code: traitCode, answers }),
     });
   },
 

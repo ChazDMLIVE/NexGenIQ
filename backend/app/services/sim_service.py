@@ -88,6 +88,7 @@ def economic_scenario_from_schema(
         days_on_feed=s.days_on_feed,
         fixed_cost_per_cow=s.fixed_cost_per_cow,
         discount_rate=s.discount_rate,
+        elevation_ft=s.elevation_ft,
     )
 
 

@@ -38,6 +38,31 @@ _FIRST_CALVING_AGE = 2
 _REPLACEMENT_DEVELOPMENT_COST = 900.0   # rear an own heifer to first calving
 _PURCHASED_REPLACEMENT_COST = 1800.0    # buy a bred replacement female
 
+# --- Trait-response constants for the herd dynamics ----------------------
+# Birth weight: a calf heavier at birth is more likely to need assistance
+# and to be lost to dystocia. The base BW mean is 85 lb; calving loss
+# rises by this fraction per pound of BW above the mean.
+_BW_MEAN = 85.0
+_DYSTOCIA_LOSS_PER_LB_BW = 0.0015
+
+# Scrotal circumference: a sire battery with larger SC settles cows
+# slightly faster. SC mean 37 cm; conception rises by this per cm.
+_SC_MEAN = 37.0
+_CONCEPTION_PER_CM_SC = 0.004
+
+# PAP / high-altitude disease. At full altitude stress (see
+# EconomicScenario.altitude_stress) an animal at the PAP risk threshold
+# carries this annual probability of death; the probability scales with
+# how far the animal's PAP sits above the threshold, and with the
+# altitude-stress factor. Below ~5,000 ft the stress factor is 0 and PAP
+# has no effect at all.
+_PAP_MEAN = 41.0
+_PAP_RISK_THRESHOLD = 49.0       # mmHg above which animals are high-risk
+_PAP_DEATH_AT_THRESHOLD = 0.04   # annual death prob at threshold, full stress
+_PAP_DEATH_PER_MMHG = 0.012      # added death prob per mmHg above threshold
+_PAP_CULL_PER_MMHG = 0.010       # added forced-cull prob per mmHg, full stress
+_VALUE_OF_LOST_ANIMAL = 1400.0   # economic loss when a productive cow dies
+
 
 @dataclass
 class SimulationResult:
@@ -245,9 +270,24 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
     stayability therefore means fewer culls, fewer reared replacements,
     and lower total development cost - which is what gives STAY a
     positive economic value.
+
+    Trait wiring in this function:
+      * HP   -> per-cow conception probability.
+      * SC   -> sire-battery conception probability.
+      * CED  -> calving loss (calf's direct effect).
+      * CEM  -> calving loss for first-calf heifers (dam's effect).
+      * BW   -> calving loss (heavier calves -> more dystocia).
+      * STAY -> forced-cull probability.
+      * MW   -> pasture cost (in herd_costs) and cull-cow salvage weight.
+      * PAP  -> altitude-scaled death loss and forced culling.
     """
     sire_comp = _sample_composition(system.bull_breed_composition, rng)
     sire_genetics = _draw_genetics(genetics, rng, shift)
+
+    # Sire scrotal circumference improves how quickly the bull battery
+    # settles cows - SC carries a small positive economic value through
+    # the herd's overall conception rate.
+    sc_adj = _CONCEPTION_PER_CM_SC * sire_genetics.get("SC", 0.0)
 
     revenue = 0.0
     calves_weaned = 0
@@ -255,16 +295,37 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
 
     for cow in herd:
         # Conception, modulated by the cow's heifer-pregnancy genetics so
-        # HP carries a real economic value.
+        # HP carries a real economic value, and by sire scrotal
+        # circumference (SC).
         hp_adj = cow.genetics.get("HP", 0.0) / 100.0
-        conception_p = min(0.999, max(0.0,
-                                      system.conception_rate + hp_adj))
+        conception_p = min(
+            0.999, max(0.0, system.conception_rate + hp_adj + sc_adj)
+        )
         if rng.random() > conception_p:
             continue
 
-        # Calving loss, modulated by calving-ease direct (CED).
+        # Calving loss. Three genetic effects act here:
+        #  * CED  - the calf's own calving-ease genetics (direct);
+        #  * CEM  - the dam's calving-ease genetics (maternal), which
+        #           matter most for first-calf (age 2) heifers;
+        #  * BW   - a heavier calf at birth raises dystocia loss.
         ced_adj = cow.genetics.get("CED", 0.0) / 100.0
-        loss_p = min(0.999, max(0.0, system.calving_loss_rate - ced_adj))
+        cem_adj = cow.genetics.get("CEM", 0.0) / 100.0
+        # CEM acts only on first-calf heifers; older cows calve easily.
+        if cow.age > _FIRST_CALVING_AGE:
+            cem_adj = 0.0
+        bw_calf = (
+            genetics["BW"].mean
+            + 0.5 * cow.genetics.get("BW", 0.0)
+            + 0.5 * sire_genetics.get("BW", 0.0)
+            + (shift.get("BW", 0.0) if shift else 0.0)
+        )
+        bw_loss = _DYSTOCIA_LOSS_PER_LB_BW * max(0.0, bw_calf - _BW_MEAN)
+        loss_p = min(
+            0.999,
+            max(0.0,
+                system.calving_loss_rate - ced_adj - cem_adj + bw_loss),
+        )
         if rng.random() < loss_p:
             continue
 
@@ -322,13 +383,41 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
     # what gives MW a negative economic value.
     cost = herd_costs(herd, genetics, economics)
 
-    # Age the herd; cull on age and on genetic stayability (STAY).
+    # Age the herd; cull on age, on genetic stayability (STAY), and on
+    # high-altitude (PAP) pressure; account high-altitude death loss.
     survivors: list[_Cow] = []
     cull_revenue = 0.0
+    stress = economics.altitude_stress
     for cow in herd:
         cow.age += 1
+
+        # High-altitude disease. Only relevant where the environment is
+        # high enough (stress > 0). An animal whose PAP phenotype sits
+        # above the risk threshold carries an elevation-scaled annual
+        # probability of death; a productive cow lost this way is an
+        # economic loss. Survivors above the threshold are also more
+        # likely to be culled out of the herd.
+        if stress > 0.0 and "PAP" in genetics:
+            pap = _PAP_MEAN + cow.genetics.get("PAP", 0.0)
+            excess = max(0.0, pap - _PAP_RISK_THRESHOLD)
+            death_p = stress * (
+                (_PAP_DEATH_AT_THRESHOLD if pap >= _PAP_RISK_THRESHOLD
+                 else 0.0)
+                + _PAP_DEATH_PER_MMHG * excess
+            )
+            if rng.random() < min(0.95, death_p):
+                # The cow dies; no cull-cow salvage value, and the herd
+                # bears the loss of a productive animal.
+                cull_revenue -= _VALUE_OF_LOST_ANIMAL
+                continue
+            pap_cull = stress * _PAP_CULL_PER_MMHG * excess
+        else:
+            pap_cull = 0.0
+
         stay_adj = cow.genetics.get("STAY", 0.0) / 100.0
-        cull_p = min(0.95, max(0.0, system.replacement_rate - stay_adj))
+        cull_p = min(
+            0.95, max(0.0, system.replacement_rate - stay_adj + pap_cull)
+        )
         forced_out = cow.age > _MAX_COW_AGE or (
             cow.age > _FIRST_CALVING_AGE and rng.random() < cull_p
         )

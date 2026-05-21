@@ -19,10 +19,39 @@ import {
 import { Button, Card, Field, Stepper } from "../components/UI";
 import { ContextPanel } from "../components/Help";
 
+/* Readable names for the trait codes the simulation can return, so the
+   results table does not show bare codes. Matches the engine registry. */
+const TRAIT_NAMES: Record<string, string> = {
+  BW: "Birth weight",
+  WW: "Weaning weight",
+  YW: "Yearling weight",
+  PWG: "Post-weaning gain",
+  MILK: "Maternal milk",
+  MW: "Mature cow weight",
+  CED: "Calving ease direct",
+  CEM: "Calving ease maternal",
+  HP: "Heifer pregnancy",
+  SC: "Scrotal circumference",
+  STAY: "Stayability",
+  CW: "Carcass weight",
+  MARB: "Marbling",
+  REA: "Ribeye area",
+  FAT: "Backfat thickness",
+  DMI: "Dry matter intake",
+  RFI: "Residual feed intake",
+  DOC: "Docility",
+  PAP: "Pulmonary arterial pressure",
+};
+
 const STEPS = ["Your herd", "Economics", "Results"];
 
-/* The traits the simulation derives economic values for. */
-const SIM_TRAITS = ["WW", "MILK", "CED", "STAY", "HP", "MW"];
+/*
+ * The trait set is no longer hard-coded here. Sending an empty `traits`
+ * list lets the engine derive an economic value for EVERY trait the
+ * herd's breeds publish an EPD for — the full EPD set, including the
+ * carcass and feed-efficiency traits that matter for terminal and
+ * on-the-rail marketing, and PAP for Angus / Red Angus / Simmental herds.
+ */
 
 interface SimulationWizardProps {
   /** Called with the derived economic weights to start an index from. */
@@ -45,12 +74,26 @@ export function SimulationWizard({
   const [replacement, setReplacement] = useState(0.18);
   const [heiferRetention, setHeiferRetention] = useState(true);
 
+  /* Step 1 — the herd's breed. Determines which EPDs apply (e.g. PAP is
+     published only by Angus, Red Angus and Simmental). */
+  const [breed, setBreed] = useState("Angus");
+
   /* Step 2 — the economic scenario. */
   const [endpoint, setEndpoint] = useState("weaning");
   const [steerPrice, setSteerPrice] = useState(195);
   const [heiferPrice, setHeiferPrice] = useState(178);
   const [aumCost, setAumCost] = useState(38);
   const [fixedCost, setFixedCost] = useState(185);
+  /* Elevation drives the economic weight of PAP (brisket disease). */
+  const [elevationFt, setElevationFt] = useState(4000);
+  /* Carcass / feedlot inputs — used when calves are sold past weaning. */
+  const [carcassBasePrice, setCarcassBasePrice] = useState(300);
+  const [backgroundDays, setBackgroundDays] = useState(60);
+  const [daysOnFeed, setDaysOnFeed] = useState(160);
+
+  /* Whether the chosen endpoint involves a feedlot / carcass phase. */
+  const isTerminalEndpoint = endpoint !== "weaning";
+  const isCarcassEndpoint = endpoint === "carcass";
 
   /* Step 3 — the result. */
   const [result, setResult] = useState<SimulationResponse | null>(null);
@@ -70,10 +113,10 @@ export function SimulationWizard({
           replacement_rate: replacement,
           heifer_retention: heiferRetention,
           cow_breed_composition: [
-            { fraction: 1.0, breeds: { Angus: 1.0 } },
+            { fraction: 1.0, breeds: { [breed]: 1.0 } },
           ],
           bull_breed_composition: [
-            { fraction: 1.0, breeds: { Angus: 1.0 } },
+            { fraction: 1.0, breeds: { [breed]: 1.0 } },
           ],
         },
         economic_scenario: {
@@ -84,19 +127,45 @@ export function SimulationWizard({
               price_per_cwt: steerPrice },
             { sex: "F", low: 0, high: 9999,
               price_per_cwt: heiferPrice },
+            { sex: "C", low: 0, high: 9999, price_per_cwt: 110 },
           ],
+          carcass_base_price: carcassBasePrice,
+          /* A standard USDA quality x yield grade grid. Premiums and
+             discounts in $/cwt of carcass relative to the base price. */
+          grid: isCarcassEndpoint
+            ? [
+                { quality_grade: "Prime", yield_grade: 2, premium: 24 },
+                { quality_grade: "Prime", yield_grade: 3, premium: 18 },
+                { quality_grade: "Choice", yield_grade: 2, premium: 6 },
+                { quality_grade: "Choice", yield_grade: 3, premium: 2 },
+                { quality_grade: "Choice", yield_grade: 4, premium: -8 },
+                { quality_grade: "Select", yield_grade: 3, premium: -14 },
+                { quality_grade: "Select", yield_grade: 4, premium: -22 },
+                { quality_grade: "Standard", yield_grade: 3,
+                  premium: -30 },
+              ]
+            : [],
           cull_cow_price_per_cwt: 110,
           aum_cost: aumCost,
           fixed_cost_per_cow: fixedCost,
+          background_days: isTerminalEndpoint ? backgroundDays : 0,
+          days_on_feed:
+            endpoint === "fed" || endpoint === "carcass"
+              ? daysOnFeed
+              : 0,
           discount_rate: 0.06,
+          elevation_ft: elevationFt,
         },
         controls: {
           burn_in_years: 6,
           planning_horizon_years: 12,
-          replicates: 10,
+          replicates: 12,
           seed: 20260520,
         },
-        traits: SIM_TRAITS,
+        /* Empty list -> the engine derives an MEV for every trait the
+           herd's breeds publish (the full EPD set, PAP included for the
+           breeds that evaluate it). */
+        traits: [],
       });
       setResult(res);
       setStep(3);
@@ -156,6 +225,24 @@ export function SimulationWizard({
                       setHerdSize(Number(e.target.value))
                     }
                   />
+                </Field>
+                <Field
+                  label="Predominant breed"
+                  hint="The main breed of your cow herd. This decides which
+                        EPDs apply — for example, a PAP (brisket disease)
+                        EPD is published only for Angus, Red Angus and
+                        Simmental."
+                >
+                  <select
+                    value={breed}
+                    onChange={(e) => setBreed(e.target.value)}
+                  >
+                    <option value="Angus">Angus</option>
+                    <option value="Red Angus">Red Angus</option>
+                    <option value="Hereford">Hereford</option>
+                    <option value="Simmental">Simmental</option>
+                    <option value="Charolais">Charolais</option>
+                  </select>
                 </Field>
                 <Field
                   label="Conception rate"
@@ -243,7 +330,8 @@ export function SimulationWizard({
                 <Field
                   label="When do you sell your calves?"
                   hint="Where in the production chain you market the calf
-                        crop."
+                        crop. Selling past weaning makes growth, feed
+                        efficiency and carcass traits economically real."
                 >
                   <select
                     value={endpoint}
@@ -307,7 +395,83 @@ export function SimulationWizard({
                     }
                   />
                 </Field>
+                <Field
+                  label="Ranch elevation (ft above sea level)"
+                  hint="Elevation of your range. High-altitude (brisket)
+                        disease becomes a real cost above ~5,000 ft — this
+                        is what gives the PAP EPD economic weight. Set it
+                        to your highest summer pasture."
+                >
+                  <input
+                    type="number"
+                    step="100"
+                    value={elevationFt}
+                    onChange={(e) =>
+                      setElevationFt(Number(e.target.value))
+                    }
+                  />
+                </Field>
               </Card>
+
+              {/* Feedlot / carcass inputs — only relevant when calves
+                  are marketed past weaning. */}
+              {isTerminalEndpoint && (
+                <Card title="Feedlot and carcass">
+                  <p className="field-hint" style={{ marginBottom: 12 }}>
+                    Because you sell past weaning, growth, feed efficiency
+                    {isCarcassEndpoint
+                      ? " and carcass merit (marbling, ribeye, backfat)"
+                      : ""}{" "}
+                    now carry economic value. NexGenIQ values every one of
+                    those traits for you.
+                  </p>
+                  <Field
+                    label="Days backgrounded"
+                    hint="Days calves spend backgrounding after weaning
+                          before the feedlot."
+                  >
+                    <input
+                      type="number"
+                      step="10"
+                      value={backgroundDays}
+                      onChange={(e) =>
+                        setBackgroundDays(Number(e.target.value))
+                      }
+                    />
+                  </Field>
+                  {(endpoint === "fed" ||
+                    endpoint === "carcass") && (
+                    <Field
+                      label="Days on feed"
+                      hint="Days in the feedlot to a finished weight."
+                    >
+                      <input
+                        type="number"
+                        step="10"
+                        value={daysOnFeed}
+                        onChange={(e) =>
+                          setDaysOnFeed(Number(e.target.value))
+                        }
+                      />
+                    </Field>
+                  )}
+                  {isCarcassEndpoint && (
+                    <Field
+                      label="Carcass base price ($/cwt)"
+                      hint="Base price per hundredweight of carcass, before
+                            grid premiums and discounts."
+                    >
+                      <input
+                        type="number"
+                        value={carcassBasePrice}
+                        onChange={(e) =>
+                          setCarcassBasePrice(Number(e.target.value))
+                        }
+                      />
+                    </Field>
+                  )}
+                </Card>
+              )}
               <div className="wizard-actions">
                 <Button
                   variant="secondary"
@@ -392,6 +556,12 @@ export function SimulationWizard({
                       <tr key={m.trait_code}>
                         <td>
                           <strong>{m.trait_code}</strong>
+                          <span
+                            className="field-hint"
+                            style={{ marginLeft: 6 }}
+                          >
+                            {TRAIT_NAMES[m.trait_code] ?? ""}
+                          </span>
                         </td>
                         <td className="rank-index tnum">
                           {m.mev >= 0 ? "+" : ""}

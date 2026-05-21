@@ -742,3 +742,189 @@ input[type="range"] {
   font-size: var(--text-label);
   color: var(--graphite-700);
 }
+
+/* ----------------------------------------------------------------------
+ * Economic-value estimator (the "Help me price this" guided modal).
+ * -------------------------------------------------------------------- */
+.goal-estimate-link {
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--sage-600);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.goal-estimate-link:hover {
+  color: var(--sage-900);
+}
+
+.estimator-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 22, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.estimator-modal {
+  background: #fff;
+  border-radius: 10px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 24px 28px;
+  box-shadow: 0 12px 40px rgba(20, 24, 22, 0.3);
+}
+
+.estimator-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.estimator-title {
+  font-size: 20px;
+  color: var(--graphite-900);
+  margin: 0;
+}
+
+.estimator-intro {
+  color: var(--graphite-700);
+  font-size: 14px;
+  margin: 8px 0 16px;
+}
+
+.estimator-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.estimator-question {
+  border-left: 3px solid var(--sage-300);
+  padding-left: 12px;
+}
+
+.estimator-q-label {
+  display: block;
+  font-weight: 600;
+  color: var(--graphite-900);
+  font-size: 14px;
+}
+
+.estimator-q-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.estimator-q-input input {
+  width: 140px;
+}
+
+.estimator-result {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--sage-50);
+  border: 1px solid var(--sage-600);
+  border-radius: 8px;
+}
+
+.estimator-result-label {
+  font-size: 13px;
+  color: var(--graphite-700);
+  margin: 0;
+}
+
+.estimator-result-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--sage-900);
+  margin: 2px 0 8px;
+}
+
+.estimator-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* ----------------------------------------------------------------------
+ * Technical Documentation page.
+ * -------------------------------------------------------------------- */
+.docs-summary {
+  color: var(--graphite-900);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.docs-toggle {
+  margin-top: 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--sage-600);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.docs-toggle:hover {
+  color: var(--sage-900);
+}
+
+.docs-detail {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--graphite-400);
+}
+
+.docs-body {
+  color: var(--graphite-700);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 12px;
+}
+
+.docs-equation {
+  font-family: "Iowan Old Style", Georgia, serif;
+  font-size: 16px;
+  text-align: center;
+  color: var(--graphite-900);
+  background: var(--sage-50);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+.docs-refs {
+  font-size: 13px;
+  color: var(--graphite-400);
+  line-height: 1.7;
+  margin: 14px 0 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--sage-300);
+}
+
+.docs-citation {
+  font-size: 14px;
+  color: var(--graphite-900);
+  line-height: 1.7;
+  background: var(--sage-50);
+  border: 1px solid var(--sage-600);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin: 8px 0 12px;
+}

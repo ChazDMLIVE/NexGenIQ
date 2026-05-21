@@ -23,6 +23,7 @@ import numpy as np
 
 from .animal import AnimalSet, EpdScale
 from .goal import BreedingGoal
+from .traits import BREED_RESTRICTED_TRAITS
 from .parameters import GeneticParameterSet
 
 _SYM_TOL = 1e-8
@@ -279,6 +280,26 @@ def validate_animals(
             "The animals come from more than one genetic evaluation. Their "
             "EPDs will be placed on a common base before ranking.",
         )
+
+    # Breed-gating: some EPDs (e.g. PAP, the pulmonary-arterial-pressure
+    # trait) are published only by certain breed associations. If the
+    # breeding goal includes such a trait, at least one candidate animal
+    # should be of a breed that publishes it - otherwise the trait's EPDs
+    # are not on a meaningful, comparable footing.
+    herd_breeds = {a.breed for a in animal_set if a.breed}
+    for code in trait_codes:
+        publishers = BREED_RESTRICTED_TRAITS.get(code)
+        if publishers and not (herd_breeds & set(publishers)):
+            report.add(
+                Severity.WARN,
+                "breed_restricted_trait",
+                f"The goal includes {code}, whose EPD is published only "
+                f"by {', '.join(publishers)}. None of the candidate "
+                f"animals are of those breeds, so this trait's EPDs may "
+                f"not be comparable across your animals.",
+                fix_hint=f"Use {code} only for {', '.join(publishers)} "
+                         f"animals, or remove it from the breeding goal.",
+            )
 
     for animal in animal_set:
         for code in trait_codes:

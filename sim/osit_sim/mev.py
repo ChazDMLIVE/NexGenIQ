@@ -26,7 +26,12 @@ import numpy as np
 
 from .genetics import TraitGenetics
 from .herd import run_simulation
-from .inputs import EconomicScenario, ProductionSystem, SimulationControls
+from .inputs import (
+    EconomicScenario,
+    ProductionSystem,
+    SimulationControls,
+    traits_for_herd,
+)
 
 
 @dataclass
@@ -150,14 +155,24 @@ def derive_mevs(
     system, economics, controls, genetics:
         The simulation inputs.
     traits:
-        Which traits to derive an MEV for; defaults to every trait.
+        Which traits to derive an MEV for. Defaults to every trait the
+        herd's breeds publish an EPD for - so a breed-restricted trait
+        such as PAP is included only when the herd contains a breed
+        (Angus, Red Angus, Simmental) that evaluates it.
 
     Returns
     -------
     MevResult
         The derived MEVs with Monte-Carlo errors, ordered by importance.
     """
-    trait_codes = traits if traits is not None else list(genetics)
+    if traits is not None:
+        trait_codes = traits
+    else:
+        # Default to the breed-available traits, intersected with the
+        # traits the supplied genetics actually parameterise.
+        trait_codes = [
+            c for c in traits_for_herd(system) if c in genetics
+        ]
 
     # Per-trait perturbation: a fraction of the genetic SD - small enough
     # to stay locally linear, large enough to exceed simulation noise.

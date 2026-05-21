@@ -50,7 +50,7 @@ def derive_mevs(
 
     # Reproducibility ledger: record what produced this MEV set.
     ledger = RunLedger(
-        engine_version="osit-sim 0.1.0",
+        engine_version="osit-sim 0.2.0",
         mode="mev_derivation",
         inputs_summary={
             "production_system": request.production_system.name,

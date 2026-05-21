@@ -13,6 +13,9 @@ from fastapi import APIRouter, Depends
 
 from osit_index import (
     TRAIT_REGISTRY,
+    available_recipes,
+    estimate_economic_value,
+    get_recipe,
     available_data_files,
     consensus_parameter_set,
     consensus_parameter_source,
@@ -22,7 +25,13 @@ from osit_index import (
 
 from app.api.deps import get_current_user
 from app.models import User
-from app.schemas import TraitOut
+from app.schemas import (
+    EstimateRequest,
+    EstimateResultOut,
+    EstimatorQuestionOut,
+    EstimatorRecipeOut,
+    TraitOut,
+)
 
 router = APIRouter(prefix="/library", tags=["library"])
 
@@ -43,6 +52,7 @@ def list_traits(user: User = Depends(get_current_user)) -> list[TraitOut]:
             units=t.units,
             higher_is_better=t.higher_is_better,
             is_threshold=t.is_threshold,
+            breeds=list(t.breeds),
             description=t.description,
         )
         for t in TRAIT_REGISTRY.values()
@@ -117,3 +127,70 @@ def data_versions(user: User = Depends(get_current_user)) -> dict:
         },
         "data_files": available_data_files(),
     }
+
+
+@router.get(
+    "/econ-estimator/recipes",
+    response_model=list[EstimatorRecipeOut],
+    tags=["library"],
+)
+def list_econ_recipes(
+    user: User = Depends(get_current_user),
+) -> list[EstimatorRecipeOut]:
+    """Return the economic-value estimator recipes for every covered trait.
+
+    A user who does not run the herd simulation can still get a defensible
+    starting economic value for each trait by answering a short set of
+    plain-language questions. This endpoint returns those questions and
+    each recipe's formula, so the estimate is fully transparent.
+    """
+    out: list[EstimatorRecipeOut] = []
+    for code in available_recipes():
+        recipe = get_recipe(code)
+        out.append(
+            EstimatorRecipeOut(
+                trait_code=recipe.trait_code,
+                questions=[
+                    EstimatorQuestionOut(
+                        key=q.key,
+                        prompt=q.prompt,
+                        help_text=q.help_text,
+                        default=q.default,
+                        units=q.units,
+                        minimum=q.minimum,
+                        maximum=q.maximum,
+                    )
+                    for q in recipe.questions
+                ],
+                formula_text=recipe.formula_text,
+                basis_note=recipe.basis_note,
+            )
+        )
+    return out
+
+
+@router.post(
+    "/econ-estimator/estimate",
+    response_model=EstimateResultOut,
+    tags=["library"],
+)
+def estimate_econ_value(
+    request: EstimateRequest,
+    user: User = Depends(get_current_user),
+) -> EstimateResultOut:
+    """Estimate the economic value of one trait from the user's answers.
+
+    The answers are the plain-language inputs of the trait's recipe (see
+    the ``/econ-estimator/recipes`` endpoint). Any answer omitted falls
+    back to the recipe's default, so a partial answer set still yields a
+    number. The response carries the value, the formula used, and the
+    inputs, so nothing is a black box.
+    """
+    result = estimate_economic_value(request.trait_code, request.answers)
+    return EstimateResultOut(
+        trait_code=result.trait_code,
+        economic_value=result.economic_value,
+        formula_text=result.formula_text,
+        basis_note=result.basis_note,
+        inputs_used=result.inputs_used,
+    )

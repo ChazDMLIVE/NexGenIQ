@@ -27,6 +27,7 @@ class TraitCategory(str, Enum):
     FERTILITY = "fertility"
     FEED_EFFICIENCY = "feed_efficiency"
     TEMPERAMENT = "temperament"
+    HEALTH = "health"
     OTHER = "other"
 
 
@@ -54,6 +55,11 @@ class Trait:
         genetic liability is continuous (calving ease, stayability, heifer
         pregnancy). Their EPDs are accepted as published; the engine flags
         the linearity assumption (Phase 1 Section 1.2, Phase 3 Appendix A.4).
+    breeds:
+        If non-empty, the trait's EPD is published only by these breed
+        associations, and the trait is offered only when the herd contains
+        such breeds. PAP, for example, is published only by Angus (AAA) and
+        Simmental (ASA). An empty tuple means the trait is breed-universal.
     description:
         Plain-language explanation surfaced in the help system.
     """
@@ -64,6 +70,7 @@ class Trait:
     units: str
     higher_is_better: bool = True
     is_threshold: bool = False
+    breeds: tuple[str, ...] = ()
     description: str = ""
 
 
@@ -149,8 +156,54 @@ TRAIT_REGISTRY: dict[str, Trait] = {
               is_threshold=True,
               description="Predicted disposition of progeny. Calmer cattle "
                           "handle better and can perform better."),
+        # --- Health ---------------------------------------------------------
+        Trait("PAP", "Pulmonary arterial pressure", TraitCategory.HEALTH,
+              "mmHg", higher_is_better=False,
+              breeds=("Angus", "Red Angus", "Simmental"),
+              description="Predicted pulmonary arterial pressure of progeny. "
+                          "High PAP indicates susceptibility to high-altitude "
+                          "(brisket / bovine pulmonary hypertension) disease; "
+                          "lower is better. Published by AAA (Angus) and ASA "
+                          "(Simmental); economically important only at "
+                          "elevation. The breeding-goal weight scales with "
+                          "the production scenario's elevation."),
+        Trait("PAP_L", "Pulmonary arterial pressure (latent)",
+              TraitCategory.HEALTH, "latent-z", higher_is_better=False,
+              breeds=("Angus", "Red Angus", "Simmental"),
+              description="A boundary-aware, latent-scale PAP phenotype. Raw "
+                          "PAP is a practically bounded, measurement-error-"
+                          "prone observation of an underlying physiological "
+                          "state; mapping it through a logit transform onto "
+                          "an unbounded latent scale removes the compression "
+                          "near the practical bounds and recovers heritable "
+                          "signal (latent-z h2 ~ 0.32 vs ~ 0.25 for raw PAP; "
+                          "Markel et al.). Use this trait when your "
+                          "evaluation publishes a latent-scale PAP EPD. It is "
+                          "dimensionless: its economic value is dollars per "
+                          "latent-z unit, not per mmHg."),
     ]
 }
+
+
+#: Trait codes whose EPD is published only by certain breed associations.
+#: Derived from the registry so it stays in sync.
+BREED_RESTRICTED_TRAITS: dict[str, tuple[str, ...]] = {
+    code: t.breeds for code, t in TRAIT_REGISTRY.items() if t.breeds
+}
+
+
+def traits_available_for_breeds(breeds: set[str]) -> list[str]:
+    """Return the trait codes usable for a herd of the given breeds.
+
+    A breed-universal trait is always available. A breed-restricted trait
+    (e.g. PAP) is available only when at least one of the herd's breeds
+    publishes it. This is how the UI decides which EPDs to offer.
+    """
+    available: list[str] = []
+    for code, trait in TRAIT_REGISTRY.items():
+        if not trait.breeds or breeds & set(trait.breeds):
+            available.append(code)
+    return available
 
 
 def get_trait(code: str) -> Trait:

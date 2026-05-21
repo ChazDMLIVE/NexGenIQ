@@ -20,8 +20,9 @@ import { AuthScreen } from "./pages/AuthScreen";
 import { IndexBuilder } from "./pages/IndexBuilder";
 import { SimulationWizard } from "./pages/SimulationWizard";
 import { Troubleshooting } from "./pages/Troubleshooting";
+import { TechnicalDocs } from "./pages/TechnicalDocs";
 
-type Route = "builder" | "simulation" | "troubleshooting";
+type Route = "builder" | "simulation" | "troubleshooting" | "techdocs";
 
 /* Economic weights handed from the simulation to the Index Builder. */
 export interface DerivedGoal {
@@ -69,7 +70,9 @@ export function App() {
               ? "Index Builder"
               : route === "simulation"
                 ? "Herd Simulation"
-                : "Troubleshooting"}
+                : route === "techdocs"
+                  ? "Technical Documentation"
+                  : "Troubleshooting"}
           </span>
           <span className="topbar-spacer" />
           <a
@@ -91,6 +94,16 @@ export function App() {
             }}
           >
             Herd Simulation
+          </a>
+          <a
+            href="#"
+            className="topbar-link"
+            onClick={(e) => {
+              e.preventDefault();
+              setRoute("techdocs");
+            }}
+          >
+            Technical Docs
           </a>
           <a
             href="#"
@@ -126,6 +139,7 @@ export function App() {
         {route === "simulation" && (
           <SimulationWizard onUseInIndex={handleUseInIndex} />
         )}
+        {route === "techdocs" && <TechnicalDocs />}
         {route === "troubleshooting" && <Troubleshooting />}
       </div>
     </HelpProvider>
