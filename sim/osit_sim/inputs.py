@@ -248,6 +248,13 @@ class EconomicScenario:
         elevation and rising death loss and forced culling above roughly
         5,000 ft. At low elevation PAP's marginal economic value is near
         zero; in a high-mountain environment it can dominate the goal.
+    replacement_development_cost:
+        Cost to rear an own heifer from weaning to first calving.
+    purchased_replacement_cost:
+        Cost to buy a bred replacement female on the open market.
+    value_of_lost_animal:
+        Economic loss when a productive cow dies (e.g. to
+        high-altitude disease) rather than being culled for salvage.
     """
 
     name: str
@@ -263,6 +270,15 @@ class EconomicScenario:
     fixed_cost_per_cow: float = 180.0
     discount_rate: float = 0.06
     elevation_ft: float = 0.0
+    # Replacement-female and death-loss costs. These were previously
+    # fixed model assumptions inside the herd engine; they are exposed
+    # here so a user can set them to their own operation. The defaults
+    # are representative North American figures, not authoritative
+    # published values - a user who knows their own numbers should
+    # override them.
+    replacement_development_cost: float = 900.0
+    purchased_replacement_cost: float = 1800.0
+    value_of_lost_animal: float = 1400.0
 
     @property
     def altitude_stress(self) -> float:

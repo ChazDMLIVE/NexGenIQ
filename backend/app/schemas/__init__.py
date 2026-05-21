@@ -264,6 +264,11 @@ class EconomicScenarioIn(BaseModel):
     # Drives the economic importance of PAP (high-altitude / brisket
     # disease): near-zero effect below ~5,000 ft, rising loss above it.
     elevation_ft: float = Field(default=0.0, ge=0.0, le=14000.0)
+    # Replacement-female and death-loss costs (defaults are
+    # representative figures; a user can set them to their operation).
+    replacement_development_cost: float = Field(default=900.0, ge=0.0)
+    purchased_replacement_cost: float = Field(default=1800.0, ge=0.0)
+    value_of_lost_animal: float = Field(default=1400.0, ge=0.0)
 
 
 class SimulationControlsIn(BaseModel):

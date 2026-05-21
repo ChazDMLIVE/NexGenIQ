@@ -204,10 +204,19 @@ def load_parameter_set(
     # (heritability in (0, 1], genetic_sd > 0), so a bad value raises here
     # with a clear message.
     trait_params: dict[str, TraitParameters] = {}
-    citation = (
+    generic_citation = (
         f"{name} ({version}); see provenance in {file_path.name}."
     )
+    # An optional per-trait source map ("trait_sources") lets a data file
+    # cite each trait individually; a trait without an entry falls back to
+    # the generic, file-level citation.
+    trait_sources = blob.get("trait_sources", {})
     for code, spec in raw_traits.items():
+        per_trait = trait_sources.get(code)
+        citation = (
+            f"{per_trait} [{name}, {version}]"
+            if per_trait else generic_citation
+        )
         try:
             trait_params[code] = TraitParameters(
                 trait_code=code,

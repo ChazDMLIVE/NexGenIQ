@@ -90,6 +90,11 @@ export function SimulationWizard({
   const [carcassBasePrice, setCarcassBasePrice] = useState(300);
   const [backgroundDays, setBackgroundDays] = useState(60);
   const [daysOnFeed, setDaysOnFeed] = useState(160);
+  /* Replacement-female and death-loss costs (model defaults shown;
+     the user can set them to their own operation). */
+  const [replacementDevCost, setReplacementDevCost] = useState(900);
+  const [purchasedReplCost, setPurchasedReplCost] = useState(1800);
+  const [lostAnimalCost, setLostAnimalCost] = useState(1400);
 
   /* Whether the chosen endpoint involves a feedlot / carcass phase. */
   const isTerminalEndpoint = endpoint !== "weaning";
@@ -155,6 +160,9 @@ export function SimulationWizard({
               : 0,
           discount_rate: 0.06,
           elevation_ft: elevationFt,
+          replacement_development_cost: replacementDevCost,
+          purchased_replacement_cost: purchasedReplCost,
+          value_of_lost_animal: lostAnimalCost,
         },
         controls: {
           burn_in_years: 6,
@@ -408,6 +416,59 @@ export function SimulationWizard({
                     value={elevationFt}
                     onChange={(e) =>
                       setElevationFt(Number(e.target.value))
+                    }
+                  />
+                </Field>
+              </Card>
+
+              <Card title="Replacement and herd costs">
+                <p className="field-hint" style={{ marginBottom: 12 }}>
+                  These costs determine what fertility and longevity are
+                  worth. The defaults are representative figures &mdash;
+                  set them to your own operation for a result specific to
+                  you.
+                </p>
+                <Field
+                  label="Cost to develop a replacement heifer ($)"
+                  hint="What it costs to rear one of your own heifers from
+                        weaning to her first calving."
+                >
+                  <input
+                    type="number"
+                    step="25"
+                    value={replacementDevCost}
+                    onChange={(e) =>
+                      setReplacementDevCost(Number(e.target.value))
+                    }
+                  />
+                </Field>
+                <Field
+                  label="Cost to buy a bred replacement female ($)"
+                  hint="The market price of a bred replacement female,
+                        used when your own heifers do not fill every
+                        opening."
+                >
+                  <input
+                    type="number"
+                    step="25"
+                    value={purchasedReplCost}
+                    onChange={(e) =>
+                      setPurchasedReplCost(Number(e.target.value))
+                    }
+                  />
+                </Field>
+                <Field
+                  label="Loss when a productive cow dies ($)"
+                  hint="The economic loss when a cow dies (for example to
+                        high-altitude disease) rather than being culled
+                        for salvage value."
+                >
+                  <input
+                    type="number"
+                    step="25"
+                    value={lostAnimalCost}
+                    onChange={(e) =>
+                      setLostAnimalCost(Number(e.target.value))
                     }
                   />
                 </Field>

@@ -31,14 +31,19 @@ from .inputs import (
 _MAX_COW_AGE = 11
 _FIRST_CALVING_AGE = 2
 
-# Replacement-female economics. Developing a heifer from weaning to first
-# calving (~2 years of feed, health and care) is a real cost; so is buying
-# a bred replacement on the open market. These are what make stayability
-# (fewer replacements needed) economically valuable.
-_REPLACEMENT_DEVELOPMENT_COST = 900.0   # rear an own heifer to first calving
-_PURCHASED_REPLACEMENT_COST = 1800.0    # buy a bred replacement female
+# Replacement-female economics are now USER INPUTS, not fixed constants:
+# EconomicScenario.replacement_development_cost, .purchased_replacement_cost
+# and .value_of_lost_animal carry these figures, with documented default
+# values, so the user can set them to their own operation. They are what
+# make stayability (fewer replacements needed) economically valuable.
 
-# --- Trait-response constants for the herd dynamics ----------------------
+# --- Trait-response MODEL COEFFICIENTS for the herd dynamics --------------
+# The constants below are MODEL ASSUMPTIONS, not user inputs and not
+# empirically sourced single values: they are the response slopes and
+# thresholds that translate a genetic difference into a biological
+# outcome. They are documented here and held fixed so the model behaves
+# consistently; a user changes the herd's behaviour through the scenario
+# inputs (prices, costs, rates, elevation), not through these slopes.
 # Birth weight: a calf heavier at birth is more likely to need assistance
 # and to be lost to dystocia. The base BW mean is 85 lb; calving loss
 # rises by this fraction per pound of BW above the mean.
@@ -61,7 +66,8 @@ _PAP_RISK_THRESHOLD = 49.0       # mmHg above which animals are high-risk
 _PAP_DEATH_AT_THRESHOLD = 0.04   # annual death prob at threshold, full stress
 _PAP_DEATH_PER_MMHG = 0.012      # added death prob per mmHg above threshold
 _PAP_CULL_PER_MMHG = 0.010       # added forced-cull prob per mmHg, full stress
-_VALUE_OF_LOST_ANIMAL = 1400.0   # economic loss when a productive cow dies
+# (the dollar loss of a dead cow is the user input
+#  EconomicScenario.value_of_lost_animal, not a constant here)
 
 
 @dataclass
@@ -408,7 +414,7 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
             if rng.random() < min(0.95, death_p):
                 # The cow dies; no cull-cow salvage value, and the herd
                 # bears the loss of a productive animal.
-                cull_revenue -= _VALUE_OF_LOST_ANIMAL
+                cull_revenue -= economics.value_of_lost_animal
                 continue
             pap_cull = stress * _PAP_CULL_PER_MMHG * excess
         else:
@@ -440,12 +446,12 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
         for h in surplus:
             revenue += getattr(h, "sale_value", 0.0)
         # Retained heifers cost their development to first calving.
-        cost += len(kept) * _REPLACEMENT_DEVELOPMENT_COST
+        cost += len(kept) * economics.replacement_development_cost
         next_herd = survivors + kept
         # If the calf crop did not produce enough heifers, buy the rest.
         shortfall = system.herd_size - len(next_herd)
         if shortfall > 0:
-            cost += shortfall * _PURCHASED_REPLACEMENT_COST
+            cost += shortfall * economics.purchased_replacement_cost
             for _ in range(shortfall):
                 comp = _sample_composition(
                     system.cow_breed_composition, rng
@@ -462,7 +468,7 @@ def _simulate_year(herd, system, economics, genetics, rng, shift):
         # Terminal herd: no heifers retained; top up by purchase.
         shortfall = system.herd_size - len(next_herd)
         if shortfall > 0:
-            cost += shortfall * _PURCHASED_REPLACEMENT_COST
+            cost += shortfall * economics.purchased_replacement_cost
             for _ in range(shortfall):
                 comp = _sample_composition(
                     system.cow_breed_composition, rng

@@ -198,6 +198,12 @@ export interface EconomicScenarioIn {
   discount_rate: number;
   /** Ranch elevation, ft above sea level. Drives PAP's economic weight. */
   elevation_ft?: number;
+  /** Cost to rear an own heifer to first calving. */
+  replacement_development_cost?: number;
+  /** Cost to buy a bred replacement female. */
+  purchased_replacement_cost?: number;
+  /** Economic loss when a productive cow dies. */
+  value_of_lost_animal?: number;
 }
 
 export interface SimulationControlsIn {

@@ -89,6 +89,9 @@ def economic_scenario_from_schema(
         fixed_cost_per_cow=s.fixed_cost_per_cow,
         discount_rate=s.discount_rate,
         elevation_ft=s.elevation_ft,
+        replacement_development_cost=s.replacement_development_cost,
+        purchased_replacement_cost=s.purchased_replacement_cost,
+        value_of_lost_animal=s.value_of_lost_animal,
     )
 
 
