@@ -267,3 +267,30 @@ class RunLedger(Base, TimestampMixin):
     created_by: Mapped[str | None] = mapped_column(
         ForeignKey("users.id"), nullable=True
     )
+
+
+class SavedItem(Base, TimestampMixin):
+    """A piece of work a user has explicitly chosen to save.
+
+    One table covers all three saved kinds - a completed index ranking,
+    a completed herd-simulation result, and a standalone breeding goal -
+    distinguished by ``kind``. The full inputs and result are kept in the
+    ``payload`` JSON blob so a saved item can be re-opened in its tool
+    without re-running any engine. Nothing is saved automatically; a row
+    here exists only because the user pressed Save.
+    """
+
+    __tablename__ = "saved_items"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True,
+                                    default=_uuid)
+    owner_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    # One of: "index_result", "simulation_result", "breeding_goal".
+    kind: Mapped[str] = mapped_column(String(30), nullable=False)
+    # The user-given name for this saved item.
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    # The complete inputs + result, in the JSON shape the relevant tool
+    # consumes when the item is re-opened.
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)

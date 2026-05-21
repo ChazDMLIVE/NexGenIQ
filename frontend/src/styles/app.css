@@ -1695,3 +1695,19 @@ input[type="range"] {
     margin: 1.5cm;
   }
 }
+
+/* ----------------------------------------------------------------------
+ * My Saved Work page.
+ * -------------------------------------------------------------------- */
+.saved-row-actions {
+  display: flex;
+  gap: 14px;
+}
+
+.saved-delete {
+  color: #B5683E;
+}
+
+.saved-delete:hover {
+  color: #8a3f1d;
+}

@@ -110,6 +110,27 @@ export function GoalStep({
     }
   }
 
+  /* Save the current breeding goal as a reusable starting point. */
+  async function saveGoal() {
+    if (components.length === 0) return;
+    const name = window.prompt("Name this saved goal:", goalName);
+    if (!name) return;
+    try {
+      await api.saveItem("breeding_goal", name, {
+        goalName,
+        basis,
+        components,
+      });
+      window.alert("Goal saved. Re-open it from My Saved Work.");
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Could not save this goal.",
+      );
+    }
+  }
+
   /* Traits not yet in the goal, for the "add trait" picker. */
   const available = traits.filter(
     (t) => !components.some((c) => c.trait_code === t.code),
@@ -310,6 +331,16 @@ export function GoalStep({
             </Field>
           </div>
         )}
+
+        <div style={{ marginTop: 16 }}>
+          <button
+            type="button"
+            className="goal-estimate-link"
+            onClick={saveGoal}
+          >
+            Save this goal for later
+          </button>
+        </div>
       </Card>
 
       {estimatorTrait && (

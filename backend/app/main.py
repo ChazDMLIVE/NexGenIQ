@@ -23,6 +23,7 @@ from app.api import (
     import_routes,
     index_routes,
     library_routes,
+    saved_routes,
     sim_routes,
 )
 from app.core.config import get_settings
@@ -86,6 +87,7 @@ app.include_router(library_routes.router, prefix=_prefix)
 app.include_router(import_routes.router, prefix=_prefix)
 app.include_router(index_routes.router, prefix=_prefix)
 app.include_router(sim_routes.router, prefix=_prefix)
+app.include_router(saved_routes.router, prefix=_prefix)
 
 
 @app.get("/health", tags=["meta"])

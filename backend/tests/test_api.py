@@ -344,3 +344,141 @@ def test_simulation_runs_when_slot_free(client, auth_headers):
     )
     assert r.status_code == 200
     assert len(r.json()["mevs"]) == 2
+
+
+# --- saved work -----------------------------------------------------------
+
+def test_saved_work_save_list_get_delete(client, auth_headers):
+    """A user can save an item, see it listed, fetch it in full, and
+    delete it."""
+    # Nothing saved yet.
+    r = client.get("/api/v1/saved", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json() == []
+
+    # Save a breeding goal.
+    payload = {
+        "kind": "breeding_goal",
+        "name": "My maternal goal",
+        "payload": {
+            "goalName": "My maternal goal",
+            "basis": "per_cow_exposed",
+            "components": [
+                {"trait_code": "WW", "economic_weight": 1.8},
+            ],
+        },
+    }
+    r = client.post(
+        "/api/v1/saved", json=payload, headers=auth_headers
+    )
+    assert r.status_code == 201
+    item_id = r.json()["id"]
+
+    # It now appears in the list.
+    listed = client.get("/api/v1/saved", headers=auth_headers).json()
+    assert len(listed) == 1
+    assert listed[0]["name"] == "My maternal goal"
+    assert listed[0]["kind"] == "breeding_goal"
+
+    # Fetched in full, the payload comes back.
+    full = client.get(
+        f"/api/v1/saved/{item_id}", headers=auth_headers
+    ).json()
+    assert full["payload"]["components"][0]["trait_code"] == "WW"
+
+    # Delete it; the list is empty again.
+    d = client.delete(
+        f"/api/v1/saved/{item_id}", headers=auth_headers
+    )
+    assert d.status_code == 204
+    assert client.get("/api/v1/saved", headers=auth_headers).json() == []
+
+
+def test_saved_work_requires_auth(client):
+    """The saved-work endpoints reject an unauthenticated request."""
+    assert client.get("/api/v1/saved").status_code == 401
+
+
+def test_saved_work_unknown_kind_rejected(client, auth_headers):
+    """Saving an item with an unknown kind is rejected."""
+    r = client.post(
+        "/api/v1/saved",
+        json={"kind": "not_a_kind", "name": "x", "payload": {}},
+        headers=auth_headers,
+    )
+    assert r.status_code == 422
+
+
+def test_saved_work_is_per_user(client, auth_headers):
+    """A user cannot see or open another user's saved items."""
+    # User A saves an item.
+    r = client.post(
+        "/api/v1/saved",
+        json={
+            "kind": "breeding_goal",
+            "name": "A's goal",
+            "payload": {},
+        },
+        headers=auth_headers,
+    )
+    a_item_id = r.json()["id"]
+
+    # A different user (fresh auth_headers) sees an empty list...
+    other_headers = _fresh_auth(client)
+    assert client.get("/api/v1/saved", headers=other_headers).json() == []
+
+    # ...and cannot fetch or delete A's item (404, not 403, so the
+    # item's existence is not revealed).
+    assert (
+        client.get(
+            f"/api/v1/saved/{a_item_id}", headers=other_headers
+        ).status_code
+        == 404
+    )
+    assert (
+        client.delete(
+            f"/api/v1/saved/{a_item_id}", headers=other_headers
+        ).status_code
+        == 404
+    )
+
+
+def test_saved_work_per_user_cap(client, auth_headers):
+    """Saving beyond the per-user limit returns a clear 409 response."""
+    # The cap is 50; save 50 items, then the 51st must be rejected.
+    for i in range(50):
+        r = client.post(
+            "/api/v1/saved",
+            json={
+                "kind": "breeding_goal",
+                "name": f"goal {i}",
+                "payload": {},
+            },
+            headers=auth_headers,
+        )
+        assert r.status_code == 201
+    over = client.post(
+        "/api/v1/saved",
+        json={"kind": "breeding_goal", "name": "one too many",
+              "payload": {}},
+        headers=auth_headers,
+    )
+    assert over.status_code == 409
+    assert "limit" in over.json()["detail"].lower()
+
+
+def _fresh_auth(client):
+    """Register a second, independent user and return their headers."""
+    import uuid
+
+    email = f"other-{uuid.uuid4().hex[:8]}@example.com"
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": email, "password": "testpass123",
+              "full_name": "Other User", "role": "researcher"},
+    )
+    token = client.post(
+        "/api/v1/auth/token",
+        data={"username": email, "password": "testpass123"},
+    ).json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

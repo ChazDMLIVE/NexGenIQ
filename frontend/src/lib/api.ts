@@ -249,6 +249,23 @@ export interface SimulationResponse {
   interpretation: Interpretation;
 }
 
+/* ---- saved work ---- */
+export type SavedKind =
+  | "index_result"
+  | "simulation_result"
+  | "breeding_goal";
+
+export interface SavedItemSummary {
+  id: string;
+  kind: SavedKind;
+  name: string;
+  created_at: string;
+}
+
+export interface SavedItem extends SavedItemSummary {
+  payload: Record<string, unknown>;
+}
+
 export interface SensitivityResponse {
   baseline_top: string;
   summary: string;
@@ -383,6 +400,33 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ trait_code: traitCode, answers }),
     });
+  },
+
+  /** List the current user's saved items, newest first. */
+  async listSaved(): Promise<SavedItemSummary[]> {
+    return request<SavedItemSummary[]>("/saved");
+  },
+
+  /** Save a piece of work. Throws if the per-user limit is reached. */
+  async saveItem(
+    kind: SavedKind,
+    name: string,
+    payload: Record<string, unknown>,
+  ): Promise<SavedItem> {
+    return request<SavedItem>("/saved", {
+      method: "POST",
+      body: JSON.stringify({ kind, name, payload }),
+    });
+  },
+
+  /** Fetch one saved item in full, for re-opening. */
+  async getSaved(id: string): Promise<SavedItem> {
+    return request<SavedItem>(`/saved/${id}`);
+  },
+
+  /** Delete one of the current user's saved items. */
+  async deleteSaved(id: string): Promise<void> {
+    await request<void>(`/saved/${id}`, { method: "DELETE" });
   },
 
   /** Inspect an uploaded CSV and get a proposed column mapping. */

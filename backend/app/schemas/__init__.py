@@ -381,3 +381,31 @@ class EstimateResultOut(BaseModel):
     formula_text: str
     basis_note: str
     inputs_used: dict[str, float]
+
+
+# ---------------------------------------------------------------------------
+# Saved work - items a user has explicitly chosen to keep
+# ---------------------------------------------------------------------------
+class SavedItemCreate(BaseModel):
+    """A request to save a piece of work."""
+
+    # One of: "index_result", "simulation_result", "breeding_goal".
+    kind: str
+    name: str = Field(min_length=1, max_length=200)
+    # The full inputs + result, in the shape the tool re-opens it with.
+    payload: dict = Field(default_factory=dict)
+
+
+class SavedItemSummary(BaseModel):
+    """A saved item without its payload - for the list view."""
+
+    id: str
+    kind: str
+    name: str
+    created_at: str
+
+
+class SavedItemOut(SavedItemSummary):
+    """A full saved item, including the payload, for re-opening."""
+
+    payload: dict

@@ -330,6 +330,32 @@ export function SimulationWizard({
     );
   }
 
+  /* Save this simulation result so the user can re-open it later. The
+     payload keeps the derived economic values, the interpretation, and
+     a short label of the operation - enough to re-read the result. */
+  async function saveResult() {
+    if (!result) return;
+    const name = window.prompt(
+      "Name this saved simulation result:",
+      systemName,
+    );
+    if (!name) return;
+    try {
+      await api.saveItem("simulation_result", name, {
+        systemName,
+        endpoint,
+        result,
+      });
+      window.alert("Saved. You can re-open it from My Saved Work.");
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Could not save this result.",
+      );
+    }
+  }
+
   function useDerivedValues() {
     if (!result) return;
     const components: GoalComponent[] = result.mevs.map((m) => ({
@@ -1068,6 +1094,12 @@ export function SimulationWizard({
                   Adjust and re-run
                 </Button>
                 <div className="export-actions">
+                  <Button
+                    variant="secondary"
+                    onClick={saveResult}
+                  >
+                    Save result
+                  </Button>
                   <Button
                     variant="secondary"
                     onClick={exportMevCsv}

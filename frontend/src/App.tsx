@@ -22,10 +22,12 @@ import { SimulationWizard } from "./pages/SimulationWizard";
 import { Troubleshooting } from "./pages/Troubleshooting";
 import { TechnicalDocs } from "./pages/TechnicalDocs";
 import { HowToUse } from "./pages/HowToUse";
+import { SavedWork } from "./pages/SavedWork";
 
 type Route =
   | "builder"
   | "simulation"
+  | "saved"
   | "howto"
   | "troubleshooting"
   | "techdocs";
@@ -76,11 +78,13 @@ export function App() {
               ? "Index Builder"
               : route === "simulation"
                 ? "Herd Simulation"
-                : route === "howto"
-                  ? "How to Use"
-                  : route === "techdocs"
-                    ? "Technical Documentation"
-                    : "Troubleshooting"}
+                : route === "saved"
+                  ? "My Saved Work"
+                  : route === "howto"
+                    ? "How to Use"
+                    : route === "techdocs"
+                      ? "Technical Documentation"
+                      : "Troubleshooting"}
           </span>
           <span className="topbar-spacer" />
           <a
@@ -102,6 +106,16 @@ export function App() {
             }}
           >
             Herd Simulation
+          </a>
+          <a
+            href="#"
+            className="topbar-link"
+            onClick={(e) => {
+              e.preventDefault();
+              setRoute("saved");
+            }}
+          >
+            My Saved Work
           </a>
           <a
             href="#"
@@ -156,6 +170,9 @@ export function App() {
         )}
         {route === "simulation" && (
           <SimulationWizard onUseInIndex={handleUseInIndex} />
+        )}
+        {route === "saved" && (
+          <SavedWork onUseGoal={handleUseInIndex} />
         )}
         {route === "howto" && <HowToUse />}
         {route === "techdocs" && <TechnicalDocs />}

@@ -157,6 +157,32 @@ export function ResultsWorkspace({
     );
   }
 
+  /* Save this index result so the user can re-open the ranking later.
+     The payload carries the goal, animals and mode - enough to rebuild
+     the result without re-running the engine. */
+  async function saveResult() {
+    const name = window.prompt(
+      "Name this saved index result:",
+      goal.name,
+    );
+    if (!name) return;
+    try {
+      await api.saveItem("index_result", name, {
+        goal,
+        animals,
+        mode,
+        result,
+      });
+      window.alert("Saved. You can re-open it from My Saved Work.");
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Could not save this result.",
+      );
+    }
+  }
+
   return (
     <>
       {/* Print-only report header - hidden on screen, shown in the PDF. */}
@@ -367,6 +393,9 @@ export function ResultsWorkspace({
           Adjust and rebuild
         </Button>
         <div className="export-actions">
+          <Button variant="secondary" onClick={saveResult}>
+            Save result
+          </Button>
           <Button variant="secondary" onClick={exportRankingCsv}>
             Export CSV
           </Button>
