@@ -5,11 +5,13 @@ These wrap the osit-sim engine: run a whole-herd simulation and derive the
 marginal economic values of the traits, which a user can then carry
 straight into the Index Builder as a breeding goal.
 
-A herd simulation is more expensive than an analytical index build, but for
-the MVP it still completes within a normal request (a few seconds at the
-default replicate count). The asynchronous job pattern specified in Phase 3
-for very large runs is a later hardening step; the endpoint here is
-synchronous and documents that.
+A herd simulation is CPU-bound and runs for tens of seconds. To keep the
+service responsive when several users run simulations at once, the number
+of simulations running concurrently is capped (a semaphore). A request
+that arrives while the cap is full gets an immediate, clear "server busy"
+response (HTTP 503) rather than queueing behind long runs and dragging
+every run down. The asynchronous job pattern specified in Phase 3 for very
+large runs is a later hardening step; the endpoint here is synchronous.
 
 Every derivation writes a reproducibility-ledger row recording the engine
 version and the run controls (Phase 2 gap G10).
@@ -17,7 +19,9 @@ version and the run controls (Phase 2 gap G10).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+import threading
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -29,6 +33,15 @@ from app.services import sim_service
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 _settings = get_settings()
+
+# Concurrency cap. A bounded semaphore limits how many herd simulations
+# run at once; its size comes from settings (roughly the number of CPU
+# cores available to the backend). The endpoint acquires a slot WITHOUT
+# blocking - if none is free, it returns a "server busy" response at once
+# rather than letting the request pile up behind long-running simulations.
+_sim_semaphore = threading.BoundedSemaphore(
+    max(1, _settings.max_concurrent_simulations)
+)
 
 
 @router.post("/derive-mevs", response_model=SimulationResponse)
@@ -44,9 +57,28 @@ def derive_mevs(
     Monte-Carlo standard error, and the baseline herd profit.
 
     The returned MEV list is the economic-weight set for an Index Builder
-    breeding goal — the user can carry it straight into the index workflow.
+    breeding goal - the user can carry it straight into the index workflow.
+
+    If the server is already running its maximum number of concurrent
+    simulations, this returns HTTP 503 with a plain-language message so
+    the caller can simply retry in a moment.
     """
-    response = sim_service.run_mev_derivation(request)
+    # Try to claim a simulation slot without waiting. A full cap means the
+    # server is busy; tell the user clearly instead of queueing forever.
+    if not _sim_semaphore.acquire(blocking=False):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "The server is busy running other simulations right now. "
+                "Please wait a moment and run it again - your inputs are "
+                "still here."
+            ),
+        )
+    try:
+        response = sim_service.run_mev_derivation(request)
+    finally:
+        # Always free the slot, even if the simulation raised.
+        _sim_semaphore.release()
 
     # Reproducibility ledger: record what produced this MEV set.
     ledger = RunLedger(

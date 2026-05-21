@@ -54,6 +54,13 @@ class Settings(BaseSettings):
     # --- engine -----------------------------------------------------------
     engine_version: str = "osit-index 0.2.0"
 
+    # --- simulation concurrency -------------------------------------------
+    # A herd simulation is CPU-bound and runs for tens of seconds. This
+    # caps how many run at once so a burst of users does not slow every
+    # run down; requests over the cap get a clear "server busy" response.
+    # Set roughly to the number of CPU cores available to the backend.
+    max_concurrent_simulations: int = 2
+
     @property
     def cors_origin_list(self) -> list[str]:
         """The CORS origins as a list, parsed from the comma-separated

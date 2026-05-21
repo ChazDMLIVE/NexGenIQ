@@ -170,6 +170,10 @@ export function SimulationWizard({
   const [result, setResult] = useState<SimulationResponse | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
+  /* True when the last failure was the server being at its
+     simulation-concurrency cap - a calm, retryable state, not an
+     error in the user's inputs. */
+  const [serverBusy, setServerBusy] = useState(false);
 
   /* --- derived breed information ------------------------------------- */
   /* The calf crop's breed composition is the average of the dam side and
@@ -218,6 +222,7 @@ export function SimulationWizard({
     }
     setRunning(true);
     setError("");
+    setServerBusy(false);
     try {
       const res = await api.deriveMevs({
         production_system: {
@@ -280,9 +285,18 @@ export function SimulationWizard({
       setResult(res);
       setStep(3);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "The simulation failed.",
-      );
+      const message =
+        err instanceof Error ? err.message : "The simulation failed.";
+      // The backend returns a "server busy" message when its
+      // simulation-concurrency cap is full - treat that as a calm,
+      // retryable notice rather than an error.
+      if (message.toLowerCase().includes("server is busy")) {
+        setServerBusy(true);
+        setError("");
+      } else {
+        setServerBusy(false);
+        setError(message);
+      }
     } finally {
       setRunning(false);
     }
@@ -821,6 +835,21 @@ export function SimulationWizard({
                     : "Run the simulation →"}
                 </Button>
               </div>
+              {serverBusy && (
+                <div
+                  className="sim-busy-notice"
+                  style={{ marginTop: 12 }}
+                >
+                  <p className="sim-busy-title">
+                    The server is busy right now
+                  </p>
+                  <p className="sim-busy-detail">
+                    Other simulations are running. Your inputs are still
+                    here &mdash; wait a moment and press &ldquo;Run the
+                    simulation&rdquo; again.
+                  </p>
+                </div>
+              )}
               {error && (
                 <p className="auth-error" style={{ marginTop: 12 }}>
                   {error}

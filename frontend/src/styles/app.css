@@ -1317,3 +1317,27 @@ input[type="range"] {
   border-radius: 4px;
   padding: 8px 10px;
 }
+
+/* ----------------------------------------------------------------------
+ * Server-busy notice (simulation concurrency cap reached).
+ * -------------------------------------------------------------------- */
+.sim-busy-notice {
+  background: #FFF8E8;
+  border: 1px solid #B8860B;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.sim-busy-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #7A4F0B;
+  margin: 0 0 4px;
+}
+
+.sim-busy-detail {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--graphite-700);
+  margin: 0;
+}

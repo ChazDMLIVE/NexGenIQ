@@ -274,3 +274,73 @@ def test_derived_mevs_feed_an_index(client, auth_headers):
     assert r.status_code == 200
     assert r.json()["ok"] is True
     assert len(r.json()["scores"]) == 2
+
+
+# --- simulation concurrency cap -------------------------------------------
+
+def test_simulation_busy_returns_503(client, auth_headers):
+    """When every simulation slot is taken, /derive-mevs returns a clear
+    503 'server busy' response rather than queueing the request."""
+    from app.api import sim_routes
+
+    # Exhaust the concurrency semaphore so no slot is free.
+    held = 0
+    while sim_routes._sim_semaphore.acquire(blocking=False):
+        held += 1
+    try:
+        request = {
+            "production_system": {
+                "name": "Busy test",
+                "herd_size": 60,
+                "cow_breed_composition": [
+                    {"fraction": 1.0, "breeds": {"Angus": 1.0}}
+                ],
+                "bull_breed_composition": [
+                    {"fraction": 1.0, "breeds": {"Angus": 1.0}}
+                ],
+            },
+            "economic_scenario": {"name": "e", "sale_endpoint": "weaning"},
+            "controls": {"replicates": 2},
+            "traits": ["WW"],
+        }
+        r = client.post(
+            "/api/v1/simulation/derive-mevs",
+            json=request,
+            headers=auth_headers,
+        )
+        assert r.status_code == 503
+        assert "busy" in r.json()["detail"].lower()
+    finally:
+        # Release every slot we took so other tests are unaffected.
+        for _ in range(held):
+            sim_routes._sim_semaphore.release()
+
+
+def test_simulation_runs_when_slot_free(client, auth_headers):
+    """With a slot free, /derive-mevs runs normally and returns 200."""
+    request = {
+        "production_system": {
+            "name": "Free-slot test",
+            "herd_size": 60,
+            "cow_breed_composition": [
+                {"fraction": 1.0, "breeds": {"Angus": 1.0}}
+            ],
+            "bull_breed_composition": [
+                {"fraction": 1.0, "breeds": {"Angus": 1.0}}
+            ],
+        },
+        "economic_scenario": {"name": "e", "sale_endpoint": "weaning"},
+        "controls": {
+            "burn_in_years": 2,
+            "planning_horizon_years": 3,
+            "replicates": 2,
+        },
+        "traits": ["WW", "CED"],
+    }
+    r = client.post(
+        "/api/v1/simulation/derive-mevs",
+        json=request,
+        headers=auth_headers,
+    )
+    assert r.status_code == 200
+    assert len(r.json()["mevs"]) == 2
