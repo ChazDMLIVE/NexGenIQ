@@ -23,6 +23,7 @@ import { Troubleshooting } from "./pages/Troubleshooting";
 import { TechnicalDocs } from "./pages/TechnicalDocs";
 import { HowToUse } from "./pages/HowToUse";
 import { SavedWork } from "./pages/SavedWork";
+import { Logo } from "./components/Logo";
 
 type Route =
   | "builder"
@@ -37,6 +38,16 @@ export interface DerivedGoal {
   name: string;
   components: GoalComponent[];
 }
+
+/* The top-bar navigation items, in display order. */
+const NAV_ITEMS: { route: Route; label: string }[] = [
+  { route: "builder", label: "Index Builder" },
+  { route: "simulation", label: "Herd Simulation" },
+  { route: "saved", label: "My Saved Work" },
+  { route: "howto", label: "How to Use" },
+  { route: "techdocs", label: "Technical Docs" },
+  { route: "troubleshooting", label: "Help" },
+];
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -72,94 +83,44 @@ export function App() {
     <HelpProvider>
       <div className="app-shell">
         <header className="topbar">
-          <span className="topbar-brand">NexGenIQ</span>
-          <span className="topbar-sub">
-            {route === "builder"
-              ? "Index Builder"
-              : route === "simulation"
-                ? "Herd Simulation"
-                : route === "saved"
-                  ? "My Saved Work"
-                  : route === "howto"
-                    ? "How to Use"
-                    : route === "techdocs"
-                      ? "Technical Documentation"
-                      : "Troubleshooting"}
-          </span>
-          <span className="topbar-spacer" />
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setRoute("builder");
-            }}
+          <button
+            type="button"
+            className="topbar-logo-btn"
+            onClick={() => setRoute("builder")}
+            aria-label="NexGenIQ home"
           >
-            Index Builder
-          </a>
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setRoute("simulation");
-            }}
-          >
-            Herd Simulation
-          </a>
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setRoute("saved");
-            }}
-          >
-            My Saved Work
-          </a>
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setRoute("howto");
-            }}
-          >
-            How to Use
-          </a>
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setRoute("techdocs");
-            }}
-          >
-            Technical Docs
-          </a>
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setRoute("troubleshooting");
-            }}
-          >
-            Help
-          </a>
-          <span className="topbar-user">
-            {user.full_name || user.email}
-          </span>
-          <a
-            href="#"
-            className="topbar-link"
-            onClick={(e) => {
-              e.preventDefault();
-              signOut();
-            }}
-          >
-            Sign out
-          </a>
+            <Logo size={26} />
+          </button>
+
+          <nav className="topbar-nav">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.route}
+                type="button"
+                className={
+                  route === item.route
+                    ? "topbar-link topbar-link-active"
+                    : "topbar-link"
+                }
+                onClick={() => setRoute(item.route)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="topbar-user-group">
+            <span className="topbar-user">
+              {user.full_name || user.email}
+            </span>
+            <button
+              type="button"
+              className="topbar-signout"
+              onClick={signOut}
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
         {route === "builder" && (

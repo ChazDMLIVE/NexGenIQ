@@ -18,30 +18,101 @@
 .topbar {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-6);
+  gap: 18px;
+  padding: 10px 22px;
   background: var(--graphite-900);
   color: var(--surface);
 }
-.topbar-brand {
-  font-size: var(--text-section);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.2px;
+
+/* --- logo --- */
+.topbar-logo-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
-.topbar-sub {
-  font-size: var(--text-caption);
+
+.nx-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nx-logo-word {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #fff;
+}
+
+.nx-logo-iq {
   color: var(--sage-300);
 }
-.topbar-spacer {
+
+/* --- nav links --- */
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   flex: 1;
 }
+
+.topbar-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sage-300);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.topbar-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.topbar-link-active {
+  background: var(--sage-600);
+  color: #fff;
+}
+
+.topbar-link-active:hover {
+  background: var(--sage-600);
+  color: #fff;
+}
+
+/* --- user / sign out --- */
+.topbar-user-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .topbar-user {
-  font-size: var(--text-label);
+  font-size: 13px;
   color: var(--sage-300);
 }
-.topbar-link {
+
+.topbar-signout {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: var(--sage-300);
-  font-size: var(--text-label);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.topbar-signout:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
 }
 
 .main-area {
@@ -1534,15 +1605,18 @@ input[type="range"] {
     flex-shrink: 1;
   }
 
-  /* The top bar wraps its links instead of overflowing off-screen. */
+  /* The top bar wraps so the logo, nav and user group all fit a
+     narrow screen instead of overflowing off-screen. */
   .topbar {
     flex-wrap: wrap;
     gap: 8px 12px;
     padding: 10px 14px;
   }
 
-  .topbar-spacer {
-    display: none;
+  .topbar-nav {
+    flex-wrap: wrap;
+    flex-basis: 100%;
+    order: 3;
   }
 
   /* Headline metric cards: a 2-up grid instead of 4 crushed columns. */
