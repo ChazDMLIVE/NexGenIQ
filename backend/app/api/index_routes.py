@@ -92,6 +92,15 @@ def build(
             "goal": request.goal.name,
             "trait_count": len(request.goal.components),
             "animal_count": len(request.animals),
+            # The EPD source evaluation(s) the animals came from -
+            # provenance, so a recorded run is fully traceable.
+            "epd_evaluations": sorted(
+                {
+                    a.evaluation_id
+                    for a in request.animals
+                    if a.evaluation_id
+                }
+            ),
         },
         result_summary={
             "ok": response.ok,

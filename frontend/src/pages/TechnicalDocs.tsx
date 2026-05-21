@@ -316,8 +316,18 @@ const SECTIONS: DocSection[] = [
           are two distinct traits with their own heritabilities; a user
           selects whichever their genetic evaluation publishes. PAP-L is
           dimensionless, so its economic value is expressed per latent-z
-          unit rather than per mmHg. Both PAP traits are breed-gated:
-          their EPDs are published only by Angus, Red Angus and Simmental.
+          unit rather than per mmHg. Both PAP traits are breed-gated.
+          PAP is an unusually difficult and costly trait to phenotype - it
+          requires veterinary catheterization of the pulmonary artery and
+          is measured almost only on herds at altitude - so very few
+          associations have accumulated enough records to run a genetic
+          evaluation for it. An official PAP EPD is published only by the
+          American Angus Association (AAA) and, through International
+          Genetic Solutions, the American Simmental Association (ASA).
+          Other breeds, including Red Angus, appear in PAP research
+          datasets but have no official breed-association PAP EPD;
+          NexGenIQ therefore offers the PAP traits only for Angus and
+          Simmental.
         </p>
         <p className="docs-refs">
           Markel, C. D., S. L. Lake, S. P. Field, T. N. Holt, T. E. Engle,

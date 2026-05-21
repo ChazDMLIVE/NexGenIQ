@@ -3,6 +3,12 @@
  *
  * Two ways in: upload a CSV (the guided inspect -> confirm-mapping ->
  * parse flow of Phase 3.5 Section 4.3) or add a few animals by hand.
+ *
+ * The user also records the EPD SOURCE EVALUATION - which national or
+ * breed-association genetic evaluation the EPDs came from. EPDs from
+ * different evaluations are on different bases and are not directly
+ * comparable; recording the source makes every ranking traceable and
+ * citable, and flags when animals span more than one evaluation.
  */
 
 import { useState } from "react";
@@ -26,6 +32,36 @@ interface InspectState {
   }[];
 }
 
+/* Common national / breed evaluations, offered as quick picks. The user
+   can also type any label - this is a free-form provenance record, not a
+   fixed enumeration. */
+const COMMON_EVALUATIONS = [
+  "AAA (American Angus Association)",
+  "RAAA (Red Angus Association of America)",
+  "AHA (American Hereford Association)",
+  "ASA (American Simmental Association)",
+  "AICA (American-International Charolais Association)",
+  "AGA (American Gelbvieh Association)",
+  "NALF (North American Limousin Foundation)",
+  "IBBA (International Brangus Breeders Association)",
+  "ASA-Shorthorn (American Shorthorn Association)",
+  "ASBA (American Salers / Salers Breeders)",
+  "ABBA (American Brahman Breeders Association)",
+  "AMAA (American Maine-Anjou Association)",
+  "ACA (American Chianina Association)",
+  "RAAA/AGA/ASA via International Genetic Solutions (IGS)",
+];
+
+/* Stamp one evaluation label onto every animal in a set. */
+function withEvaluation(list: Animal[], evaluation: string): Animal[] {
+  return list.map((a) => ({
+    ...a,
+    /* A per-row evaluation from the CSV is kept; otherwise the
+       set-level label is applied. */
+    evaluation_id: a.evaluation_id || evaluation,
+  }));
+}
+
 export function AnimalsStep({
   traits,
   animals,
@@ -37,6 +73,9 @@ export function AnimalsStep({
   const [problems, setProblems] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  /* The EPD source evaluation - one label for the whole set. */
+  const [evaluation, setEvaluation] = useState("");
 
   /* The set of fields a CSV column can map to. */
   const targetOptions = [
@@ -50,6 +89,17 @@ export function AnimalsStep({
       { value: `${t.code}_acc`, label: `${t.name} — accuracy` },
     ]),
   ];
+
+  /* Re-stamp the current animals whenever the set-level evaluation
+     label changes, so the choice always takes effect. */
+  function updateEvaluation(value: string) {
+    setEvaluation(value);
+    if (animals.length > 0) {
+      onAnimals(
+        animals.map((a) => ({ ...a, evaluation_id: value })),
+      );
+    }
+  }
 
   async function onFile(file: File) {
     setError("");
@@ -83,7 +133,7 @@ export function AnimalsStep({
     setError("");
     try {
       const result = await api.parseCsv(inspect.file, mapping);
-      onAnimals(result.animals);
+      onAnimals(withEvaluation(result.animals, evaluation));
       setProblems(result.problems);
     } catch (err) {
       setError(
@@ -96,6 +146,35 @@ export function AnimalsStep({
 
   return (
     <>
+      {/* EPD source evaluation - applies to the whole set. */}
+      <Card title="Where did these EPDs come from?">
+        <Field
+          label="EPD source evaluation"
+          hint="The national or breed-association genetic evaluation your
+                animals' EPDs were published in. EPDs from different
+                evaluations sit on different bases and are not directly
+                comparable, so recording the source keeps your ranking
+                traceable. Type your own, or pick a common one."
+        >
+          <input
+            type="text"
+            list="evaluation-options"
+            value={evaluation}
+            onChange={(e) => updateEvaluation(e.target.value)}
+            placeholder="e.g. AAA 2025 spring evaluation"
+          />
+          <datalist id="evaluation-options">
+            {COMMON_EVALUATIONS.map((ev) => (
+              <option key={ev} value={ev} />
+            ))}
+          </datalist>
+        </Field>
+        <p className="field-hint">
+          If your file has its own evaluation column, that is kept
+          per-animal; this field fills in any animal that does not.
+        </p>
+      </Card>
+
       <div className="tabs">
         <button
           className={`tab ${tab === "upload" ? "tab-active" : ""}`}
@@ -219,6 +298,7 @@ export function AnimalsStep({
           traits={traits}
           animals={animals}
           onAnimals={onAnimals}
+          evaluation={evaluation}
         />
       )}
     </>
@@ -232,7 +312,8 @@ function ManualEntry({
   traits,
   animals,
   onAnimals,
-}: AnimalsStepProps) {
+  evaluation,
+}: AnimalsStepProps & { evaluation: string }) {
   const [id, setId] = useState("");
   const [breed, setBreed] = useState("Angus");
   const [epdText, setEpdText] = useState("");
@@ -257,7 +338,12 @@ function ManualEntry({
 
     onAnimals([
       ...animals,
-      { animal_id: id.trim(), breed, evaluation_id: "", epds },
+      {
+        animal_id: id.trim(),
+        breed,
+        evaluation_id: evaluation,
+        epds,
+      },
     ]);
     setId("");
     setEpdText("");

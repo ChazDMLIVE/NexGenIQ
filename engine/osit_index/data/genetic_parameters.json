@@ -16,91 +16,323 @@
     ],
     "retrieved": "2026-05",
     "caveat": "Heritabilities are sourced from the cited studies; genetic standard deviations are representative phenotypic-scale figures, and genetic correlations are drawn from the cited literature where available and set to literature-typical values otherwise. Every value is overridable, and runs record which parameter-set version was used.",
-    "pap_note": "PAP heritability (0.26) is from Crawford et al. (2016), the John E. Rouse CSU Beef Improvement Center Angus herd. PAP_L (latent-z, 0.318) is the boundary-aware sire-model estimate of Markel et al. The latent-z genetic SD is on the logit-transformed scale (practical PAP range 30-150 mmHg). PAP EPDs are published only by AAA, ARA (Red Angus) and ASA."
+    "pap_note": "PAP heritability (0.26) is from Crawford et al. (2016), the John E. Rouse CSU Beef Improvement Center Angus herd. PAP_L (latent-z, 0.318) is the boundary-aware sire-model estimate of Markel et al. The latent-z genetic SD is on the logit-transformed scale (practical PAP range 30-150 mmHg). An official PAP EPD is published only by the American Angus Association (AAA) and the American Simmental Association (ASA, through International Genetic Solutions). Other breeds, including Red Angus, appear in PAP research datasets but have no official association PAP EPD."
   },
   "trait_sources": {
-    "BW":   "Crawford et al. (2016): direct h2 = 0.42 in CSU-BIC Angus.",
-    "WW":   "Crawford et al. (2016): direct h2 = 0.29 (Angus).",
-    "YW":   "Crawford et al. (2016): direct h2 = 0.45 (Angus).",
-    "PWG":  "Crawford et al. (2016): post-weaning gain h2 = 0.14; Koots et al. (1994) weighted mean 0.22-0.31. Value 0.20 is a mid-range figure across these.",
+    "BW": "Crawford et al. (2016): direct h2 = 0.42 in CSU-BIC Angus.",
+    "WW": "Crawford et al. (2016): direct h2 = 0.29 (Angus).",
+    "YW": "Crawford et al. (2016): direct h2 = 0.45 (Angus).",
+    "PWG": "Crawford et al. (2016): post-weaning gain h2 = 0.14; Koots et al. (1994) weighted mean 0.22-0.31. Value 0.20 is a mid-range figure across these.",
     "MILK": "Crawford et al. (2016): maternal WW h2 = 0.19, used as the milk (maternal) component.",
-    "MW":   "Koots et al. (1994): mature/market weight h2 weighted mean 0.41.",
+    "MW": "Koots et al. (1994): mature/market weight h2 weighted mean 0.41.",
     "STAY": "Charolais-Charbray and Nellore reproduction studies: stayability h2 ranges 0.10-0.26; value 0.18 is mid-range.",
-    "CED":  "Calving-ease direct h2 = 0.27 (primiparous Nellore; consistent with composite-breed estimates).",
-    "CEM":  "Calving-ease maternal h2 = 0.19 (same source).",
-    "HP":   "Heifer-pregnancy h2 ranges 0.11 (Charolais-Charbray) to 0.42-0.53 (Nellore). Value 0.13 is the lower, temperate-breed figure.",
-    "SC":   "Boligon et al. (2010): scrotal-circumference h2 ~0.42 (Nellore); consistent with temperate-breed estimates 0.40-0.49.",
-    "CW":   "Carcass-weight h2 = 0.22-0.28 (Angus genomic; Hanwoo). Value 0.28.",
+    "CED": "Calving-ease direct h2 = 0.27 (primiparous Nellore; consistent with composite-breed estimates).",
+    "CEM": "Calving-ease maternal h2 = 0.19 (same source).",
+    "HP": "Heifer-pregnancy h2 ranges 0.11 (Charolais-Charbray) to 0.42-0.53 (Nellore). Value 0.13 is the lower, temperate-breed figure.",
+    "SC": "Boligon et al. (2010): scrotal-circumference h2 ~0.42 (Nellore); consistent with temperate-breed estimates 0.40-0.49.",
+    "CW": "Carcass-weight h2 = 0.22-0.28 (Angus genomic; Hanwoo). Value 0.28.",
     "MARB": "Marbling-score h2 = 0.25-0.28 (Angus; Hanwoo). Value 0.27.",
-    "REA":  "Ribeye-area h2 = 0.35 (Angus genomic); 0.23 (Hanwoo). Value 0.32.",
-    "FAT":  "Backfat-thickness h2 = 0.15 (Angus genomic); 0.20 (Hanwoo). Value 0.18.",
-    "DMI":  "Dry-matter-intake h2 ~0.35 (feed-efficiency literature consensus).",
-    "RFI":  "Residual-feed-intake h2 = 0.42 (Australian cattle; Arthur-type estimates).",
-    "DOC":  "Pinto et al. (2025) meta-analysis: docility/temperament h2 ~0.26.",
-    "PAP":  "Crawford et al. (2016): PAP h2 = 0.26 (CSU-BIC Angus).",
+    "REA": "Ribeye-area h2 = 0.35 (Angus genomic); 0.23 (Hanwoo). Value 0.32.",
+    "FAT": "Backfat-thickness h2 = 0.15 (Angus genomic); 0.20 (Hanwoo). Value 0.18.",
+    "DMI": "Dry-matter-intake h2 ~0.35 (feed-efficiency literature consensus).",
+    "RFI": "Residual-feed-intake h2 = 0.42 (Australian cattle; Arthur-type estimates).",
+    "DOC": "Pinto et al. (2025) meta-analysis: docility/temperament h2 ~0.26.",
+    "PAP": "Crawford et al. (2016): PAP h2 = 0.26 (CSU-BIC Angus).",
     "PAP_L": "Markel et al.: boundary-aware latent-z PAP sire-model h2 = 0.318."
   },
   "traits": {
-    "BW":    {"heritability": 0.42,  "genetic_sd": 4.0,  "units": "lb"},
-    "WW":    {"heritability": 0.29,  "genetic_sd": 22.0, "units": "lb"},
-    "YW":    {"heritability": 0.45,  "genetic_sd": 35.0, "units": "lb"},
-    "PWG":   {"heritability": 0.20,  "genetic_sd": 20.0, "units": "lb"},
-    "MILK":  {"heritability": 0.19,  "genetic_sd": 14.0, "units": "lb"},
-    "MW":    {"heritability": 0.41,  "genetic_sd": 70.0, "units": "lb"},
-    "STAY":  {"heritability": 0.18,  "genetic_sd": 8.0,  "units": "%"},
-    "CED":   {"heritability": 0.27,  "genetic_sd": 6.0,  "units": "%"},
-    "CEM":   {"heritability": 0.19,  "genetic_sd": 5.0,  "units": "%"},
-    "HP":    {"heritability": 0.13,  "genetic_sd": 7.0,  "units": "%"},
-    "SC":    {"heritability": 0.42,  "genetic_sd": 1.1,  "units": "cm"},
-    "CW":    {"heritability": 0.28,  "genetic_sd": 30.0, "units": "lb"},
-    "MARB":  {"heritability": 0.27,  "genetic_sd": 0.28, "units": "score"},
-    "REA":   {"heritability": 0.32,  "genetic_sd": 0.60, "units": "sq in"},
-    "FAT":   {"heritability": 0.18,  "genetic_sd": 0.07, "units": "in"},
-    "DMI":   {"heritability": 0.35,  "genetic_sd": 1.4,  "units": "lb/day"},
-    "RFI":   {"heritability": 0.42,  "genetic_sd": 1.2,  "units": "lb/day"},
-    "DOC":   {"heritability": 0.26,  "genetic_sd": 6.0,  "units": "score"},
-    "PAP":   {"heritability": 0.26,  "genetic_sd": 3.2,  "units": "mmHg"},
-    "PAP_L": {"heritability": 0.318, "genetic_sd": 0.45, "units": "latent-z"}
+    "BW": {
+      "heritability": 0.42,
+      "genetic_sd": 4.0,
+      "units": "lb"
+    },
+    "WW": {
+      "heritability": 0.29,
+      "genetic_sd": 22.0,
+      "units": "lb"
+    },
+    "YW": {
+      "heritability": 0.45,
+      "genetic_sd": 35.0,
+      "units": "lb"
+    },
+    "PWG": {
+      "heritability": 0.2,
+      "genetic_sd": 20.0,
+      "units": "lb"
+    },
+    "MILK": {
+      "heritability": 0.19,
+      "genetic_sd": 14.0,
+      "units": "lb"
+    },
+    "MW": {
+      "heritability": 0.41,
+      "genetic_sd": 70.0,
+      "units": "lb"
+    },
+    "STAY": {
+      "heritability": 0.18,
+      "genetic_sd": 8.0,
+      "units": "%"
+    },
+    "CED": {
+      "heritability": 0.27,
+      "genetic_sd": 6.0,
+      "units": "%"
+    },
+    "CEM": {
+      "heritability": 0.19,
+      "genetic_sd": 5.0,
+      "units": "%"
+    },
+    "HP": {
+      "heritability": 0.13,
+      "genetic_sd": 7.0,
+      "units": "%"
+    },
+    "SC": {
+      "heritability": 0.42,
+      "genetic_sd": 1.1,
+      "units": "cm"
+    },
+    "CW": {
+      "heritability": 0.28,
+      "genetic_sd": 30.0,
+      "units": "lb"
+    },
+    "MARB": {
+      "heritability": 0.27,
+      "genetic_sd": 0.28,
+      "units": "score"
+    },
+    "REA": {
+      "heritability": 0.32,
+      "genetic_sd": 0.6,
+      "units": "sq in"
+    },
+    "FAT": {
+      "heritability": 0.18,
+      "genetic_sd": 0.07,
+      "units": "in"
+    },
+    "DMI": {
+      "heritability": 0.35,
+      "genetic_sd": 1.4,
+      "units": "lb/day"
+    },
+    "RFI": {
+      "heritability": 0.42,
+      "genetic_sd": 1.2,
+      "units": "lb/day"
+    },
+    "DOC": {
+      "heritability": 0.26,
+      "genetic_sd": 6.0,
+      "units": "score"
+    },
+    "PAP": {
+      "heritability": 0.26,
+      "genetic_sd": 3.2,
+      "units": "mmHg"
+    },
+    "PAP_L": {
+      "heritability": 0.318,
+      "genetic_sd": 0.45,
+      "units": "latent-z"
+    }
   },
   "genetic_correlations": [
-    ["BW", "WW", 0.50],
-    ["BW", "YW", 0.45],
-    ["BW", "CED", -0.55],
-    ["BW", "CW", 0.40],
-    ["WW", "YW", 0.80],
-    ["WW", "PWG", 0.30],
-    ["WW", "MW", 0.45],
-    ["WW", "CW", 0.50],
-    ["WW", "MILK", -0.20],
-    ["WW", "CED", -0.30],
-    ["YW", "PWG", 0.75],
-    ["YW", "MW", 0.55],
-    ["YW", "CW", 0.65],
-    ["YW", "REA", 0.35],
-    ["MW", "MILK", 0.25],
-    ["CED", "CEM", 0.30],
-    ["CEM", "MILK", 0.10],
-    ["CW", "REA", 0.45],
-    ["CW", "MARB", 0.10],
-    ["CW", "FAT", 0.20],
-    ["REA", "FAT", -0.25],
-    ["MARB", "FAT", 0.15],
-    ["REA", "MARB", -0.20],
-    ["HP", "STAY", 0.35],
-    ["SC", "HP", 0.29],
-    ["SC", "STAY", 0.19],
-    ["DMI", "YW", 0.55],
-    ["DMI", "RFI", 0.65],
-    ["RFI", "YW", 0.05],
-    ["PAP", "PAP_L", 0.95],
-    ["PAP", "BW", 0.15],
-    ["PAP_L", "BW", 0.15],
-    ["PAP", "WW", 0.14],
-    ["PAP_L", "WW", 0.14],
-    ["PAP", "YW", 0.23],
-    ["PAP_L", "YW", 0.23],
-    ["PAP", "MW", 0.10],
-    ["PAP_L", "MW", 0.10]
+    [
+      "BW",
+      "WW",
+      0.5
+    ],
+    [
+      "BW",
+      "YW",
+      0.45
+    ],
+    [
+      "BW",
+      "CED",
+      -0.55
+    ],
+    [
+      "BW",
+      "CW",
+      0.4
+    ],
+    [
+      "WW",
+      "YW",
+      0.8
+    ],
+    [
+      "WW",
+      "PWG",
+      0.3
+    ],
+    [
+      "WW",
+      "MW",
+      0.45
+    ],
+    [
+      "WW",
+      "CW",
+      0.5
+    ],
+    [
+      "WW",
+      "MILK",
+      -0.2
+    ],
+    [
+      "WW",
+      "CED",
+      -0.3
+    ],
+    [
+      "YW",
+      "PWG",
+      0.75
+    ],
+    [
+      "YW",
+      "MW",
+      0.55
+    ],
+    [
+      "YW",
+      "CW",
+      0.65
+    ],
+    [
+      "YW",
+      "REA",
+      0.35
+    ],
+    [
+      "MW",
+      "MILK",
+      0.25
+    ],
+    [
+      "CED",
+      "CEM",
+      0.3
+    ],
+    [
+      "CEM",
+      "MILK",
+      0.1
+    ],
+    [
+      "CW",
+      "REA",
+      0.45
+    ],
+    [
+      "CW",
+      "MARB",
+      0.1
+    ],
+    [
+      "CW",
+      "FAT",
+      0.2
+    ],
+    [
+      "REA",
+      "FAT",
+      -0.25
+    ],
+    [
+      "MARB",
+      "FAT",
+      0.15
+    ],
+    [
+      "REA",
+      "MARB",
+      -0.2
+    ],
+    [
+      "HP",
+      "STAY",
+      0.35
+    ],
+    [
+      "SC",
+      "HP",
+      0.29
+    ],
+    [
+      "SC",
+      "STAY",
+      0.19
+    ],
+    [
+      "DMI",
+      "YW",
+      0.55
+    ],
+    [
+      "DMI",
+      "RFI",
+      0.65
+    ],
+    [
+      "RFI",
+      "YW",
+      0.05
+    ],
+    [
+      "PAP",
+      "PAP_L",
+      0.95
+    ],
+    [
+      "PAP",
+      "BW",
+      0.15
+    ],
+    [
+      "PAP_L",
+      "BW",
+      0.15
+    ],
+    [
+      "PAP",
+      "WW",
+      0.14
+    ],
+    [
+      "PAP_L",
+      "WW",
+      0.14
+    ],
+    [
+      "PAP",
+      "YW",
+      0.23
+    ],
+    [
+      "PAP_L",
+      "YW",
+      0.23
+    ],
+    [
+      "PAP",
+      "MW",
+      0.1
+    ],
+    [
+      "PAP_L",
+      "MW",
+      0.1
+    ]
   ],
   "correlation_sources": {
     "PAP-growth": "Crawford et al. (2016): genetic correlations of PAP with BW 0.15, WW 0.14, YW 0.23, PWG ~-0.01 - all weak.",

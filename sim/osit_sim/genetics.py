@@ -5,11 +5,12 @@ Supplies the per-trait genetic parameters, the breed additive effects, and
 the F1 heterosis values that the herd simulation uses to generate each
 animal's genetic merit and phenotype.
 
-The breed-effect and heterosis values here are illustrative figures of the
-structure and rough magnitude of the USMARC germplasm-evaluation estimates
-(Phase 1 Section 1.6.1) — they let the engine run end to end and are
-clearly labelled as illustrative. A production deployment loads versioned
-official estimates.
+The breed additive effects for the growth and carcass traits are taken
+from the USMARC across-breed EPD adjustment factors (the same sourced
+values the index engine uses); the remaining per-trait deviations and the
+F1 heterosis values are representative figures consistent with those
+estimates and with the published heterosis literature. A researcher can
+override any of them with population-specific estimates.
 
 Reference: NexGenIQ Phase 3 Part 3B Section 2.5.
 """
@@ -114,37 +115,76 @@ def default_herd_genetics() -> dict[str, TraitGenetics]:
 
 # ---------------------------------------------------------------------------
 # Breed additive effects, expressed as deviations from an Angus base.
-# Illustrative figures of the structure of USMARC germplasm estimates.
 #
-# PAP breed effects: Angus is the base. Simmental and Red Angus carry a
-# small positive (worse) PAP deviation in the illustrative figures;
-# breeds with no PAP evaluation are simply absent and contribute 0.
+# The BW, WW, YW, MILK, CW, MARB, REA and FAT deviations are taken from the
+# USMARC across-breed EPD adjustment factors (Kuehn and Thallman; the same
+# values the index engine uses for across-breed adjustment) - they are the
+# best-available, regularly-updated estimates of beef breed differences on
+# an Angus base. The remaining deviations (PWG, MW, CED, CEM, DMI, DOC) are
+# representative figures consistent with those values and with breed
+# reputation, used only by the herd simulation; a researcher should
+# override them with population-specific estimates where available.
+#
+# PAP: only Angus and Simmental have an official PAP evaluation. Simmental
+# carries a small positive (worse) illustrative PAP deviation; every other
+# breed is simply absent from the PAP key and contributes 0, and PAP is
+# only simulated when the herd contains a PAP-evaluated breed.
 # ---------------------------------------------------------------------------
 _BREED_EFFECTS: dict[str, dict[str, float]] = {
-    "Angus":    {},  # the base breed — all zero
+    "Angus":    {},  # the base breed - all zero
     "Hereford": {
-        "BW": 4.0, "WW": -20.0, "MILK": -18.0, "YW": -28.0,
-        "PWG": -8.0, "MW": -40.0, "CW": -55.0, "MARB": -0.9,
-        "REA": -0.3, "FAT": 0.02, "CED": -3.0, "CEM": -2.0,
+        "BW": 0.8, "WW": -4.2, "YW": -8.6, "MILK": -18.0,
+        "PWG": -5.0, "MW": -40.0, "CW": -23.3, "MARB": -0.20,
+        "REA": -0.04, "FAT": 0.011, "CED": -1.0, "CEM": -2.0,
         "DMI": -0.6, "DOC": -1.5,
     },
+    "Red Angus": {
+        "BW": -0.2, "WW": -3.4, "YW": -5.5, "MILK": 1.5,
+        "PWG": -2.0, "MW": -15.0, "CW": -4.0, "MARB": -0.10,
+        "REA": -0.05, "FAT": 0.005, "CED": 0.5, "CEM": 1.0,
+        "DMI": -0.2, "DOC": 0.5,
+    },
     "Simmental": {
-        "BW": 5.0, "WW": 18.0, "MILK": 8.0, "YW": 22.0,
-        "PWG": 4.0, "MW": 60.0, "CW": 35.0, "MARB": -1.1,
-        "REA": 0.9, "FAT": -0.06, "CED": -5.0, "CEM": -3.0,
+        "BW": 3.6, "WW": 16.8, "YW": 21.9, "MILK": 13.6,
+        "PWG": 6.0, "MW": 60.0, "CW": 5.5, "MARB": -0.62,
+        "REA": 0.55, "FAT": -0.103, "CED": -4.0, "CEM": -3.0,
         "DMI": 0.9, "DOC": -2.5, "PAP": 1.5,
     },
-    "Red Angus": {
-        "BW": 0.0, "WW": -8.0, "MILK": 4.0, "YW": -10.0,
-        "PWG": -2.0, "MW": -20.0, "CW": -6.0, "MARB": -0.2,
-        "REA": -0.1, "FAT": 0.01, "CED": 1.0, "CEM": 1.0,
-        "DMI": -0.2, "DOC": 0.5, "PAP": 0.6,
-    },
     "Charolais": {
-        "BW": 7.0, "WW": 22.0, "MILK": -6.0, "YW": 30.0,
-        "PWG": 8.0, "MW": 75.0, "CW": 50.0, "MARB": -1.4,
-        "REA": 1.2, "FAT": -0.08, "CED": -8.0, "CEM": -4.0,
+        "BW": 5.5, "WW": 20.3, "YW": 21.4, "MILK": -0.5,
+        "PWG": 6.0, "MW": 75.0, "CW": 11.6, "MARB": -0.84,
+        "REA": 0.79, "FAT": -0.166, "CED": -7.0, "CEM": -4.0,
         "DMI": 1.1, "DOC": -3.0,
+    },
+    "Gelbvieh": {
+        "BW": 2.9, "WW": -8.6, "YW": -15.9, "MILK": 6.0,
+        "PWG": -3.0, "MW": 25.0, "CW": -17.5, "MARB": -0.44,
+        "REA": 0.62, "FAT": -0.088, "CED": -3.0, "CEM": -2.0,
+        "DMI": 0.4, "DOC": -1.5,
+    },
+    "Limousin": {
+        "BW": 1.7, "WW": -3.9, "YW": -14.6, "MILK": -8.9,
+        "PWG": -4.0, "MW": 15.0, "CW": -11.5, "MARB": -0.22,
+        "REA": 0.62, "FAT": -0.062, "CED": -2.0, "CEM": -3.0,
+        "DMI": 0.1, "DOC": -3.5,
+    },
+    "Shorthorn": {
+        "BW": 4.0, "WW": -21.9, "YW": -20.1, "MILK": 0.2,
+        "PWG": -3.0, "MW": -10.0, "CW": -7.3, "MARB": -0.03,
+        "REA": 0.29, "FAT": -0.027, "CED": -1.0, "CEM": -1.0,
+        "DMI": -0.3, "DOC": 0.0,
+    },
+    "Salers": {
+        "BW": 2.3, "WW": -9.4, "YW": -14.7, "MILK": 3.8,
+        "PWG": -3.0, "MW": 10.0, "CW": -21.2, "MARB": -0.15,
+        "REA": 0.45, "FAT": -0.064, "CED": -2.0, "CEM": -1.0,
+        "DMI": 0.2, "DOC": -1.0,
+    },
+    "Maine-Anjou": {
+        "BW": 1.6, "WW": -27.2, "YW": -34.5, "MILK": -6.4,
+        "PWG": -5.0, "MW": 35.0, "CW": -35.8, "MARB": -0.45,
+        "REA": 0.85, "FAT": -0.146, "CED": -2.0, "CEM": -3.0,
+        "DMI": 0.5, "DOC": -2.0,
     },
 }
 

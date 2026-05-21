@@ -59,7 +59,7 @@ SIMULATED_TRAITS: dict[str, str] = {
 #: simulation only perturbs a restricted trait when the herd contains a
 #: breed that publishes it (see ``traits_for_herd``).
 BREED_RESTRICTED_TRAITS: dict[str, tuple[str, ...]] = {
-    "PAP": ("Angus", "Red Angus", "Simmental"),
+    "PAP": ("Angus", "Simmental"),
 }
 
 

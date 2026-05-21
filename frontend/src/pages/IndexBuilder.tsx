@@ -86,8 +86,8 @@ const TEMPLATES: GoalTemplate[] = [
     name: "High-altitude / brisket disease",
     desc: "For herds grazing at elevation, where high-altitude (brisket) " +
       "disease is a real cost. Pairs PAP selection with a sound maternal " +
-      "and growth base. PAP EPDs are published by Angus, Red Angus and " +
-      "Simmental.",
+      "and growth base. An official PAP EPD is published only by the " +
+      "American Angus and American Simmental associations.",
     basis: "per_cow_exposed",
     components: [
       { trait_code: "PAP", economic_weight: -8.9 },

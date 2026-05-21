@@ -57,7 +57,7 @@ const TRAIT_NAMES: Record<string, string> = {
 /* Breeds that publish a PAP EPD - used to tell the user whether PAP will
    be evaluated for the herd they have described. Matches the engine's
    BREED_RESTRICTED_TRAITS. */
-const PAP_BREEDS = new Set(["Angus", "Red Angus", "Simmental"]);
+const PAP_BREEDS = new Set(["Angus", "Simmental"]);
 
 const STEPS = ["Your herd", "Economics", "Results"];
 
@@ -66,7 +66,7 @@ const STEPS = ["Your herd", "Economics", "Results"];
  * the engine derive an economic value for EVERY trait the herd's breeds
  * publish an EPD for - the full EPD set, including the carcass and
  * feed-efficiency traits that matter for terminal and on-the-rail
- * marketing, and PAP for Angus / Red Angus / Simmental herds.
+ * marketing, and PAP for Angus and Simmental herds.
  */
 
 interface SimulationWizardProps {
@@ -416,8 +416,9 @@ export function SimulationWizard({
                       "in the economic-value analysis."
                     : "None of your herd's breeds publish a PAP " +
                       "(brisket disease) EPD, so PAP will not be " +
-                      "included. PAP EPDs come from Angus, Red Angus " +
-                      "and Simmental."}
+                      "included. An official PAP EPD is published only " +
+                      "by the American Angus Association and the " +
+                      "American Simmental Association."}
                 </p>
               </Card>
 

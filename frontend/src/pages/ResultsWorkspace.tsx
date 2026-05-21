@@ -62,6 +62,13 @@ export function ResultsWorkspace({
 
   /* --- headline metrics ---------------------------------------------- */
   const scores = result.scores;
+  /* The distinct EPD source evaluations the animals came from - shown
+     for provenance so the ranking is traceable. */
+  const epdEvaluations = [
+    ...new Set(
+      animals.map((a) => a.evaluation_id).filter((e) => e),
+    ),
+  ];
   const topValue = scores.length ? scores[0].index_value : 0;
   const spread = scores.length
     ? scores[0].index_value - scores[scores.length - 1].index_value
@@ -157,6 +164,16 @@ export function ResultsWorkspace({
           </p>
         </div>
       </div>
+
+      {epdEvaluations.length > 0 && (
+        <p className="field-hint" style={{ marginTop: -8 }}>
+          {epdEvaluations.length === 1
+            ? `EPD source: ${epdEvaluations[0]}.`
+            : `EPD sources: ${epdEvaluations.join("; ")}. ` +
+              "Animals from different evaluations were placed on a " +
+              "common base before ranking."}
+        </p>
+      )}
 
       {/* ---- tabs ---- */}
       <div className="tabs">

@@ -22,6 +22,11 @@ export const KNOWN_BREEDS = [
   "Hereford",
   "Simmental",
   "Charolais",
+  "Gelbvieh",
+  "Limousin",
+  "Shorthorn",
+  "Salers",
+  "Maine-Anjou",
 ];
 
 interface BreedCompositionBuilderProps {

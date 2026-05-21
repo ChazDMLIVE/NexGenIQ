@@ -159,7 +159,7 @@ TRAIT_REGISTRY: dict[str, Trait] = {
         # --- Health ---------------------------------------------------------
         Trait("PAP", "Pulmonary arterial pressure", TraitCategory.HEALTH,
               "mmHg", higher_is_better=False,
-              breeds=("Angus", "Red Angus", "Simmental"),
+              breeds=("Angus", "Simmental"),
               description="Predicted pulmonary arterial pressure of progeny. "
                           "High PAP indicates susceptibility to high-altitude "
                           "(brisket / bovine pulmonary hypertension) disease; "
@@ -169,7 +169,7 @@ TRAIT_REGISTRY: dict[str, Trait] = {
                           "the production scenario's elevation."),
         Trait("PAP_L", "Pulmonary arterial pressure (latent)",
               TraitCategory.HEALTH, "latent-z", higher_is_better=False,
-              breeds=("Angus", "Red Angus", "Simmental"),
+              breeds=("Angus", "Simmental"),
               description="A boundary-aware, latent-scale PAP phenotype. Raw "
                           "PAP is a practically bounded, measurement-error-"
                           "prone observation of an underlying physiological "
