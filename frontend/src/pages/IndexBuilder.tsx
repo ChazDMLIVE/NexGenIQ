@@ -159,13 +159,14 @@ export function IndexBuilder({
   const goalValid = components.length > 0;
   const animalsValid = animals.length > 0;
 
-  async function runBuild() {
+  async function runBuild(animalsOverride?: Animal[]) {
+    const animalsToBuild = animalsOverride ?? animals;
     setBuilding(true);
     setBuildError("");
     try {
       const res = await api.buildIndex({
         goal: { name: goalName, basis, components, source: "manual" },
-        animals,
+        animals: animalsToBuild,
         mode,
         missing_policy: "exclude",
       });
@@ -197,7 +198,9 @@ export function IndexBuilder({
               <p className="page-intro">
                 Tell NexGenIQ which traits matter and what each is worth.
                 Not sure? Start from a template — the defaults come from
-                published research and you can just continue.
+                published research and you can just continue. The traits
+                you pick here must match the EPD columns in the animal
+                file you upload later.
               </p>
               <GoalStep
                 templates={TEMPLATES}
@@ -289,6 +292,13 @@ export function IndexBuilder({
                 traits={traits}
                 animals={animals}
                 onAnimals={setAnimals}
+                onRunExample={(exampleAnimals) => {
+                  /* Load the example animals into state AND build the
+                     index immediately, passing the animals explicitly
+                     so the build does not wait for the state update. */
+                  setAnimals(exampleAnimals);
+                  runBuild(exampleAnimals);
+                }}
               />
               <div className="wizard-actions">
                 <Button variant="secondary" onClick={() => setStep(2)}>
@@ -298,7 +308,7 @@ export function IndexBuilder({
                   variant="primary"
                   busy={building}
                   disabled={!animalsValid}
-                  onClick={runBuild}
+                  onClick={() => runBuild()}
                 >
                   Build my index →
                 </Button>

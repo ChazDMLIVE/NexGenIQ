@@ -20,6 +20,8 @@ interface AnimalsStepProps {
   traits: Trait[];
   animals: Animal[];
   onAnimals: (a: Animal[]) => void;
+  /** Optional - load the example animals and build the index at once. */
+  onRunExample?: (exampleAnimals: Animal[]) => void;
 }
 
 interface InspectState {
@@ -67,6 +69,7 @@ export function AnimalsStep({
   traits,
   animals,
   onAnimals,
+  onRunExample,
 }: AnimalsStepProps) {
   const [tab, setTab] = useState<"upload" | "manual">("upload");
   const [inspect, setInspect] = useState<InspectState | null>(null);
@@ -200,9 +203,13 @@ export function AnimalsStep({
           <Button
             variant="primary"
             onClick={() => {
-              onAnimals(EXAMPLE_ANGUS_ANIMALS);
               setProblems([]);
               setError("");
+              if (onRunExample) {
+                onRunExample(EXAMPLE_ANGUS_ANIMALS);
+              } else {
+                onAnimals(EXAMPLE_ANGUS_ANIMALS);
+              }
             }}
           >
             Run example data &rarr;

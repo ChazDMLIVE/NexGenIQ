@@ -1362,3 +1362,36 @@ input[type="range"] {
 .example-link:hover {
   color: var(--sage-900);
 }
+
+/* ----------------------------------------------------------------------
+ * Goal-step warning: goal traits must match the animal file's columns.
+ * -------------------------------------------------------------------- */
+.goal-match-warning {
+  background: #FFF8E8;
+  border: 1px solid #B8860B;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 4px 0 12px;
+}
+
+.goal-match-warning-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #7A4F0B;
+  margin: 0 0 6px;
+}
+
+.goal-match-warning p {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--graphite-700);
+  margin: 0 0 8px;
+}
+
+.goal-match-warning p:last-child {
+  margin-bottom: 0;
+}
+
+.goal-match-warning strong {
+  color: var(--graphite-900);
+}

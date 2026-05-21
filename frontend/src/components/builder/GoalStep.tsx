@@ -123,6 +123,26 @@ export function GoalStep({
           </select>
         </Field>
 
+        <div className="goal-match-warning">
+          <p className="goal-match-warning-title">
+            Important — your animal file must have these traits
+          </p>
+          <p>
+            Every trait you put in this goal must also be a column in the
+            animal file you upload on the Animals step. If your goal
+            includes a trait your file does not have, those animals
+            cannot be scored on it: NexGenIQ will either leave them out of
+            the ranking or fill the gap with a breed average and flag the
+            result as approximate.
+          </p>
+          <p>
+            <strong>The simple rule:</strong> only put a trait in the goal
+            if your animals have an EPD for it. The downloadable column
+            template on the Animals step shows exactly how to lay your
+            file out.
+          </p>
+        </div>
+
         <p className="field-hint" style={{ marginBottom: 4 }}>
           Not sure what a trait is worth? Use “Help me price this” on any
           row for a guided estimate — or run the Herd Simulation for a
