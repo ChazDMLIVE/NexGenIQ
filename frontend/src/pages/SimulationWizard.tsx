@@ -124,10 +124,43 @@ export function SimulationWizard({
   const [replacementDevCost, setReplacementDevCost] = useState(900);
   const [purchasedReplCost, setPurchasedReplCost] = useState(1800);
   const [lostAnimalCost, setLostAnimalCost] = useState(1400);
+  /* Simulation precision - a named preset the producer chooses. More
+     replicate herds give a more precise economic value, especially for
+     the noisier traits (PAP, stayability, fertility), but take longer. */
+  const [precision, setPrecision] = useState<
+    "quick" | "standard" | "high"
+  >("standard");
 
   /* Whether the chosen endpoint involves a feedlot / carcass phase. */
   const isTerminalEndpoint = endpoint !== "weaning";
   const isCarcassEndpoint = endpoint === "carcass";
+
+  /* Precision presets: replicate count and an approximate run time.
+     The replicate count is the number of independent simulated herds the
+     economic values are averaged over. */
+  const PRECISION_PRESETS = {
+    quick: {
+      replicates: 8,
+      label: "Quick",
+      time: "about 30-40 seconds",
+      note: "Fastest. Good for exploring. The noisier traits may come " +
+        "back marked imprecise.",
+    },
+    standard: {
+      replicates: 14,
+      label: "Standard",
+      time: "about 1 minute",
+      note: "A balanced choice for most runs.",
+    },
+    high: {
+      replicates: 26,
+      label: "High precision",
+      time: "about 2-3 minutes",
+      note: "For when you need a reliable value on the noisier traits " +
+        "(PAP, stayability, fertility). Takes noticeably longer.",
+    },
+  } as const;
+  const chosenPreset = PRECISION_PRESETS[precision];
 
   /* Step 3 - the result. */
   const [result, setResult] = useState<SimulationResponse | null>(null);
@@ -230,7 +263,7 @@ export function SimulationWizard({
         controls: {
           burn_in_years: 6,
           planning_horizon_years: 12,
-          replicates: 12,
+          replicates: chosenPreset.replicates,
           seed: 20260520,
         },
         /* Empty list -> the engine derives an MEV for every trait the
@@ -635,6 +668,51 @@ export function SimulationWizard({
                   )}
                 </Card>
               )}
+              <Card title="Simulation precision">
+                <p className="field-hint" style={{ marginBottom: 12 }}>
+                  The simulation works out each trait's value by running
+                  many independent virtual herds and averaging the
+                  result. More herds give a more precise value, especially
+                  for the noisier traits, but take longer to run.
+                </p>
+                {papAvailable && elevationFt >= 5000 && (
+                  <p className="precision-nudge">
+                    Your herd grazes at altitude and includes a
+                    PAP-evaluated breed. PAP is one of the noisier traits
+                    to estimate &mdash; <strong>High precision</strong> is
+                    recommended so its economic value comes back
+                    reliable.
+                  </p>
+                )}
+                <div className="precision-options">
+                  {(["quick", "standard", "high"] as const).map((key) => {
+                    const preset = PRECISION_PRESETS[key];
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        className={
+                          precision === key
+                            ? "precision-card precision-card-active"
+                            : "precision-card"
+                        }
+                        onClick={() => setPrecision(key)}
+                      >
+                        <span className="precision-card-label">
+                          {preset.label}
+                        </span>
+                        <span className="precision-card-time">
+                          {preset.time}
+                        </span>
+                        <span className="precision-card-note">
+                          {preset.note}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+
               <div className="wizard-actions">
                 <Button
                   variant="secondary"
@@ -650,6 +728,13 @@ export function SimulationWizard({
                   Run the simulation →
                 </Button>
               </div>
+              {running && (
+                <p className="field-hint" style={{ marginTop: 8 }}>
+                  Running {chosenPreset.label.toLowerCase()} precision -
+                  this takes {chosenPreset.time}. You can leave this
+                  screen open; it will not time out.
+                </p>
+              )}
               {error && (
                 <p className="auth-error" style={{ marginTop: 12 }}>
                   {error}
@@ -707,6 +792,32 @@ export function SimulationWizard({
                     {endpoint}
                   </p>
                 </div>
+              </div>
+
+              <div className="profit-note">
+                <p className="profit-note-label">
+                  What &ldquo;simulated herd profit&rdquo; means
+                </p>
+                <p>
+                  This is the modelled whole-herd net return for one
+                  year &mdash; total revenue (calves sold, surplus
+                  heifers, cull-cow salvage) minus total cost (pasture,
+                  fixed costs, replacement females, feed, death loss),
+                  run over the full planning horizon, discounted, and
+                  averaged across the {result.replicates} simulated
+                  herds. It is the baseline the economic values are
+                  measured against: each value below is how much this
+                  profit moves when a trait is improved.
+                </p>
+                <p>
+                  Read it as a <strong>comparison figure for the
+                  operation you described, not a forecast of your actual
+                  income</strong>. It is only as accurate as the prices
+                  and costs you entered, and a real operation carries
+                  costs this model does not (machinery, land, taxes). Use
+                  it to compare scenarios &mdash; not as an accounting
+                  number.
+                </p>
               </div>
 
               <Card title="Derived economic values">

@@ -249,11 +249,23 @@ const SIMULATION_STEPS: Step[] = [
             past weaning: days backgrounded, days on feed, and the carcass
             base price.
           </li>
+          <li>
+            <strong>Simulation precision</strong> — choose Quick,
+            Standard, or High precision. The tool works out trait values
+            by running many independent virtual herds and averaging them;
+            more herds give a more precise value (especially for the
+            noisier traits like PAP and stayability) but take longer. Each
+            option shows an approximate run time. If your herd grazes at
+            altitude with a PAP-evaluated breed, the tool will suggest
+            High precision.
+          </li>
         </ul>
         <p className="docs-body">
-          Press <strong>Run the simulation</strong>. The tool builds
-          several independent virtual herds, runs each forward, and works
-          out the economic values. This takes a few seconds.
+          Press <strong>Run the simulation</strong>. The tool builds the
+          virtual herds, runs each forward, and works out the economic
+          values. Depending on the precision you chose this takes roughly
+          30 seconds to a few minutes — a note on screen tells you the
+          estimate, and you can leave the screen open while it runs.
         </p>
       </>
     ),
