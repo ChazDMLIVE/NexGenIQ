@@ -21,8 +21,14 @@ import { IndexBuilder } from "./pages/IndexBuilder";
 import { SimulationWizard } from "./pages/SimulationWizard";
 import { Troubleshooting } from "./pages/Troubleshooting";
 import { TechnicalDocs } from "./pages/TechnicalDocs";
+import { HowToUse } from "./pages/HowToUse";
 
-type Route = "builder" | "simulation" | "troubleshooting" | "techdocs";
+type Route =
+  | "builder"
+  | "simulation"
+  | "howto"
+  | "troubleshooting"
+  | "techdocs";
 
 /* Economic weights handed from the simulation to the Index Builder. */
 export interface DerivedGoal {
@@ -70,9 +76,11 @@ export function App() {
               ? "Index Builder"
               : route === "simulation"
                 ? "Herd Simulation"
-                : route === "techdocs"
-                  ? "Technical Documentation"
-                  : "Troubleshooting"}
+                : route === "howto"
+                  ? "How to Use"
+                  : route === "techdocs"
+                    ? "Technical Documentation"
+                    : "Troubleshooting"}
           </span>
           <span className="topbar-spacer" />
           <a
@@ -94,6 +102,16 @@ export function App() {
             }}
           >
             Herd Simulation
+          </a>
+          <a
+            href="#"
+            className="topbar-link"
+            onClick={(e) => {
+              e.preventDefault();
+              setRoute("howto");
+            }}
+          >
+            How to Use
           </a>
           <a
             href="#"
@@ -139,6 +157,7 @@ export function App() {
         {route === "simulation" && (
           <SimulationWizard onUseInIndex={handleUseInIndex} />
         )}
+        {route === "howto" && <HowToUse />}
         {route === "techdocs" && <TechnicalDocs />}
         {route === "troubleshooting" && <Troubleshooting />}
       </div>

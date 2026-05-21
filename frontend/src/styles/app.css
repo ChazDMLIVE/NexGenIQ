@@ -1122,3 +1122,55 @@ input[type="range"] {
   color: var(--graphite-900);
   margin: 0 0 4px;
 }
+
+/* ----------------------------------------------------------------------
+ * How to Use page.
+ * -------------------------------------------------------------------- */
+.howto-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--graphite-900);
+  margin: 32px 0 4px;
+  padding-top: 16px;
+  border-top: 2px solid var(--sage-300);
+}
+
+.howto-list {
+  margin: 8px 0 12px;
+  padding-left: 20px;
+}
+
+.howto-list li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--graphite-700);
+  margin-bottom: 8px;
+}
+
+.howto-list li strong {
+  color: var(--graphite-900);
+}
+
+.howto-glossary {
+  margin: 12px 0 0;
+}
+
+.howto-term {
+  margin-bottom: 14px;
+  padding-left: 14px;
+  border-left: 3px solid var(--sage-300);
+}
+
+.howto-term dt {
+  font-weight: 700;
+  color: var(--graphite-900);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.howto-term dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--graphite-700);
+}
