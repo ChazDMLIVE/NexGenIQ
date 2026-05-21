@@ -166,6 +166,21 @@ class AnimalScoreOut(BaseModel):
     explanation: str = ""
 
 
+class InterpretationOut(BaseModel):
+    """A layered, plain-language interpretation of a result.
+
+    Shared by the index build and the herd simulation. The interpretation
+    is informational decision-support; the ``disclaimer`` field states
+    explicitly that it is not a recommendation to take any action.
+    """
+
+    headline: str = ""
+    readout: str = ""
+    detail: list[str] = Field(default_factory=list)
+    cautions: list[str] = Field(default_factory=list)
+    disclaimer: str = ""
+
+
 class IndexBuildResponse(BaseModel):
     """The full response of an index build."""
 
@@ -177,6 +192,9 @@ class IndexBuildResponse(BaseModel):
     validation: list[ValidationIssueOut]
     adjustment_table_version: str
     ledger_id: str | None = None
+    interpretation: InterpretationOut = Field(
+        default_factory=InterpretationOut
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -314,7 +332,10 @@ class SimulationResponse(BaseModel):
     baseline_profit: float
     replicates: int
     mevs: list[DerivedMevOut]
-    warnings: list
+    warnings: list[str]
+    interpretation: InterpretationOut = Field(
+        default_factory=InterpretationOut
+    )
 
 # ---------------------------------------------------------------------------
 # Economic-value estimator (for users who do not run the herd simulation)

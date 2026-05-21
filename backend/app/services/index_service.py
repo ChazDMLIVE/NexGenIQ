@@ -22,6 +22,7 @@ from osit_index import (
     consensus_parameter_set,
     example_adjustment_table,
     explain_score,
+    interpret_index_result,
     tornado_sensitivity,
 )
 from osit_index.adjustment import AdjustmentFactorTable
@@ -205,6 +206,8 @@ def run_index_build(
         for s in result.scores
     ]
 
+    interp = interpret_index_result(result)
+
     return schemas.IndexBuildResponse(
         ok=result.validation.ok,
         mode=result.mode.value,
@@ -213,6 +216,13 @@ def run_index_build(
         excluded=result.excluded,
         validation=_validation_out(result.validation),
         adjustment_table_version=result.adjustment_table_version,
+        interpretation=schemas.InterpretationOut(
+            headline=interp.headline,
+            readout=interp.readout,
+            detail=interp.detail,
+            cautions=interp.cautions,
+            disclaimer=interp.disclaimer,
+        ),
     )
 
 

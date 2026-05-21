@@ -18,6 +18,7 @@ import {
 } from "../lib/api";
 import { Button, Card, Field, Stepper } from "../components/UI";
 import { ContextPanel } from "../components/Help";
+import { InterpretationPanel } from "../components/InterpretationPanel";
 
 /* Readable names for the trait codes the simulation can return, so the
    results table does not show bare codes. Matches the engine registry. */
@@ -567,6 +568,10 @@ export function SimulationWizard({
                 economic value of each trait. Carry these straight into
                 the Index Builder to rank animals for your operation.
               </p>
+
+              <InterpretationPanel
+                interpretation={result.interpretation}
+              />
 
               <div className="metric-row">
                 <div className="metric-card">

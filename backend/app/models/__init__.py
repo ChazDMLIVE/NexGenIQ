@@ -149,7 +149,7 @@ class Dataset(Base, TimestampMixin):
     """A collection of candidate animals (e.g. a sale catalogue).
 
     ``path`` supports the wildcard access-control model of Phase 3
-    Part 3C Section 3.6 (adopted from iGenDec).
+    Part 3C Section 3.6.
     """
 
     __tablename__ = "datasets"

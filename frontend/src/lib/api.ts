@@ -109,6 +109,14 @@ export interface AnimalScore {
   explanation: string;
 }
 
+export interface Interpretation {
+  headline: string;
+  readout: string;
+  detail: string[];
+  cautions: string[];
+  disclaimer: string;
+}
+
 export interface IndexBuildResponse {
   ok: boolean;
   mode: string;
@@ -118,6 +126,7 @@ export interface IndexBuildResponse {
   validation: ValidationIssue[];
   adjustment_table_version: string;
   ledger_id: string | null;
+  interpretation: Interpretation;
 }
 
 export interface TornadoEntry {
@@ -233,6 +242,7 @@ export interface SimulationResponse {
   replicates: number;
   mevs: DerivedMev[];
   warnings: string[];
+  interpretation: Interpretation;
 }
 
 export interface SensitivityResponse {

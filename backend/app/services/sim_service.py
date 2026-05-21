@@ -25,6 +25,7 @@ from osit_sim import (
     SimulationControls,
     default_herd_genetics,
     derive_mevs,
+    interpret_mev_result,
 )
 
 from app import schemas
@@ -140,9 +141,18 @@ def run_mev_derivation(
         traits=request.traits or None,
     )
 
+    interp = interpret_mev_result(result)
+
     return schemas.SimulationResponse(
         baseline_profit=result.baseline_profit,
         replicates=result.replicates,
+        interpretation=schemas.InterpretationOut(
+            headline=interp.headline,
+            readout=interp.readout,
+            detail=interp.detail,
+            cautions=interp.cautions,
+            disclaimer=interp.disclaimer,
+        ),
         mevs=[
             schemas.DerivedMevOut(
                 trait_code=m.trait_code,

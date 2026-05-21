@@ -3,9 +3,10 @@ Input models for the osit-sim herd-simulation engine.
 
 These describe the production system, the economic environment, and the
 simulation controls — everything the user supplies before a simulation
-runs. The vocabulary deliberately mirrors iGenDec's (sale endpoints,
+runs. The vocabulary follows standard bio-economic terminology (sale
+endpoints,
 terminal vs. replacement-generating, AUM-based costs) so the model is
-familiar to anyone who has used iGenDec (Phase 2 Section 4.1).
+familiar to anyone who has used a herd bio-economic model.
 
 Reference: NexGenIQ Phase 3 Part 3A Section 1.3.2; Part 3B Section 2.5.
 """

@@ -32,7 +32,7 @@ animals) or use either engine standalone.
 ## Methodology
 
 See NexGenIQ Phase 3 Part 3B Section 2.5. The approach follows the
-documented iGenDec methodology (Phase 2 Section 1.2): the economic value
+documented bio-economic selection-index methodology: the economic value
 of a trait is the partial derivative of profit with respect to its genetic
 mean, estimated numerically from a whole-herd simulation.
 

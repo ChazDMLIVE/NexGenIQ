@@ -7,7 +7,7 @@ cattle producers, seedstock breeders, and breed associations build
 economically optimal selection indexes and rank breeding animals — with an
 interface designed to be usable by anyone, regardless of background.
 
-It is modelled after iGenDec and is being built as a genuinely open,
+It is built on established bio-economic selection-index methodology as a genuinely open,
 modern, multi-breed alternative. See the `docs/` planning documents for the
 full background (genetics theory, comparable-software analysis, technical
 specification, and UI/UX design).

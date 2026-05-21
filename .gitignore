@@ -14,6 +14,9 @@ env/
 node_modules/
 frontend/dist/
 *.tsbuildinfo
+# Vite writes a temporary timestamped config file during a build; it is
+# transient and must never be committed.
+vite.config.*.timestamp-*.mjs
 
 # --- Databases (local dev) ---
 # The SQLite dev database is never committed; production uses managed
@@ -48,15 +51,19 @@ htmlcov/
 # committed. (Safe to delete from disk whenever convenient.)
 /nexgeniq/
 
-# The planning documents live in docs/. Loose copies at the repo root are
-# excluded to keep the root clean; the docs/ copies ARE committed.
+# Internal planning documents. These are working design documents, not
+# part of the shipped tool, and are excluded from the repository
+# everywhere - both loose copies at the repo root and copies in docs/.
 /Phase1_*.docx
 /Phase2_*.docx
 /Phase3_*.docx
 /Phase3-5_*.docx
+docs/Phase1_*.docx
+docs/Phase2_*.docx
+docs/Phase3_*.docx
+docs/Phase3-5_*.docx
 
 # Developer scratch files (not part of the application).
 frontend/shots.mjs
 sim/README_pkg.md
 frontend/README_pkg.md
-

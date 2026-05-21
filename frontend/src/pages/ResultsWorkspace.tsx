@@ -17,6 +17,7 @@ import {
   type Trait,
 } from "../lib/api";
 import { Alert, Badge, Button, Card } from "../components/UI";
+import { InterpretationPanel } from "../components/InterpretationPanel";
 
 /* A fixed sage-to-grey ramp for the contribution-bar segments. The order
  * is the index trait order, so a segment's colour is stable across rows. */
@@ -124,6 +125,8 @@ export function ResultsWorkspace({
         {scores.length} animals ranked for “{goal.name}”. Click any animal
         to see why it ranks where it does.
       </p>
+
+      <InterpretationPanel interpretation={result.interpretation} />
 
       {/* ---- headline metrics ---- */}
       <div className="metric-row">

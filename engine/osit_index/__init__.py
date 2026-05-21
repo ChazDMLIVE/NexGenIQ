@@ -39,6 +39,7 @@ from .index import (
 from .validation import ValidationIssue, Severity, ValidationReport
 from .sensitivity import tornado_sensitivity, SensitivityResult
 from .explain import explain_score
+from .interpret import interpret_index_result, ResultInterpretation
 from .library import (
     consensus_parameter_set,
     consensus_parameter_source,
@@ -95,6 +96,8 @@ __all__ = [
     "tornado_sensitivity",
     "SensitivityResult",
     "explain_score",
+    "interpret_index_result",
+    "ResultInterpretation",
     "consensus_parameter_set",
     "consensus_parameter_source",
     "example_adjustment_table",

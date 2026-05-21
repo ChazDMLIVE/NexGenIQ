@@ -13,7 +13,7 @@ full pipeline (describe the production system -> derive economic values ->
 build an index -> rank animals) or use either engine standalone.
 
 Methodology: NexGenIQ Phase 3 Part 3B Section 2.5, following the documented
-iGenDec approach (Phase 2 Section 1.2). The engine performs no I/O and has
+bio-economic selection-index methodology. The engine performs no I/O and has
 no web dependency, so it is independently testable.
 
 Public API
@@ -43,6 +43,7 @@ from .inputs import (
 from .genetics import TraitGenetics, default_herd_genetics
 from .herd import run_simulation, SimulationResult
 from .mev import derive_mevs, MevResult, DerivedMev
+from .interpret import interpret_mev_result, MevInterpretation
 
 __version__ = "0.2.0"
 
@@ -65,5 +66,7 @@ __all__ = [
     "derive_mevs",
     "MevResult",
     "DerivedMev",
+    "interpret_mev_result",
+    "MevInterpretation",
     "__version__",
 ]
