@@ -470,7 +470,7 @@ export function TechnicalDocs() {
             <p className="docs-citation">
               Markel, C. D. 2026. NexGenIQ: an open-source economic
               selection-index and herd-simulation platform for beef
-              cattle. University of Wyoming, Laramie, WY. Software.
+              cattle. Software.
             </p>
             <p className="docs-body">
               When you report results, please also state the engine

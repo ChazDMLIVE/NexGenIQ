@@ -1,5 +1,5 @@
 NexGenIQ
-Copyright 2026 Chase Markel, University of Wyoming
+Copyright 2026 Chase Markel
 
 This product includes software developed for open, reproducible beef-cattle
 genetic-selection research.
@@ -13,4 +13,4 @@ copy of the License in the accompanying LICENSE file or at:
 If you use NexGenIQ in published research, please cite it as:
 
     Markel, C. NexGenIQ: an open-source selection-index and herd-simulation
-    platform for beef cattle. University of Wyoming.
+    platform for beef cattle.

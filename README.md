@@ -114,6 +114,6 @@ Every run is recorded in a reproducibility ledger.
 ## Licence
 
 Licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file. The
-[NOTICE](NOTICE) file records the copyright holder (Chase Markel, University
-of Wyoming) and a suggested citation for use in published research. Built for
-an open, reproducible, community-contributable public repository.
+[NOTICE](NOTICE) file records the copyright holder (Chase Markel) and a
+suggested citation for use in published research. Built for an open,
+reproducible, community-contributable public repository.
