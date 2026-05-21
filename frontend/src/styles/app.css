@@ -1420,3 +1420,76 @@ input[type="range"] {
   color: var(--graphite-700);
   margin: 0;
 }
+
+/* ----------------------------------------------------------------------
+ * SVG result charts.
+ * -------------------------------------------------------------------- */
+.nx-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  font-family: inherit;
+}
+
+.nx-chart-axis {
+  stroke: var(--graphite-400);
+  stroke-width: 1;
+}
+
+.nx-chart-bar-pos {
+  fill: var(--sage-600);
+}
+
+.nx-chart-bar-neg {
+  fill: #B5683E;
+}
+
+.nx-chart-err line {
+  stroke: var(--graphite-900);
+  stroke-width: 1.5;
+}
+
+.nx-chart-label {
+  font-size: 13px;
+  fill: var(--graphite-900);
+  font-weight: 600;
+}
+
+.nx-chart-value {
+  font-size: 12px;
+  fill: var(--graphite-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.nx-contrib {
+  margin: 8px 0;
+}
+
+.nx-contrib-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+
+.nx-contrib-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--graphite-700);
+}
+
+.nx-contrib-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.chart-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--graphite-900);
+  margin: 0 0 10px;
+}

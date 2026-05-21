@@ -18,6 +18,8 @@ import {
 } from "../lib/api";
 import { Alert, Badge, Button, Card } from "../components/UI";
 import { InterpretationPanel } from "../components/InterpretationPanel";
+import { BarChart, ContributionChart } from "../components/Charts";
+import type { BarDatum, ContributionSlice } from "../components/Charts";
 
 /* A fixed sage-to-grey ramp for the contribution-bar segments. The order
  * is the index trait order, so a segment's colour is stable across rows. */
@@ -196,6 +198,27 @@ export function ResultsWorkspace({
 
       {/* ---- ranking tab ---- */}
       {tab === "ranking" && (
+        <>
+        <Card>
+          <p className="chart-card-title">Animals ranked by index value</p>
+          <BarChart
+            title="Index value by animal, best to worst"
+            decimals={1}
+            data={scores.map(
+              (s): BarDatum => ({
+                label: s.animal_id,
+                value: s.index_value,
+                error:
+                  s.std_error != null ? s.std_error * 2 : undefined,
+              }),
+            )}
+          />
+          <p className="field-hint" style={{ marginTop: 8 }}>
+            Bars show each animal's index value; the whiskers show the
+            95% confidence range. Animals whose ranges overlap are close
+            in estimated merit.
+          </p>
+        </Card>
         <Card>
           <table className="rank-table">
             <thead>
@@ -249,6 +272,7 @@ export function ResultsWorkspace({
             )}
           </div>
         </Card>
+        </>
       )}
 
       {/* ---- sensitivity tab ---- */}
@@ -389,6 +413,18 @@ function RankRow({
           <td colSpan={5}>
             <div className="drawer">
               <p className="drawer-explain">{score.explanation}</p>
+              <p className="chart-card-title" style={{ marginTop: 4 }}>
+                What drove this animal's index value
+              </p>
+              <ContributionChart
+                title={`Trait contributions for ${score.animal_id}`}
+                slices={indexTraits.map(
+                  (code): ContributionSlice => ({
+                    label: traitName(code),
+                    value: score.contributions[code] ?? 0,
+                  }),
+                )}
+              />
               {indexTraits.map((code) => {
                 const value = score.contributions[code] ?? 0;
                 const max =

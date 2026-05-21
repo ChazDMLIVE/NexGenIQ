@@ -21,6 +21,8 @@ import {
 import { Button, Card, Field, Stepper } from "../components/UI";
 import { ContextPanel } from "../components/Help";
 import { InterpretationPanel } from "../components/InterpretationPanel";
+import { BarChart } from "../components/Charts";
+import type { BarDatum } from "../components/Charts";
 import {
   BreedCompositionBuilder,
   averageComposition,
@@ -934,6 +936,27 @@ export function SimulationWizard({
                   number.
                 </p>
               </div>
+
+              <Card title="Economic value of each trait">
+                <p className="field-hint" style={{ marginBottom: 8 }}>
+                  Each bar is a trait's derived economic value, sorted by
+                  how much is at stake. The whiskers are the Monte-Carlo
+                  error: a wide whisker means the estimate is imprecise -
+                  re-run at a higher precision for a tighter number.
+                </p>
+                <BarChart
+                  title="Derived economic value by trait"
+                  decimals={2}
+                  data={result.mevs.map(
+                    (m): BarDatum => ({
+                      label: m.trait_code,
+                      value: m.mev,
+                      error: m.mc_std_error,
+                      caption: `/${m.units}`,
+                    }),
+                  )}
+                />
+              </Card>
 
               <Card title="Derived economic values">
                 <table className="rank-table">
