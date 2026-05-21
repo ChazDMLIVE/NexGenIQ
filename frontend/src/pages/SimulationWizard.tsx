@@ -23,6 +23,7 @@ import { ContextPanel } from "../components/Help";
 import { InterpretationPanel } from "../components/InterpretationPanel";
 import { BarChart } from "../components/Charts";
 import type { BarDatum } from "../components/Charts";
+import { toCsv, downloadTextFile, dateStamp } from "../lib/exportCsv";
 import {
   BreedCompositionBuilder,
   averageComposition,
@@ -302,6 +303,31 @@ export function SimulationWizard({
     } finally {
       setRunning(false);
     }
+  }
+
+  /* Build and download a CSV of the derived economic values. */
+  function exportMevCsv() {
+    if (!result) return;
+    const header = [
+      "Trait code",
+      "Trait name",
+      "Economic value",
+      "Units",
+      "Monte-Carlo error",
+      "Precise",
+    ];
+    const rows = result.mevs.map((m) => [
+      m.trait_code,
+      TRAIT_NAMES[m.trait_code] ?? m.trait_code,
+      m.mev.toFixed(3),
+      m.units,
+      m.mc_std_error.toFixed(3),
+      m.is_precise ? "yes" : "no",
+    ]);
+    downloadTextFile(
+      `nexgeniq-economic-values-${dateStamp()}.csv`,
+      toCsv(header, rows),
+    );
   }
 
   function useDerivedValues() {
@@ -863,6 +889,19 @@ export function SimulationWizard({
           {/* ---- Step 3: results ---- */}
           {step === 3 && result && (
             <>
+              {/* Print-only report header. */}
+              <div className="print-header">
+                <p className="print-header-brand">NexGenIQ</p>
+                <p className="print-header-title">
+                  Herd Simulation Report &mdash; {systemName}
+                </p>
+                <p className="print-header-meta">
+                  Generated {new Date().toLocaleDateString()} &middot;{" "}
+                  Sale endpoint: {endpoint} &middot;{" "}
+                  {result.replicates} replicate herds
+                </p>
+              </div>
+
               <h1 className="page-title">
                 What your traits are worth
               </h1>
@@ -1021,19 +1060,33 @@ export function SimulationWizard({
                 costs.
               </div>
 
-              <div className="wizard-actions">
+              <div className="wizard-actions no-print">
                 <Button
                   variant="secondary"
                   onClick={() => setStep(2)}
                 >
                   Adjust and re-run
                 </Button>
-                <Button
-                  variant="primary"
-                  onClick={useDerivedValues}
-                >
-                  Use these in the Index Builder →
-                </Button>
+                <div className="export-actions">
+                  <Button
+                    variant="secondary"
+                    onClick={exportMevCsv}
+                  >
+                    Export CSV
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => window.print()}
+                  >
+                    Export PDF
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={useDerivedValues}
+                  >
+                    Use these in the Index Builder →
+                  </Button>
+                </div>
               </div>
             </>
           )}

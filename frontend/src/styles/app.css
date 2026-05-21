@@ -1493,3 +1493,110 @@ input[type="range"] {
   color: var(--graphite-900);
   margin: 0 0 10px;
 }
+
+/* ----------------------------------------------------------------------
+ * Export actions and the print (PDF) report stylesheet.
+ * -------------------------------------------------------------------- */
+.export-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* The print-only report header - hidden on screen. */
+.print-header {
+  display: none;
+}
+
+@media print {
+  /* --- hide all on-screen chrome --- */
+  .topbar,
+  .context-panel,
+  .tabs,
+  .no-print,
+  .docs-toggle,
+  .goal-estimate-link,
+  button {
+    display: none !important;
+  }
+
+  /* --- reset the page to a clean white document --- */
+  body,
+  .app-shell,
+  .main-area,
+  .main-content,
+  .panel-main {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .main-content.with-panel {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- show the report header --- */
+  .print-header {
+    display: block;
+    border-bottom: 2px solid #2f3a37;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+
+  .print-header-brand {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3d6b4e;
+    margin: 0;
+  }
+
+  .print-header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2f3a37;
+    margin: 2px 0;
+  }
+
+  .print-header-meta {
+    font-size: 11px;
+    color: #4a534f;
+    margin: 0;
+  }
+
+  /* --- tighten cards and avoid awkward page breaks --- */
+  .card,
+  .interp-panel,
+  .profit-note,
+  .metric-row,
+  .nx-chart,
+  .nx-contrib {
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .card {
+    border: 1px solid #c5d4c6 !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* tables print with visible rules */
+  .rank-table th,
+  .rank-table td {
+    border-bottom: 1px solid #c5d4c6 !important;
+  }
+
+  .page-title {
+    font-size: 18px !important;
+    page-break-after: avoid;
+  }
+
+  /* a discreet footer note on every printed page */
+  @page {
+    margin: 1.5cm;
+  }
+}

@@ -20,6 +20,7 @@ import { Alert, Badge, Button, Card } from "../components/UI";
 import { InterpretationPanel } from "../components/InterpretationPanel";
 import { BarChart, ContributionChart } from "../components/Charts";
 import type { BarDatum, ContributionSlice } from "../components/Charts";
+import { toCsv, downloadTextFile, dateStamp } from "../lib/exportCsv";
 
 /* A fixed sage-to-grey ramp for the contribution-bar segments. The order
  * is the index trait order, so a segment's colour is stable across rows. */
@@ -127,8 +128,51 @@ export function ResultsWorkspace({
     }
   }
 
+  /* Build and download a CSV of the ranked animals: rank, identity,
+     index value, confidence bounds, and each trait's contribution. */
+  function exportRankingCsv() {
+    const header = [
+      "Rank",
+      "Animal ID",
+      "Breed",
+      "Index value",
+      "CI low",
+      "CI high",
+      ...indexTraits.map((c) => `${traitName(c)} contribution`),
+    ];
+    const rows = scores.map((s) => [
+      s.rank,
+      s.animal_id,
+      s.breed,
+      s.index_value.toFixed(2),
+      s.ci_low != null ? s.ci_low.toFixed(2) : "",
+      s.ci_high != null ? s.ci_high.toFixed(2) : "",
+      ...indexTraits.map((c) =>
+        (s.contributions[c] ?? 0).toFixed(3),
+      ),
+    ]);
+    downloadTextFile(
+      `nexgeniq-index-ranking-${dateStamp()}.csv`,
+      toCsv(header, rows),
+    );
+  }
+
   return (
     <>
+      {/* Print-only report header - hidden on screen, shown in the PDF. */}
+      <div className="print-header">
+        <p className="print-header-brand">NexGenIQ</p>
+        <p className="print-header-title">
+          Selection Index Report &mdash; {goal.name}
+        </p>
+        <p className="print-header-meta">
+          Generated {new Date().toLocaleDateString()} &middot;{" "}
+          Index mode: {mode === "blup_index"
+            ? "accuracy-adjusted"
+            : "standard"}
+        </p>
+      </div>
+
       <h1 className="page-title">Your ranked animals</h1>
       <p className="page-intro">
         {scores.length} animals ranked for “{goal.name}”. Click any animal
@@ -318,11 +362,21 @@ export function ResultsWorkspace({
       )}
 
       {/* ---- actions ---- */}
-      <div className="wizard-actions">
+      <div className="wizard-actions no-print">
         <Button variant="secondary" onClick={onEdit}>
           Adjust and rebuild
         </Button>
-        <span />
+        <div className="export-actions">
+          <Button variant="secondary" onClick={exportRankingCsv}>
+            Export CSV
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => window.print()}
+          >
+            Export PDF
+          </Button>
+        </div>
       </div>
     </>
   );
