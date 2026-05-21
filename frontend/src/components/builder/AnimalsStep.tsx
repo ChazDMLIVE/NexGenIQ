@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { api, type Animal, type Trait } from "../../lib/api";
 import { Button, Card, EmptyState, Field } from "../UI";
+import { EXAMPLE_ANGUS_ANIMALS } from "../../data/exampleData";
 
 interface AnimalsStepProps {
   traits: Trait[];
@@ -172,6 +173,46 @@ export function AnimalsStep({
         <p className="field-hint">
           If your file has its own evaluation column, that is kept
           per-animal; this field fills in any animal that does not.
+        </p>
+      </Card>
+
+      <Card title="New here? Start with the template or example data">
+        <p className="field-hint" style={{ marginBottom: 12 }}>
+          To rank your own animals, your file needs the right columns.
+          Download the template to see exactly how to lay them out, or
+          load the example dataset to see the whole tool work first.
+        </p>
+        <div className="example-actions">
+          <a
+            className="example-link"
+            href="/nexgeniq_index_template.csv"
+            download
+          >
+            Download the column template (CSV)
+          </a>
+          <a
+            className="example-link"
+            href="/nexgeniq_example_angus.csv"
+            download
+          >
+            Download the example data (20 Angus, CSV)
+          </a>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onAnimals(EXAMPLE_ANGUS_ANIMALS);
+              setProblems([]);
+              setError("");
+            }}
+          >
+            Run example data &rarr;
+          </Button>
+        </div>
+        <p className="field-hint" style={{ marginTop: 10 }}>
+          &ldquo;Run example data&rdquo; loads 20 illustrative Angus
+          animals straight in &mdash; just continue to build the index
+          and see a real ranking. These are realistic but made-up
+          figures, for demonstration only.
         </p>
       </Card>
 

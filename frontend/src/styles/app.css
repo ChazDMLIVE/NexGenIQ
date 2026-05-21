@@ -1341,3 +1341,24 @@ input[type="range"] {
   color: var(--graphite-700);
   margin: 0;
 }
+
+/* ----------------------------------------------------------------------
+ * Index Builder example data / template downloads.
+ * -------------------------------------------------------------------- */
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.example-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sage-600);
+  text-decoration: underline;
+}
+
+.example-link:hover {
+  color: var(--sage-900);
+}
