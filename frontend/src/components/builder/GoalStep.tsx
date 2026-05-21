@@ -12,6 +12,7 @@
 
 import { useState } from "react";
 import type { GoalComponent, Trait } from "../../lib/api";
+import { api } from "../../lib/api";
 import { Card, Field } from "../UI";
 import { InfoTip } from "../Help";
 import { EconEstimator } from "./EconEstimator";
@@ -75,7 +76,38 @@ export function GoalStep({
 
   function addTrait(code: string) {
     if (!code || components.some((c) => c.trait_code === code)) return;
-    onComponents([...components, { trait_code: code, economic_weight: 1 }]);
+    // Add the trait straight away so the UI is responsive; its economic
+    // weight starts at 0 and is filled in with a realistic, data-based
+    // default from the trait's economic-value estimator.
+    const next = [
+      ...components,
+      { trait_code: code, economic_weight: 0 },
+    ];
+    onComponents(next);
+    if (ESTIMATOR_TRAITS.has(code)) {
+      api
+        .estimateEconValue(code, {})
+        .then((result) => {
+          // Update only if the trait is still in the goal (the user may
+          // have removed it before the estimate returned).
+          onComponents(
+            next.map((c) =>
+              c.trait_code === code
+                ? {
+                    ...c,
+                    economic_weight: Number(
+                      result.economic_value.toFixed(3),
+                    ),
+                  }
+                : c,
+            ),
+          );
+        })
+        .catch(() => {
+          /* Estimator unavailable - leave the weight at 0 for the user
+             to set by hand or with "Help me price this". */
+        });
+    }
   }
 
   /* Traits not yet in the goal, for the "add trait" picker. */

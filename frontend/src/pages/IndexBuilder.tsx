@@ -35,6 +35,22 @@ interface GoalTemplate {
   components: GoalComponent[];
 }
 
+/* The goal pre-loaded when a user first opens the Index Builder. It uses
+ * exactly the traits in the downloadable CSV column template (WW, YW, BW,
+ * CED, STAY, MILK, MARB, REA), so a first-time user who builds their file
+ * from that template has a goal that matches it. The named TEMPLATES
+ * below are advanced presets and may use other traits. */
+const DEFAULT_GOAL: GoalComponent[] = [
+  { trait_code: "WW", economic_weight: 1.8 },
+  { trait_code: "YW", economic_weight: 0.4 },
+  { trait_code: "BW", economic_weight: -3.0 },
+  { trait_code: "CED", economic_weight: 8.0 },
+  { trait_code: "STAY", economic_weight: 6.0 },
+  { trait_code: "MILK", economic_weight: 0.3 },
+  { trait_code: "MARB", economic_weight: 25.0 },
+  { trait_code: "REA", economic_weight: 11.0 },
+];
+
 const TEMPLATES: GoalTemplate[] = [
   {
     id: "maternal",
@@ -117,7 +133,7 @@ export function IndexBuilder({
   const [goalName, setGoalName] = useState("My selection index");
   const [basis, setBasis] = useState("per_cow_exposed");
   const [components, setComponents] = useState<GoalComponent[]>(
-    TEMPLATES[0].components,
+    DEFAULT_GOAL.map((c) => ({ ...c })),
   );
 
   /* Step 2: index mode (the parameter set is the built-in library in M1). */
