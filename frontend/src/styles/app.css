@@ -1002,3 +1002,123 @@ input[type="range"] {
   line-height: 1.6;
   color: var(--graphite-400);
 }
+
+/* ----------------------------------------------------------------------
+ * Breed-composition builder and multi-band price editor.
+ * -------------------------------------------------------------------- */
+.breed-builder {
+  margin-bottom: 4px;
+}
+
+.breed-builder-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--graphite-900);
+  margin: 0 0 2px;
+}
+
+.breed-class {
+  border: 1px solid var(--graphite-400);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 10px 0;
+}
+
+.breed-class-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.breed-class-title {
+  font-weight: 600;
+  color: var(--graphite-900);
+  font-size: 14px;
+}
+
+.breed-class-frac {
+  font-size: 13px;
+  color: var(--graphite-700);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.breed-class-frac input {
+  width: 80px;
+}
+
+.breed-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0;
+}
+
+.breed-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--graphite-700);
+  padding: 4px 8px;
+}
+
+.breed-table td {
+  padding: 4px 8px;
+}
+
+.breed-table input,
+.breed-table select {
+  width: 100%;
+  min-width: 90px;
+}
+
+.breed-warn {
+  font-size: 13px;
+  color: #7A4F0B;
+  margin: 6px 0 0;
+}
+
+.calf-derived {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--sage-50);
+  border: 1px solid var(--sage-600);
+  border-radius: 8px;
+}
+
+.calf-derived-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sage-900);
+  margin: 0 0 2px;
+}
+
+.calf-derived-breeds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.calf-breed-chip {
+  background: #fff;
+  border: 1px solid var(--sage-600);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sage-900);
+}
+
+.price-sex-block {
+  margin-bottom: 16px;
+}
+
+.price-sex-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--graphite-900);
+  margin: 0 0 4px;
+}

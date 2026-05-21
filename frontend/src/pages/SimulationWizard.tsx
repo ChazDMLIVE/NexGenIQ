@@ -13,12 +13,22 @@
 import { useState } from "react";
 import {
   api,
+  type BreedCompositionIn,
   type GoalComponent,
+  type PriceBandIn,
   type SimulationResponse,
 } from "../lib/api";
 import { Button, Card, Field, Stepper } from "../components/UI";
 import { ContextPanel } from "../components/Help";
 import { InterpretationPanel } from "../components/InterpretationPanel";
+import {
+  BreedCompositionBuilder,
+  averageComposition,
+} from "../components/builder/BreedCompositionBuilder";
+import {
+  PriceBandEditor,
+  defaultPriceBands,
+} from "../components/builder/PriceBandEditor";
 
 /* Readable names for the trait codes the simulation can return, so the
    results table does not show bare codes. Matches the engine registry. */
@@ -44,14 +54,19 @@ const TRAIT_NAMES: Record<string, string> = {
   PAP: "Pulmonary arterial pressure",
 };
 
+/* Breeds that publish a PAP EPD - used to tell the user whether PAP will
+   be evaluated for the herd they have described. Matches the engine's
+   BREED_RESTRICTED_TRAITS. */
+const PAP_BREEDS = new Set(["Angus", "Red Angus", "Simmental"]);
+
 const STEPS = ["Your herd", "Economics", "Results"];
 
 /*
- * The trait set is no longer hard-coded here. Sending an empty `traits`
- * list lets the engine derive an economic value for EVERY trait the
- * herd's breeds publish an EPD for — the full EPD set, including the
- * carcass and feed-efficiency traits that matter for terminal and
- * on-the-rail marketing, and PAP for Angus / Red Angus / Simmental herds.
+ * The trait set is not hard-coded. Sending an empty `traits` list lets
+ * the engine derive an economic value for EVERY trait the herd's breeds
+ * publish an EPD for - the full EPD set, including the carcass and
+ * feed-efficiency traits that matter for terminal and on-the-rail
+ * marketing, and PAP for Angus / Red Angus / Simmental herds.
  */
 
 interface SimulationWizardProps {
@@ -62,12 +77,17 @@ interface SimulationWizardProps {
   ) => void;
 }
 
+/* Round a fraction to a whole percent for display. */
+function pct(x: number): number {
+  return Math.round(x * 100);
+}
+
 export function SimulationWizard({
   onUseInIndex,
 }: SimulationWizardProps) {
   const [step, setStep] = useState(1);
 
-  /* Step 1 — the production system. */
+  /* Step 1 - the production system. */
   const [systemName, setSystemName] = useState("My cow-calf operation");
   const [herdSize, setHerdSize] = useState(200);
   const [conception, setConception] = useState(0.92);
@@ -75,19 +95,27 @@ export function SimulationWizard({
   const [replacement, setReplacement] = useState(0.18);
   const [heiferRetention, setHeiferRetention] = useState(true);
 
-  /* Step 1 — the herd's breed. Determines which EPDs apply (e.g. PAP is
-     published only by Angus, Red Angus and Simmental). */
-  const [breed, setBreed] = useState("Angus");
+  /* Step 1 - breed composition of the cow herd and the bull battery.
+     Each is a list of composition classes; a class is a fraction of the
+     group and itself a breed mix. The calf crop's composition is derived
+     (not entered) as the dam/sire average. */
+  const [cowComposition, setCowComposition] = useState<
+    BreedCompositionIn[]
+  >([{ fraction: 1.0, breeds: { Angus: 1.0 } }]);
+  const [bullComposition, setBullComposition] = useState<
+    BreedCompositionIn[]
+  >([{ fraction: 1.0, breeds: { Angus: 1.0 } }]);
 
-  /* Step 2 — the economic scenario. */
+  /* Step 2 - the economic scenario. */
   const [endpoint, setEndpoint] = useState("weaning");
-  const [steerPrice, setSteerPrice] = useState(195);
-  const [heiferPrice, setHeiferPrice] = useState(178);
+  const [priceBands, setPriceBands] = useState<PriceBandIn[]>(
+    defaultPriceBands(),
+  );
   const [aumCost, setAumCost] = useState(38);
   const [fixedCost, setFixedCost] = useState(185);
   /* Elevation drives the economic weight of PAP (brisket disease). */
   const [elevationFt, setElevationFt] = useState(4000);
-  /* Carcass / feedlot inputs — used when calves are sold past weaning. */
+  /* Carcass / feedlot inputs - used when calves are sold past weaning. */
   const [carcassBasePrice, setCarcassBasePrice] = useState(300);
   const [backgroundDays, setBackgroundDays] = useState(60);
   const [daysOnFeed, setDaysOnFeed] = useState(160);
@@ -101,12 +129,56 @@ export function SimulationWizard({
   const isTerminalEndpoint = endpoint !== "weaning";
   const isCarcassEndpoint = endpoint === "carcass";
 
-  /* Step 3 — the result. */
+  /* Step 3 - the result. */
   const [result, setResult] = useState<SimulationResponse | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
 
+  /* --- derived breed information ------------------------------------- */
+  /* The calf crop's breed composition is the average of the dam side and
+     the sire side - half the cow herd's average, half the bull battery's
+     average. The user never enters this; it is shown so they can see it. */
+  const cowAvg = averageComposition(cowComposition);
+  const bullAvg = averageComposition(bullComposition);
+  const calfAvg: Record<string, number> = {};
+  for (const [b, f] of Object.entries(cowAvg)) {
+    calfAvg[b] = (calfAvg[b] ?? 0) + f / 2;
+  }
+  for (const [b, f] of Object.entries(bullAvg)) {
+    calfAvg[b] = (calfAvg[b] ?? 0) + f / 2;
+  }
+  /* Every breed anywhere in the herd, for the PAP-availability note. */
+  const herdBreeds = new Set<string>([
+    ...Object.keys(cowAvg),
+    ...Object.keys(bullAvg),
+  ]);
+  const papAvailable = [...herdBreeds].some((b) => PAP_BREEDS.has(b));
+
+  /* --- validation ---------------------------------------------------- */
+  function compositionValid(classes: BreedCompositionIn[]): boolean {
+    const classTotal = classes.reduce((a, c) => a + c.fraction, 0);
+    if (Math.abs(classTotal - 1.0) > 1e-6) return false;
+    return classes.every((c) => {
+      const breedTotal = Object.values(c.breeds).reduce(
+        (a, b) => a + b,
+        0,
+      );
+      return Math.abs(breedTotal - 1.0) < 1e-6;
+    });
+  }
+  const breedInputsValid =
+    compositionValid(cowComposition) &&
+    compositionValid(bullComposition);
+
   async function runSimulation() {
+    if (!breedInputsValid) {
+      setError(
+        "Please make the breed fractions add up correctly before " +
+          "running - each group and each breed mix must total 100%.",
+      );
+      setStep(1);
+      return;
+    }
     setRunning(true);
     setError("");
     try {
@@ -118,23 +190,13 @@ export function SimulationWizard({
           calving_loss_rate: calvingLoss,
           replacement_rate: replacement,
           heifer_retention: heiferRetention,
-          cow_breed_composition: [
-            { fraction: 1.0, breeds: { [breed]: 1.0 } },
-          ],
-          bull_breed_composition: [
-            { fraction: 1.0, breeds: { [breed]: 1.0 } },
-          ],
+          cow_breed_composition: cowComposition,
+          bull_breed_composition: bullComposition,
         },
         economic_scenario: {
           name: "My economics",
           sale_endpoint: endpoint,
-          price_bands: [
-            { sex: "S", low: 0, high: 9999,
-              price_per_cwt: steerPrice },
-            { sex: "F", low: 0, high: 9999,
-              price_per_cwt: heiferPrice },
-            { sex: "C", low: 0, high: 9999, price_per_cwt: 110 },
-          ],
+          price_bands: priceBands,
           carcass_base_price: carcassBasePrice,
           /* A standard USDA quality x yield grade grid. Premiums and
              discounts in $/cwt of carcass relative to the base price. */
@@ -236,24 +298,6 @@ export function SimulationWizard({
                   />
                 </Field>
                 <Field
-                  label="Predominant breed"
-                  hint="The main breed of your cow herd. This decides which
-                        EPDs apply — for example, a PAP (brisket disease)
-                        EPD is published only for Angus, Red Angus and
-                        Simmental."
-                >
-                  <select
-                    value={breed}
-                    onChange={(e) => setBreed(e.target.value)}
-                  >
-                    <option value="Angus">Angus</option>
-                    <option value="Red Angus">Red Angus</option>
-                    <option value="Hereford">Hereford</option>
-                    <option value="Simmental">Simmental</option>
-                    <option value="Charolais">Charolais</option>
-                  </select>
-                </Field>
-                <Field
                   label="Conception rate"
                   hint="The fraction of cows that conceive each season.
                         0.92 means 92%."
@@ -313,10 +357,82 @@ export function SimulationWizard({
                   </select>
                 </Field>
               </Card>
+
+              <Card title="Breed composition">
+                <p className="field-hint" style={{ marginBottom: 14 }}>
+                  Describe the real breed makeup of your cow herd and the
+                  bulls you mate them to. Most herds are one breed, but
+                  you can describe crosses and mixed herds. Breed makeup
+                  drives heterosis, breed differences, and which EPDs
+                  apply — NexGenIQ works out the calf crop for you.
+                </p>
+
+                <BreedCompositionBuilder
+                  label="Cow herd"
+                  hint="The breed makeup of your breeding females."
+                  classes={cowComposition}
+                  onChange={setCowComposition}
+                />
+
+                <div style={{ height: 18 }} />
+
+                <BreedCompositionBuilder
+                  label="Bull battery"
+                  hint="The breed makeup of the bulls your cows are mated
+                        to."
+                  classes={bullComposition}
+                  onChange={setBullComposition}
+                />
+
+                {/* Derived calf-crop composition - never entered. */}
+                <div className="calf-derived">
+                  <p className="calf-derived-label">
+                    Resulting calf crop
+                  </p>
+                  <p className="field-hint">
+                    Half from the cow herd, half from the bulls — this is
+                    the breed makeup of the calves NexGenIQ will simulate.
+                  </p>
+                  <div className="calf-derived-breeds">
+                    {Object.entries(calfAvg)
+                      .filter(([, f]) => f > 0.0005)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([breed, f]) => (
+                        <span key={breed} className="calf-breed-chip">
+                          {breed} {pct(f)}%
+                        </span>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Plain-language note on PAP availability. */}
+                <p
+                  className="field-hint"
+                  style={{ marginTop: 12, fontStyle: "italic" }}
+                >
+                  {papAvailable
+                    ? "Your herd contains a breed that publishes a PAP " +
+                      "(brisket disease) EPD, so PAP will be included " +
+                      "in the economic-value analysis."
+                    : "None of your herd's breeds publish a PAP " +
+                      "(brisket disease) EPD, so PAP will not be " +
+                      "included. PAP EPDs come from Angus, Red Angus " +
+                      "and Simmental."}
+                </p>
+              </Card>
+
+              {!breedInputsValid && (
+                <p className="auth-error" style={{ marginTop: 4 }}>
+                  Each group's share and each breed mix must total 100%
+                  before you continue.
+                </p>
+              )}
+
               <div className="wizard-actions">
                 <span />
                 <Button
                   variant="primary"
+                  disabled={!breedInputsValid}
                   onClick={() => setStep(2)}
                 >
                   Continue →
@@ -335,7 +451,7 @@ export function SimulationWizard({
                 How and when you sell your calves, and what it costs to run
                 a cow. These determine what each trait is worth.
               </p>
-              <Card title="Economics">
+              <Card title="Marketing and prices">
                 <Field
                   label="When do you sell your calves?"
                   hint="Where in the production chain you market the calf
@@ -354,30 +470,14 @@ export function SimulationWizard({
                     <option value="carcass">On the rail (carcass)</option>
                   </select>
                 </Field>
-                <Field
-                  label="Steer calf price ($/cwt)"
-                  hint="Sale price per hundredweight for steer calves."
-                >
-                  <input
-                    type="number"
-                    value={steerPrice}
-                    onChange={(e) =>
-                      setSteerPrice(Number(e.target.value))
-                    }
-                  />
-                </Field>
-                <Field
-                  label="Heifer calf price ($/cwt)"
-                  hint="Sale price per hundredweight for heifer calves."
-                >
-                  <input
-                    type="number"
-                    value={heiferPrice}
-                    onChange={(e) =>
-                      setHeiferPrice(Number(e.target.value))
-                    }
-                  />
-                </Field>
+
+                <PriceBandEditor
+                  bands={priceBands}
+                  onChange={setPriceBands}
+                />
+              </Card>
+
+              <Card title="Herd costs">
                 <Field
                   label="Pasture cost ($/AUM)"
                   hint="Cost of one animal-unit-month — the monthly cost of
@@ -475,7 +575,7 @@ export function SimulationWizard({
                 </Field>
               </Card>
 
-              {/* Feedlot / carcass inputs — only relevant when calves
+              {/* Feedlot / carcass inputs - only relevant when calves
                   are marketed past weaning. */}
               {isTerminalEndpoint && (
                 <Card title="Feedlot and carcass">
