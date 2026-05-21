@@ -347,6 +347,79 @@ const SECTIONS: DocSection[] = [
       </>
     ),
   },
+  {
+    id: "validation",
+    title: "How the engine is validated",
+    summary:
+      "The selection-index engine is checked against exact published " +
+      "equations — not just tested for self-consistency — so its " +
+      "results can be trusted and cited. The checks run automatically " +
+      "with every build.",
+    detail: (
+      <>
+        <p className="docs-body">
+          Validation means showing the engine computes the{" "}
+          <em>correct</em> answer, against an independent reference. For
+          NexGenIQ the references are exact published equations, so
+          agreement to numerical tolerance shows the engine implements
+          the published method correctly — for any inputs, not one
+          example.
+        </p>
+        <p className="docs-body">
+          <strong>The selection-index solver.</strong> For two traits the
+          selection-index equations P b = G a have an exact algebraic
+          (closed-form) solution — the published 2-trait solution of
+          Hazel&rsquo;s (1943) equations. NexGenIQ&rsquo;s general solver
+          was run across two-trait scenarios spanning uncorrelated,
+          positively and negatively correlated traits, a negative
+          economic weight, and strongly asymmetric trait scales; in every
+          case it matched the closed-form solution to a relative
+          tolerance of 1&times;10&#8315;&#185;&#8304; (machine
+          precision). The returned weights were also confirmed to satisfy
+          P b = G a exactly, and a three-trait case was checked against
+          an independent linear solve.
+        </p>
+        <p className="docs-body">
+          <strong>The BIF accuracy conversions.</strong> The accuracy /
+          reliability conversions were checked against eleven exact
+          points of the Beef Improvement Federation definition
+          (BIF accuracy = 1 &minus; &radic;(1 &minus; reliability)), from
+          0 to 1, and reproduced every one to a tolerance of
+          1&times;10&#8315;&#185;&#8304;.
+        </p>
+        <p className="docs-body">
+          <strong>Scope.</strong> This validates the deterministic
+          selection-index engine. The herd simulation is a stochastic
+          bio-economic model with no single published &ldquo;correct
+          answer&rdquo; — different models legitimately give
+          different economic values — so it is not validated against
+          a single reference. It is instead checked for face validity:
+          every derived economic value is confirmed to carry the sign
+          breeding economics predicts, and outputs respond sensibly to
+          inputs. The simulation&rsquo;s economic values should be read
+          as a modelled estimate for the operation described, not a
+          validated constant.
+        </p>
+        <p className="docs-body">
+          The full validation record — every reference, input, and
+          result — is in the project&rsquo;s validation document
+          (docs/VALIDATION.md), and the checks are implemented as
+          automated tests that run with every build, so the engine cannot
+          regress away from these reference results unnoticed.
+        </p>
+        <p className="docs-refs">
+          Hazel, L. N. 1943. The genetic basis for constructing selection
+          indexes. Genetics 28:476&ndash;490.
+          <br />
+          Smith, H. F. 1936. A discriminant function for plant selection.
+          Ann. Eugen. 7:240&ndash;250.
+          <br />
+          Beef Improvement Federation. 2021. Guidelines for Uniform Beef
+          Improvement Programs. 10th ed.
+        </p>
+      </>
+    ),
+  },
 ];
 
 export function TechnicalDocs() {
