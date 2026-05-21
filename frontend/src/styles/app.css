@@ -1395,3 +1395,28 @@ input[type="range"] {
 .goal-match-warning strong {
   color: var(--graphite-900);
 }
+
+/* ----------------------------------------------------------------------
+ * Across-breed adjustment note (shown for multi-breed animal sets).
+ * -------------------------------------------------------------------- */
+.across-breed-note {
+  background: var(--sage-50);
+  border: 1px solid var(--sage-600);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 0 0 16px;
+}
+
+.across-breed-note-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sage-900);
+  margin: 0 0 4px;
+}
+
+.across-breed-note p:last-child {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--graphite-700);
+  margin: 0;
+}

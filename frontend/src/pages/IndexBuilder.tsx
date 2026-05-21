@@ -288,6 +288,22 @@ export function IndexBuilder({
                 Upload a sale catalogue or data file — NexGenIQ will match
                 the columns for you — or add a few animals by hand.
               </p>
+              {new Set(
+                animals.map((a) => a.breed).filter(Boolean),
+              ).size > 1 && (
+                <div className="across-breed-note">
+                  <p className="across-breed-note-title">
+                    Your animals span more than one breed
+                  </p>
+                  <p>
+                    EPDs from different breeds sit on different scales and
+                    cannot be compared directly. When you build the index,
+                    NexGenIQ places every animal's EPDs on a common base
+                    first (an across-breed adjustment) so animals of
+                    different breeds can be ranked together fairly.
+                  </p>
+                </div>
+              )}
               <AnimalsStep
                 traits={traits}
                 animals={animals}
