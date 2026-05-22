@@ -65,7 +65,7 @@ def test_usmarc_carcass_traits_absent_for_some_breeds():
 def test_consensus_parameters_load():
     """The shipped consensus genetic-parameter set loads and is cited."""
     param_set, source = load_parameter_set()
-    assert param_set.version == "sourced-2026.3"
+    assert param_set.version == "sourced-2026.4"
     assert len(param_set.trait_params) >= 15
     assert source.detail.get("primary_sources")
     # Every trait carries a citation.

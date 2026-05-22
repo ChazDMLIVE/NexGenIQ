@@ -83,23 +83,45 @@ is therefore **derived**, by the standard identity
 from a cited phenotypic SD and a cited heritability. Each derived value
 records the formula and both inputs, so the derivation is fully auditable.
 
-This is the honest weak point of the current set. Crawford (2016) and
-Rolfe (2011) and Torres-Vázquez (2016) report real phenotypic SDs for
-seven traits (BW, WW, YW, PWG, PAP, DMI, RFI, plus the docility and WW
-SDs). Koots (1994) is a heritability-and-correlation meta-analysis and
-**does not tabulate phenotypic SDs**. The phenotypic SDs for the
-remaining traits — mature weight, calving ease (direct and maternal),
-scrotal circumference, carcass weight, marbling, ribeye area, backfat,
-heifer pregnancy — are therefore labelled `unsourced`: they are
-representative placeholders, and the genetic SDs derived from them
-inherit that `unsourced` status. The loader warns about every one of
-them on each run. Sourcing these phenotypic SDs from population-specific
-studies is the most important next step for this parameter set.
+Crawford (2016), Rolfe (2011) and Torres-Vázquez (2016) report real
+phenotypic SDs for the growth, feed-efficiency, PAP and docility traits.
+Koots (1994) is a heritability-and-correlation meta-analysis and **does
+not tabulate phenotypic SDs**, so the remaining continuous traits were
+sourced from population-specific descriptive-statistics tables:
 
-A small number of unit conversions are applied (kilograms to pounds for
-weight traits; cumulative 140-day intake to a per-day basis for DMI and
-RFI). Each conversion is stated explicitly in the relevant provenance
-note and flagged in the verification checklist.
+- **Mature weight** — phenotypic SD 58 kg from Costa et al. (2011,
+  Table 1), 2-year-old U.S. Angus cows, n = 15,927.
+- **Carcass weight, ribeye area, backfat, marbling** — phenotypic SDs
+  29.1 kg, 8.34 cm², 4.44 mm and 0.45 (score) from Mao et al. (2013,
+  Table 3, Angus column), Angus steers.
+- **Scrotal circumference** — phenotypic SD ≈ 2.5 cm from the Angus
+  Genetics Inc. Fall 2026 Angus evaluation trait-statistics table, the
+  same Angus National Cattle Evaluation source used for the PAP
+  heritability.
+
+The four categorical/threshold traits — calving ease direct, calving
+ease maternal, heifer pregnancy and stayability — have no meaningful
+observed-scale phenotypic SD, because the trait is scored in discrete
+categories (or 0/1) rather than measured on a continuous scale. Under
+the threshold model these traits are governed by an unobserved
+continuous *liability* whose residual SD is fixed at 1.0 by convention,
+and the cited heritabilities are estimates on that liability scale. For
+these four traits the phenotypic SD is therefore set to **1.0 on the
+liability scale** by definition of the model (Falconer & Mackay 1996,
+Ch. 18; Gianola 1982), and the genetic SD is simply √heritability. This
+is not a placeholder — it is the correct value for a threshold trait —
+so these SDs are labelled `cited` (to threshold-model theory) and
+`derived` rather than `unsourced`. Stayability's *heritability* remains
+an unsourced placeholder pending a cited stayability genetic-parameter
+study; only its SD treatment is resolved here.
+
+With these additions, none of the phenotypic or genetic standard
+deviations remain `unsourced`. A small number of unit conversions are
+applied (kilograms to pounds for weight traits; centimetres² to square
+inches for ribeye area; millimetres to inches for backfat; cumulative
+140-day intake to a per-day basis for DMI and RFI). Each conversion is
+stated explicitly in the relevant provenance note and flagged in the
+verification checklist.
 
 ### Genetic correlations
 

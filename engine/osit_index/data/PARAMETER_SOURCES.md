@@ -1,6 +1,6 @@
 # NexGenIQ genetic-parameter source verification checklist
 
-Parameter set: **Beef-cattle sourced parameter set** version **sourced-2026.3**.
+Parameter set: **Beef-cattle sourced parameter set** version **sourced-2026.4**.
 
 Every number in `genetic_parameters.json` is listed below with its
 source. The **Confirmed** column is for independent verification
@@ -19,6 +19,9 @@ by the loader on every run.
 - **TorresVazquez2016** -- Torres-Vazquez, J. A., and M. L. Spangler. 2016. Genetic parameters for docility, weaning weight, yearling weight, and intramuscular fat percentage in Hereford cattle. J. Anim. Sci. 94:21-27.
 - **Otteman2012** -- Otteman, K. L. 2012. Phenotypic and genetic relationships between docility and reproduction in Angus heifers. M.S. Thesis, Kansas State University, Manhattan, KS.
 - **MarkelLatentPAP** -- Markel, C. D., S. L. Lake, S. P. Field, T. N. Holt, T. E. Engle, C. L. Gifford, and H. C. Cunningham-Hollinger. A latent phenotype framework for pulmonary arterial pressure: boundary-aware transformation improves sire-associated heritability signal across independent Angus cattle datasets. (Manuscript.)
+- **Costa2011** -- Costa, R. B., I. Misztal, M. A. Elzo, J. K. Bertrand, L. O. D. Silva, and M. Lukaszewicz. 2011. Estimation of genetic parameters for mature weight in Angus cattle. J. Anim. Sci. 89:2680-2686.
+- **Mao2013** -- Mao, F., L. Chen, M. Vinsky, E. Okine, Z. Wang, J. Basarab, D. H. Crews Jr., and C. Li. 2013. Phenotypic and genetic relationships of feed efficiency with growth performance, ultrasound, and carcass merit traits in Angus and Charolais steers. J. Anim. Sci. 91:2067-2076.
+- **ThresholdModel** -- Threshold-model theory for categorical traits: Falconer, D. S., and T. F. C. Mackay. 1996. Introduction to Quantitative Genetics, 4th ed., Ch. 18 (Longman). Gianola, D. 1982. Theory and analysis of threshold characters. J. Anim. Sci. 54:1079-1096. Under the threshold model a categorical trait is governed by an unobserved continuous liability whose residual SD is fixed at 1.0 by convention; heritabilities for such traits are reported on that liability scale.
 
 ## Heritabilities
 
@@ -45,30 +48,55 @@ by the loader on every run.
 | PAP | 0.39 | cited | AGI2026 | [ ] |
 | PAP_L | 0.401 | cited | MarkelLatentPAP | [ ] |
 
-## Phenotypic and genetic standard deviations
+## Phenotypic standard deviations
 
-| Trait | Phenotypic SD | PSD source | Genetic SD | GSD source | Confirmed |
-|-------|---------------|------------|------------|------------|-----------|
-| BW | 5.1 | cited | 7.28 | derived | [ ] |
-| WW | 31.8 | cited | 37.75 | derived | [ ] |
-| YW | 83.8 | cited | 123.92 | derived | [ ] |
-| PWG | 63.7 | cited | 52.52 | derived | [ ] |
-| MILK | 31.8 | proxy | 30.55 | derived | [ ] |
-| MW | 70.0 | unsourced | 44.82 | derived | [ ] |
-| STAY | 8.0 | unsourced | 3.39 | derived | [ ] |
-| CED | 6.0 | unsourced | 1.9 | derived | [ ] |
-| CEM | 5.0 | unsourced | 1.73 | derived | [ ] |
-| HP | 7.0 | unsourced | 2.8 | derived | [ ] |
-| SC | 2.5 | unsourced | 1.68 | derived | [ ] |
-| CW | 30.0 | unsourced | 14.39 | derived | [ ] |
-| MARB | 0.28 | unsourced | 0.173 | derived | [ ] |
-| REA | 0.6 | unsourced | 0.389 | derived | [ ] |
-| FAT | 0.07 | unsourced | 0.0464 | derived | [ ] |
-| DMI | 152.0 | cited | 0.687 | derived | [ ] |
-| RFI | 86.0 | cited | 0.443 | derived | [ ] |
-| DOC | 0.53 | proxy | 0.249 | derived | [ ] |
-| PAP | 9.9 | cited | 6.18 | derived | [ ] |
-| PAP_L | 0.45 | cited | 0.285 | derived | [ ] |
+| Trait | Value | Source type | Citation | Confirmed |
+|-------|-------|-------------|----------|-----------|
+| BW (kg) | 5.1 | cited | Crawford2016 | [ ] |
+| WW (kg) | 31.8 | cited | Crawford2016 | [ ] |
+| YW (kg) | 83.8 | cited | Crawford2016 | [ ] |
+| PWG (kg) | 63.7 | cited | Crawford2016 | [ ] |
+| MILK (kg) | 31.8 | proxy | Crawford2016 | [ ] |
+| MW (kg) | 58.0 | cited | Costa2011 | [ ] |
+| STAY (liability-SD) | 1.0 | cited | ThresholdModel | [ ] |
+| CED (liability-SD) | 1.0 | cited | ThresholdModel | [ ] |
+| CEM (liability-SD) | 1.0 | cited | ThresholdModel | [ ] |
+| HP (liability-SD) | 1.0 | cited | ThresholdModel | [ ] |
+| SC (cm) | 2.5 | cited | AGI2026 | [ ] |
+| CW (kg) | 29.1 | cited | Mao2013 | [ ] |
+| MARB (score) | 0.45 | cited | Mao2013 | [ ] |
+| REA (cm2) | 8.34 | cited | Mao2013 | [ ] |
+| FAT (mm) | 4.44 | cited | Mao2013 | [ ] |
+| DMI (kg) | 152.0 | cited | Rolfe2011 | [ ] |
+| RFI (kg) | 86.0 | cited | Rolfe2011 | [ ] |
+| DOC (score) | 0.53 | proxy | TorresVazquez2016 | [ ] |
+| PAP (mmHg) | 9.9 | cited | Crawford2016 | [ ] |
+| PAP_L (latent-z) | 0.45 | cited | MarkelLatentPAP | [ ] |
+
+## Genetic standard deviations (derived)
+
+| Trait | Value | Source type | Citation | Confirmed |
+|-------|-------|-------------|----------|-----------|
+| BW (lb) | 7.28 | derived | Crawford2016 | [ ] |
+| WW (lb) | 37.75 | derived | Crawford2016 | [ ] |
+| YW (lb) | 123.92 | derived | Crawford2016 | [ ] |
+| PWG (lb) | 52.52 | derived | Crawford2016 | [ ] |
+| MILK (lb) | 30.55 | derived | Crawford2016 | [ ] |
+| MW (lb) | 81.88 | derived | Costa2011 | [ ] |
+| STAY (liability-SD) | 0.4243 | derived | ThresholdModel | [ ] |
+| CED (liability-SD) | 0.3162 | derived | ThresholdModel | [ ] |
+| CEM (liability-SD) | 0.3464 | derived | ThresholdModel | [ ] |
+| HP (liability-SD) | 0.4 | derived | ThresholdModel | [ ] |
+| SC (cm) | 1.68 | derived | AGI2026 | [ ] |
+| CW (lb) | 30.77 | derived | Mao2013 | [ ] |
+| MARB (score) | 0.277 | derived | Mao2013 | [ ] |
+| REA (sq in) | 0.838 | derived | Mao2013 | [ ] |
+| FAT (in) | 0.116 | derived | Mao2013 | [ ] |
+| DMI (lb/day) | 0.687 | derived | Rolfe2011 | [ ] |
+| RFI (lb/day) | 0.443 | derived | Rolfe2011 | [ ] |
+| DOC (score) | 0.249 | derived | TorresVazquez2016 | [ ] |
+| PAP (mmHg) | 6.18 | derived | Crawford2016 | [ ] |
+| PAP_L (latent-z) | 0.285 | derived | MarkelLatentPAP | [ ] |
 
 ## Genetic correlations
 
@@ -142,15 +170,14 @@ by the loader on every run.
 | PAP-PWG | -0.1 | cited | Crawford2016 | [ ] |
 | PAP_L-PWG | -0.1 | proxy | Crawford2016 | [ ] |
 
-## Summary
+## Remaining unsourced numbers
 
-Total numbers: 127
-- cited: 77
-- derived: 20
-- proxy: 13
-- unsourced: 17
+7 value(s) remain `unsourced` and are flagged by the loader:
 
-Every `cited`, `derived`, and `proxy` value carries a literature
-citation. Every `unsourced` value is a documented placeholder that
-still needs an empirical source; the loader warns about these on
-every run.
+- STAY.heritability
+- rg:MW-MILK
+- rg:CW-MARB
+- rg:HP-STAY
+- rg:SC-HP
+- rg:SC-STAY
+- rg:DOC-HP
