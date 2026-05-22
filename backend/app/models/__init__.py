@@ -306,3 +306,45 @@ class SavedItem(Base, TimestampMixin):
     # The complete inputs + result, in the JSON shape the relevant tool
     # consumes when the item is re-opened.
     payload: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+# ---------------------------------------------------------------------------
+# Audit log
+# ---------------------------------------------------------------------------
+class AuditEvent(Base):
+    """One recorded action, for the admin activity log.
+
+    Each row records WHAT happened, WHICH user did it, and WHEN -- plus a
+    short, plain-language ``summary`` that is deliberately NON-SENSITIVE
+    (for example "imported 42 animals" or "built index with 5 traits").
+    The summary never contains passwords, security answers, full payloads,
+    or a user's herd data; it is a one-line description only.
+
+    The log is append-only: rows are inserted as actions happen and are
+    never updated. It captures events from the moment this table exists
+    forward -- it cannot reconstruct activity from before then.
+    """
+
+    __tablename__ = "audit_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True,
+                                    default=_uuid)
+    # When the event occurred (UTC).
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, index=True
+    )
+    # A short event code, e.g. "register", "login", "password_reset",
+    # "index_build", "simulation_run", "file_import".
+    event_type: Mapped[str] = mapped_column(String(40), nullable=False,
+                                            index=True)
+    # The acting user. Nullable because some events (a failed login for
+    # an unknown email) have no associated account.
+    user_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
+    # The acting user's email, copied in at write time so the log still
+    # reads sensibly if the account is later deleted.
+    user_email: Mapped[str] = mapped_column(String(255), default="")
+    # A short, non-sensitive, plain-language description of the event.
+    summary: Mapped[str] = mapped_column(String(300), default="")
+

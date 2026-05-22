@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.services.audit import record_event
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.models import AdjustmentFactorTable, GeneticParameterSet, RunLedger, User
@@ -119,6 +120,16 @@ def build(
     db.refresh(ledger)
 
     response.ledger_id = ledger.id
+
+    record_event(
+        db, event_type="index_build",
+        summary=(
+            f"Built index '{request.goal.name}' "
+            f"({len(request.goal.components)} traits, "
+            f"{len(request.animals)} animals)."
+        ),
+        user=user,
+    )
     return response
 
 

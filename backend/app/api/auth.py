@@ -19,6 +19,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models import User
+from app.services.audit import record_event
 from app.schemas import (
     PasswordResetQuestionRequest,
     PasswordResetQuestionResponse,
@@ -92,6 +93,12 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> User:
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    record_event(
+        db, event_type="register",
+        summary=f"New {user.role} account created.",
+        user=user,
+    )
     return user
 
 
@@ -110,17 +117,30 @@ def login(
     if user is None or not verify_password(
         form.password, user.password_hash
     ):
+        record_event(
+            db, event_type="login_failed",
+            summary="Failed sign-in: wrong email or password.",
+            user_email=form.username,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_active:
+        record_event(
+            db, event_type="login_failed",
+            summary="Failed sign-in: account is disabled.",
+            user=user,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account is disabled.",
         )
 
+    record_event(
+        db, event_type="login", summary="Signed in.", user=user,
+    )
     token = create_access_token(subject=user.id, role=user.role)
     return Token(access_token=token, user=UserOut.model_validate(user))
 
@@ -209,3 +229,9 @@ def password_reset_confirm(
     user.password_hash = hash_password(payload.new_password)
     db.add(user)
     db.commit()
+
+    record_event(
+        db, event_type="password_reset",
+        summary="Password reset via security question.",
+        user=user,
+    )

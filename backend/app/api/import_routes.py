@@ -18,11 +18,14 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.database import get_db
 from app.models import User
 from app.services import csv_import
 from app.services.file_import import FileImportError, to_csv_bytes
+from app.services.audit import record_event
 
 router = APIRouter(prefix="/import", tags=["import"])
 
@@ -99,6 +102,7 @@ async def inspect(
 async def parse(
     file: UploadFile = File(...),
     mapping_json: str = Form(...),
+    db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> dict:
     """Parse an uploaded animal file using a confirmed column mapping.
@@ -137,6 +141,16 @@ async def parse(
         )
 
     animals, problems = csv_import.parse_animals(content, mapping)
+
+    record_event(
+        db, event_type="file_import",
+        summary=(
+            f"Imported {len(animals)} animal record(s) "
+            f"from {file.filename or 'an uploaded file'}."
+        ),
+        user=user,
+    )
+
     return {
         "animal_count": len(animals),
         "animals": animals,

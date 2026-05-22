@@ -30,6 +30,7 @@ from app.core.database import get_db
 from app.models import RunLedger, User
 from app.schemas import SimulationRequest, SimulationResponse
 from app.services import sim_service
+from app.services.audit import record_event
 
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 _settings = get_settings()
@@ -103,4 +104,14 @@ def derive_mevs(
     db.add(ledger)
     db.commit()
 
+    record_event(
+        db, event_type="simulation_run",
+        summary=(
+            f"Ran herd simulation "
+            f"'{request.production_system.name}' "
+            f"({request.production_system.herd_size} cows, "
+            f"{request.controls.replicates} replicates)."
+        ),
+        user=user,
+    )
     return response
