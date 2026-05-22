@@ -63,6 +63,13 @@ class Settings(BaseSettings):
     # Set roughly to the number of CPU cores available to the backend.
     max_concurrent_simulations: int = 2
 
+    # --- admin bootstrap --------------------------------------------------
+    # The email of the designated site administrator. On startup the
+    # account with this email is promoted to the site_admin role, so the
+    # admin panel has exactly one admin to begin with without any manual
+    # database step. Leave blank to disable automatic promotion.
+    admin_email: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         """The CORS origins as a list, parsed from the comma-separated

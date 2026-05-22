@@ -145,3 +145,36 @@ def init_db() -> None:
     engine = get_engine()
     Base.metadata.create_all(bind=engine)
     _add_missing_columns(engine)
+
+
+def bootstrap_admin() -> None:
+    """Promote the designated admin account to the site_admin role.
+
+    The admin email comes from the NEXGENIQ_ADMIN_EMAIL environment
+    variable. If that account exists and is not already a site_admin, its
+    role is set to site_admin. This gives the deployment exactly one
+    administrator with no manual database step, and is idempotent -- on
+    every later startup it finds the account already an admin and does
+    nothing. If the variable is blank, or names an account that does not
+    exist yet, this is a no-op (the account can be promoted on a later
+    startup once it has registered).
+    """
+    from app.models import User  # local import: models import this module
+
+    email = _settings.admin_email.strip().lower()
+    if not email:
+        return
+    factory = _get_session_factory()
+    db = factory()
+    try:
+        user = (
+            db.query(User)
+            .filter(User.email == email)
+            .one_or_none()
+        )
+        if user is not None and user.role != "site_admin":
+            user.role = "site_admin"
+            db.add(user)
+            db.commit()
+    finally:
+        db.close()

@@ -591,3 +591,126 @@ def test_build_from_phenotypes_requires_contemporary_group(client, auth_headers)
     # Pydantic accepts the empty string; the engine rejects it -> 400/422/500
     # surfaced as an error. Accept any non-200 with a clear failure.
     assert r.status_code != 200 or not r.json().get("ok", True)
+
+
+# --- admin panel -----------------------------------------------------------
+def _make_admin(client):
+    """Register a user and promote them to site_admin directly in the DB.
+
+    Registration never grants site_admin, so a test admin is made by
+    promoting the row -- the same thing the env-var bootstrap does in a
+    real deployment.
+    """
+    import uuid
+
+    from sqlalchemy import select
+
+    from app.core.database import _get_session_factory
+    from app.models import User
+
+    email = f"admin-{uuid.uuid4().hex[:8]}@example.com"
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": email, "password": "adminpass123",
+              "role": "producer"},
+    )
+    db = _get_session_factory()()
+    try:
+        user = db.execute(
+            select(User).where(User.email == email)
+        ).scalars().one()
+        user.role = "site_admin"
+        db.add(user)
+        db.commit()
+    finally:
+        db.close()
+    token = client.post(
+        "/api/v1/auth/token",
+        data={"username": email, "password": "adminpass123"},
+    ).json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}, email
+
+
+def test_admin_endpoints_require_admin(client, auth_headers):
+    """A non-admin token is rejected from every admin endpoint."""
+    assert client.get("/api/v1/admin/users").status_code == 401
+    assert client.get(
+        "/api/v1/admin/users", headers=auth_headers
+    ).status_code == 403
+    assert client.get(
+        "/api/v1/admin/activity", headers=auth_headers
+    ).status_code == 403
+
+
+def test_admin_lists_users_and_activity(client):
+    """An admin can list users and read the activity log."""
+    admin_h, _ = _make_admin(client)
+
+    r = client.get("/api/v1/admin/users", headers=admin_h)
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+
+    a = client.get("/api/v1/admin/activity", headers=admin_h)
+    assert a.status_code == 200
+    # Registering the admin and the login both recorded events.
+    assert any(
+        e["event_type"] in ("register", "login") for e in a.json()
+    )
+
+
+def test_admin_updates_user_role(client):
+    """An admin can change another user's role."""
+    admin_h, _ = _make_admin(client)
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "target@example.com", "password": "password123",
+              "role": "producer"},
+    )
+    users = client.get("/api/v1/admin/users", headers=admin_h).json()
+    target = next(u for u in users if u["email"] == "target@example.com")
+
+    r = client.patch(
+        f"/api/v1/admin/users/{target['id']}",
+        json={"role": "researcher"},
+        headers=admin_h,
+    )
+    assert r.status_code == 200
+    assert r.json()["role"] == "researcher"
+
+
+def test_admin_cannot_disable_self(client):
+    """An admin cannot disable their own account."""
+    admin_h, admin_email = _make_admin(client)
+    users = client.get("/api/v1/admin/users", headers=admin_h).json()
+    me = next(u for u in users if u["email"] == admin_email)
+
+    r = client.patch(
+        f"/api/v1/admin/users/{me['id']}",
+        json={"is_active": False},
+        headers=admin_h,
+    )
+    assert r.status_code == 400
+
+
+def test_admin_resets_user_password(client):
+    """An admin can set a new password for a user, and it then works."""
+    admin_h, _ = _make_admin(client)
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "pwtarget@example.com", "password": "oldpass123",
+              "role": "producer"},
+    )
+    users = client.get("/api/v1/admin/users", headers=admin_h).json()
+    target = next(
+        u for u in users if u["email"] == "pwtarget@example.com"
+    )
+
+    r = client.post(
+        f"/api/v1/admin/users/{target['id']}/password",
+        json={"new_password": "brandnew456"},
+        headers=admin_h,
+    )
+    assert r.status_code == 204
+    assert client.post("/api/v1/auth/token", data={
+        "username": "pwtarget@example.com",
+        "password": "brandnew456"}).status_code == 200

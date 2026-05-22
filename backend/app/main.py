@@ -19,6 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    admin_routes,
     auth,
     import_routes,
     index_routes,
@@ -27,7 +28,7 @@ from app.api import (
     sim_routes,
 )
 from app.core.config import get_settings
-from app.core.database import init_db
+from app.core.database import bootstrap_admin, init_db
 
 _settings = get_settings()
 
@@ -50,6 +51,7 @@ async def lifespan(app: FastAPI):
     global _db_ready, _db_error
     try:
         init_db()
+        bootstrap_admin()
         _db_ready = True
     except Exception as exc:  # noqa: BLE001 - report any startup DB failure
         _db_ready = False
@@ -94,6 +96,7 @@ app.include_router(import_routes.router, prefix=_prefix)
 app.include_router(index_routes.router, prefix=_prefix)
 app.include_router(sim_routes.router, prefix=_prefix)
 app.include_router(saved_routes.router, prefix=_prefix)
+app.include_router(admin_routes.router, prefix=_prefix)
 
 
 @app.get("/health", tags=["meta"])

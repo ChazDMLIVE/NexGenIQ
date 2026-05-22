@@ -23,6 +23,7 @@ import { Troubleshooting } from "./pages/Troubleshooting";
 import { TechnicalDocs } from "./pages/TechnicalDocs";
 import { HowToUse } from "./pages/HowToUse";
 import { SavedWork } from "./pages/SavedWork";
+import { AdminPanel } from "./pages/AdminPanel";
 import { Logo } from "./components/Logo";
 
 type Route =
@@ -31,7 +32,8 @@ type Route =
   | "saved"
   | "howto"
   | "troubleshooting"
-  | "techdocs";
+  | "techdocs"
+  | "admin";
 
 /* Economic weights handed from the simulation to the Index Builder. */
 export interface DerivedGoal {
@@ -79,6 +81,14 @@ export function App() {
     setRoute("builder");
   }
 
+  /* The Admin nav item is shown only to a site_admin account. */
+  const navItems = [
+    ...NAV_ITEMS,
+    ...(user.role === "site_admin"
+      ? [{ route: "admin" as Route, label: "Admin" }]
+      : []),
+  ];
+
   return (
     <HelpProvider>
       <div className="app-shell">
@@ -93,7 +103,7 @@ export function App() {
           </button>
 
           <nav className="topbar-nav">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.route}
                 type="button"
@@ -138,6 +148,9 @@ export function App() {
         {route === "howto" && <HowToUse />}
         {route === "techdocs" && <TechnicalDocs />}
         {route === "troubleshooting" && <Troubleshooting />}
+        {route === "admin" && user.role === "site_admin" && (
+          <AdminPanel />
+        )}
       </div>
     </HelpProvider>
   );

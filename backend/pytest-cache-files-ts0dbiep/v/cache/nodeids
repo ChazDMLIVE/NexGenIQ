@@ -1,4 +1,9 @@
 [
+  "tests/test_api.py::test_admin_cannot_disable_self",
+  "tests/test_api.py::test_admin_endpoints_require_admin",
+  "tests/test_api.py::test_admin_lists_users_and_activity",
+  "tests/test_api.py::test_admin_resets_user_password",
+  "tests/test_api.py::test_admin_updates_user_role",
   "tests/test_api.py::test_bad_login_rejected",
   "tests/test_api.py::test_build_from_phenotypes",
   "tests/test_api.py::test_build_from_phenotypes_requires_contemporary_group",

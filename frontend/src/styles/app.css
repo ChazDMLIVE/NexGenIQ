@@ -2058,3 +2058,87 @@ input[type="range"] {
   white-space: nowrap;
   border: 0;
 }
+
+
+/* ----------------------------------------------------------------------
+ * Admin panel.
+ * -------------------------------------------------------------------- */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 16px 0;
+  border-bottom: 1px solid var(--graphite-400);
+}
+
+.admin-tab {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--graphite-700);
+  cursor: pointer;
+}
+
+.admin-tab:hover {
+  color: var(--graphite-900);
+}
+
+.admin-tab-active {
+  color: var(--sage-900);
+  border-bottom-color: var(--sage-600);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--graphite-400);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--graphite-400);
+}
+
+.admin-table td {
+  padding: 8px 10px;
+  color: var(--graphite-700);
+  border-bottom: 1px solid var(--sage-50);
+  vertical-align: top;
+}
+
+.admin-status-on {
+  color: var(--sage-900);
+  font-weight: 600;
+}
+
+.admin-status-off {
+  color: #8a2020;
+  font-weight: 600;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.admin-divider {
+  border: none;
+  border-top: 1px solid var(--graphite-400);
+  margin: 20px 0;
+}
+
+.admin-subhead {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--graphite-900);
+  margin: 0 0 8px;
+}

@@ -485,3 +485,55 @@ class SavedItemOut(SavedItemSummary):
     """A full saved item, including the payload, for re-opening."""
 
     payload: dict
+
+
+# ---------------------------------------------------------------------------
+# Admin panel
+# ---------------------------------------------------------------------------
+class AdminUserOut(BaseModel):
+    """A user account as shown in the admin user list."""
+
+    id: str
+    email: EmailStr
+    full_name: str
+    role: str
+    is_active: bool
+    has_security_question: bool
+    created_at: str
+    saved_item_count: int
+
+
+class AdminUserUpdate(BaseModel):
+    """An admin change to a user account.
+
+    Every field is optional; only the fields supplied are changed.
+    """
+
+    role: str | None = None
+    is_active: bool | None = None
+
+
+class AdminPasswordReset(BaseModel):
+    """An admin-set new password for a user account."""
+
+    new_password: str = Field(min_length=8)
+
+
+class AuditEventOut(BaseModel):
+    """One activity-log event, as shown in the admin activity log."""
+
+    id: str
+    created_at: str
+    event_type: str
+    user_email: str
+    summary: str
+
+
+class AdminSavedItemOut(BaseModel):
+    """A saved item as shown to an admin viewing a user's submitted work."""
+
+    id: str
+    kind: str
+    name: str
+    created_at: str
+    owner_email: str

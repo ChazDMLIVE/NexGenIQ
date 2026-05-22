@@ -326,6 +326,36 @@ export interface CorrelationProvenance {
   note: string;
 }
 
+/* ----------------------------------------------------------------------
+ * Admin panel types.
+ * -------------------------------------------------------------------- */
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  is_active: boolean;
+  has_security_question: boolean;
+  created_at: string;
+  saved_item_count: number;
+}
+
+export interface AuditEvent {
+  id: string;
+  created_at: string;
+  event_type: string;
+  user_email: string;
+  summary: string;
+}
+
+export interface AdminSavedItem {
+  id: string;
+  kind: string;
+  name: string;
+  created_at: string;
+  owner_email: string;
+}
+
 export interface ParameterProvenance {
   name: string;
   version: string;
@@ -539,6 +569,48 @@ export const api = {
   /** Fetch the full per-number provenance of the consensus parameter set. */
   async parameterProvenance(): Promise<ParameterProvenance> {
     return request<ParameterProvenance>("/library/parameter-provenance");
+  },
+
+  /** ADMIN: list every registered user. */
+  async adminListUsers(): Promise<AdminUser[]> {
+    return request<AdminUser[]>("/admin/users");
+  },
+
+  /** ADMIN: change a user's role and/or active status. */
+  async adminUpdateUser(
+    userId: string,
+    changes: { role?: string; is_active?: boolean },
+  ): Promise<AdminUser> {
+    return request<AdminUser>(`/admin/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(changes),
+    });
+  },
+
+  /** ADMIN: set a new password for a user account. */
+  async adminResetPassword(
+    userId: string,
+    newPassword: string,
+  ): Promise<void> {
+    await request<void>(`/admin/users/${userId}/password`, {
+      method: "POST",
+      body: JSON.stringify({ new_password: newPassword }),
+    });
+  },
+
+  /** ADMIN: list one user's saved work. */
+  async adminUserSavedItems(userId: string): Promise<AdminSavedItem[]> {
+    return request<AdminSavedItem[]>(
+      `/admin/users/${userId}/saved-items`,
+    );
+  },
+
+  /** ADMIN: read the activity log, newest first. */
+  async adminActivity(eventType = ""): Promise<AuditEvent[]> {
+    const q = eventType
+      ? `?event_type=${encodeURIComponent(eventType)}`
+      : "";
+    return request<AuditEvent[]>(`/admin/activity${q}`);
   },
 
   /** Inspect an uploaded CSV and get a proposed column mapping. */
