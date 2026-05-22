@@ -306,6 +306,7 @@ PHENOTYPE_COLUMN_TO_TRAIT: dict[str, str] = {
     "IMF": "MARB",
     "REA": "REA",
     "BF": "FAT",
+    "ADG": "PWG",
     "DMI": "DMI",
     "RFI": "RFI",
     "DOC": "DOC",

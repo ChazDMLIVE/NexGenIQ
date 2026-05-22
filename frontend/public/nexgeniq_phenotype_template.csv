@@ -1,2 +1,2 @@
-Animal ID,Breed,Sex,Contemporary Group,WW,YW,BW,IMF,REA,BF,DMI,RFI,DOC,PAP,LPAP
-EXAMPLE-001,Angus,M,2026-spring-bulls,565,1085,82,4.10,13.2,0.45,22.5,-0.8,2,41,0.31
+Animal ID,Breed,Sex,Contemporary Group,WW,YW,BW,ADG,IMF,REA,BF,DMI,RFI,DOC,PAP,LPAP
+EXAMPLE-001,Angus,M,2026-spring-bulls,565,1085,82,3.00,4.10,13.2,0.45,22.5,-0.8,2,41,0.31

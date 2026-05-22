@@ -216,6 +216,7 @@ export function IndexBuilder({
       WW: { code: "WW", w: 1.8 },
       YW: { code: "YW", w: 0.4 },
       BW: { code: "BW", w: -3.0 },
+      ADG: { code: "PWG", w: 0.35 },
       IMF: { code: "MARB", w: 25.0 },
       REA: { code: "REA", w: 11.0 },
       BF: { code: "FAT", w: -8.0 },

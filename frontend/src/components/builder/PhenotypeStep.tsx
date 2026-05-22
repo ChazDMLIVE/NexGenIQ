@@ -24,7 +24,8 @@ interface PhenotypeStepProps {
 /* The producer-facing phenotype trait columns the CSV may carry. Any
  * other column is treated as metadata and ignored. */
 const PHENOTYPE_TRAIT_COLUMNS = [
-  "WW", "YW", "BW", "IMF", "REA", "BF", "DMI", "RFI", "DOC", "PAP", "LPAP",
+  "WW", "YW", "BW", "ADG", "IMF", "REA", "BF", "DMI", "RFI", "DOC", "PAP",
+  "LPAP",
 ];
 
 /* Parse a phenotype CSV into records. Column matching is
@@ -220,9 +221,10 @@ export function PhenotypeStep({
         <p className="builder-help">
           Traits NexGenIQ reads (use the short code as your CSV column
           header): Weaning Weight (WW), Yearling Weight (YW), Birth Weight
-          (BW), Intramuscular Fat (IMF), Ribeye Area (REA), Backfat (BF),
-          Dry-Matter Intake (DMI), Residual Feed Intake (RFI), Docility
-          (DOC), Pulmonary Arterial Pressure (PAP), and Latent PAP (LPAP).
+          (BW), Average Daily Gain (ADG), Intramuscular Fat (IMF), Ribeye
+          Area (REA), Backfat (BF), Dry-Matter Intake (DMI), Residual Feed
+          Intake (RFI), Docility (DOC), Pulmonary Arterial Pressure (PAP),
+          and Latent PAP (LPAP).
           You only need the ones you measured.
         </p>
         <div className="builder-downloads">
