@@ -24,7 +24,7 @@ const ENTRIES: TroubleEntry[] = [
     symptom: "NexGenIQ could not match some of my file's columns",
     meaning:
       "The column-mapping step did not recognise a header automatically. " +
-      "This is normal — catalogue files use all sorts of header names.",
+      "This is normal — data files use all sorts of header names.",
     fix:
       "On the column-mapping screen, open the dropdown next to each " +
       "unmatched column and pick the NexGenIQ field it holds. Columns you " +

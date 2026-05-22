@@ -27,3 +27,5 @@ pytest>=7.0
 # repository, and are installed by the deploy build step / by a local
 # editable install (see ../README.md and ../docs/DEPLOYMENT.md). This
 # avoids depending on a relative path or a Git URL at install time.
+openpyxl>=3.1,<4.0
+pdfplumber>=0.11,<0.12

@@ -200,6 +200,13 @@ export function AnimalsStep({
           >
             Download the example data (20 Angus, CSV)
           </a>
+          <a
+            className="example-link"
+            href="/nexgeniq_epd_list_example.pdf"
+            download
+          >
+            Download an example EPD-list PDF (40 bulls)
+          </a>
           <Button
             variant="primary"
             onClick={() => {
@@ -242,7 +249,7 @@ export function AnimalsStep({
 
       {/* ---- upload tab ---- */}
       {tab === "upload" && (
-        <Card title="Upload a catalogue file" helpId="animals">
+        <Card title="Upload your animal data file" helpId="animals">
           {!inspect ? (
             <label className="dropzone" style={{ display: "block" }}>
               <input
@@ -256,7 +263,10 @@ export function AnimalsStep({
               />
               {busy
                 ? "Reading your file…"
-                : "Choose a CSV file — a sale catalogue export works well."}
+                : "Choose a CSV or Excel (.xlsx) file — a spreadsheet "
+                  + "or data export from your records or breed "
+                  + "association. A designed sale-catalogue PDF is not "
+                  + "supported; use the seller\u2019s data export instead."}
             </label>
           ) : (
             <>

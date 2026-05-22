@@ -25,10 +25,27 @@ _SPECIAL_FIELDS = {"animal_id", "breed", "sex", "evaluation_id"}
 
 # Header keywords that hint at the special fields, for auto-detection.
 _FIELD_HINTS = {
-    "animal_id": ["id", "reg", "tag", "animal", "ref", "registration"],
+    "animal_id": [
+        "id", "reg", "tag", "tattoo", "animal", "ref", "registration",
+        "asa", "aaa", "lot", "ear",
+    ],
     "breed": ["breed"],
     "sex": ["sex", "gender"],
     "evaluation_id": ["evaluation", "eval"],
+}
+
+# Producer-facing column aliases that map onto a differently-coded engine
+# trait. Keyed by the normalised (lower-case, alphanumeric) header text.
+_TRAIT_ALIASES = {
+    "adg": "PWG",   # average daily gain -> post-weaning gain
+    "ce": "CED",    # calving ease (direct)
+    "ced": "CED",
+    "imf": "MARB",  # intramuscular fat -> marbling
+    "bf": "FAT",    # backfat -> fat thickness
+    "re": "REA",    # ribeye -> ribeye area
+    "rea": "REA",
+    "lpap": "PAP_L",
+    "milk": "MILK",
 }
 
 
@@ -98,6 +115,15 @@ def _detect_field(header: str) -> tuple[str, str]:
         if norm in (f"{c}epd", f"{c}value"):
             return code, "detected"
         if norm in (f"{c}acc", f"{c}accuracy", f"{c}acccuracy"):
+            return f"{code}_acc", "detected"
+
+    # Producer alias for a differently-coded trait (ADG->PWG, IMF->MARB...).
+    for alias, code in _TRAIT_ALIASES.items():
+        if norm == alias:
+            return code, "detected"
+        if norm in (f"{alias}epd", f"{alias}value"):
+            return code, "detected"
+        if norm in (f"{alias}acc", f"{alias}accuracy"):
             return f"{code}_acc", "detected"
 
     # Special field.

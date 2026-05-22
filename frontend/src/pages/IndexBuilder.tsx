@@ -392,8 +392,10 @@ export function IndexBuilder({
                 Which animals do you want to compare?
               </h1>
               <p className="page-intro">
-                Upload a sale catalogue or data file — NexGenIQ will match
-                the columns for you — or add a few animals by hand.
+                Upload a spreadsheet or data export (CSV or Excel) — NexGenIQ
+                will match the columns for you — or add a few animals by
+                hand. A designed sale-catalogue PDF cannot be read reliably;
+                ask the seller for their data export.
               </p>
               {new Set(
                 animals.map((a) => a.breed).filter(Boolean),

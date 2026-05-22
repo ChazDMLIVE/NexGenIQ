@@ -118,8 +118,9 @@ export const HELP: Record<string, HelpEntry> = {
       "These are what the whole index exists to compare. Their EPDs are " +
       "the raw material the ranking is built from.",
     how:
-      "Upload a sale catalogue or data file — the column mapper handles " +
-      "messy headers for you.",
+      "Upload a spreadsheet or data export (CSV or Excel) \u2014 the column " +
+      "mapper handles messy headers for you. A designed sale-catalogue " +
+      "PDF cannot be read; use the seller\u2019s data export.",
   },
   index_value: {
     title: "Index value",

@@ -445,8 +445,9 @@ const INDEX_STEPS: Step[] = [
         </p>
         <ul className="howto-list">
           <li>
-            <strong>Upload a file</strong> — choose a CSV (a sale
-            catalogue export works well). NexGenIQ reads it and shows you
+            <strong>Upload a file</strong> — choose a CSV or Excel (.xlsx)
+            spreadsheet, such as a data export from your records or a
+            breed association. NexGenIQ reads it and shows you
             how it matched each column; you confirm or correct the
             matching, then import. Any column it could not match you can
             set by hand, or leave to be ignored.
@@ -497,12 +498,13 @@ const INDEX_STEPS: Step[] = [
   },
   {
     id: "idx-example",
-    title: "Worked example — ranking five bulls in a sale catalogue",
+    title: "Worked example — ranking five bulls from a data file",
     body: (
       <>
         <p className="docs-body">
-          Suppose you have a sale catalogue with five Angus bulls and you
-          want the best one for a self-replacing commercial herd.
+          Suppose you have a data file (a spreadsheet or EPD export) with
+          five Angus bulls and you want the best one for a self-replacing
+          commercial herd.
         </p>
         <ul className="howto-list">
           <li>
@@ -519,7 +521,7 @@ const INDEX_STEPS: Step[] = [
           <li>
             <strong>Step 3:</strong> Set the EPD source to your bulls'
             association (for example, the American Angus Association).
-            Upload the catalogue CSV, confirm the column matching, and
+            Upload the data file, confirm the column matching, and
             import. Press “Build my index”.
           </li>
           <li>
