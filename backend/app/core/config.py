@@ -28,7 +28,9 @@ class Settings(BaseSettings):
     # --- application ------------------------------------------------------
     app_name: str = "NexGenIQ"
     api_v1_prefix: str = "/api/v1"
-    debug: bool = True
+    # Off by default: a deployment must explicitly opt in to debug output
+    # (NEXGENIQ_DEBUG=true) so verbose errors are never leaked by accident.
+    debug: bool = False
 
     # --- database ---------------------------------------------------------
     # SQLite by default for zero-config local development; a deployment

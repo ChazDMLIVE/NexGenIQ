@@ -26,6 +26,39 @@ from app.services.file_import import FileImportError, to_csv_bytes
 
 router = APIRouter(prefix="/import", tags=["import"])
 
+# Largest upload the import endpoints will accept. An animal file -- a
+# CSV, a spreadsheet, or a tabular EPD-list PDF -- is small in practice;
+# this cap (15 MB) is generous for a real herd file but bounds memory so
+# an oversized or maliciously-crafted file cannot exhaust the server when
+# openpyxl/pdfplumber expands it.
+_MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+
+
+async def _read_capped(file: UploadFile) -> bytes:
+    """Read an upload, rejecting anything larger than the size cap.
+
+    The file is read in 1 MB chunks so an oversized upload is refused as
+    soon as it crosses the cap, without holding the whole file in memory.
+    """
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > _MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=(
+                    f"That file is too large. The import accepts files up "
+                    f"to {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB; for a "
+                    f"larger data set, split it into smaller files."
+                ),
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
 
 @router.post("/inspect")
 async def inspect(
@@ -40,7 +73,7 @@ async def inspect(
     column-mapping screen needs so the user can confirm or correct the
     auto-detection before anything is imported.
     """
-    raw = await file.read()
+    raw = await _read_capped(file)
     try:
         content = to_csv_bytes(file.filename or "", raw)
     except FileImportError as exc:
@@ -84,13 +117,25 @@ async def parse(
         ``animals`` -- parsed records in the API animal shape -- and
         ``problems`` -- plain-language warnings about skipped/odd rows.
     """
-    raw = await file.read()
+    raw = await _read_capped(file)
     try:
         content = to_csv_bytes(file.filename or "", raw)
     except FileImportError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    mapping = json.loads(mapping_json)
+    try:
+        mapping = json.loads(mapping_json)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="The column mapping was not valid JSON.",
+        ) from exc
+    if not isinstance(mapping, dict):
+        raise HTTPException(
+            status_code=400,
+            detail="The column mapping must be a JSON object.",
+        )
+
     animals, problems = csv_import.parse_animals(content, mapping)
     return {
         "animal_count": len(animals),

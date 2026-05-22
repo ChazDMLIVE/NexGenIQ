@@ -10,9 +10,15 @@
  * recommended citation for the tool itself.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "../components/UI";
 import { ContextPanel } from "../components/Help";
+import { api } from "../lib/api";
+import type {
+  ParameterProvenance,
+  ProvenanceField,
+  SourceType,
+} from "../lib/api";
 
 /* One documentation section: a plain summary always shown, plus an
    expandable technical body. `detail` is rendered as React so the math
@@ -464,6 +470,207 @@ const SECTIONS: DocSection[] = [
   },
 ];
 
+/* Human-readable label for a source type. */
+const SOURCE_LABEL: Record<SourceType, string> = {
+  cited: "Cited",
+  derived: "Derived",
+  proxy: "Proxy",
+  unsourced: "Unsourced",
+};
+
+/* A small colour-coded badge for a value's source type. */
+function SourceBadge({ type }: { type: SourceType }) {
+  return (
+    <span className={`prov-badge prov-badge-${type}`}>
+      {SOURCE_LABEL[type]}
+    </span>
+  );
+}
+
+/* One row of a trait's provenance table: a parameter, its value, source
+   badge, citation, and an expandable note explaining where it came from. */
+function ProvenanceRow({
+  label,
+  field,
+}: {
+  label: string;
+  field: ProvenanceField | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  if (!field) return null;
+  const detail = [field.note, field.derivation]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <>
+      <tr>
+        <td>{label}</td>
+        <td className="prov-value">
+          {field.value ?? "\u2014"}
+          {field.units ? ` ${field.units}` : ""}
+        </td>
+        <td>
+          <SourceBadge type={field.source_type} />
+        </td>
+        <td>{field.citation || "\u2014"}</td>
+        <td>
+          {detail ? (
+            <button
+              type="button"
+              className="prov-why"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+            >
+              {open ? "Hide" : "Why?"}
+            </button>
+          ) : (
+            "\u2014"
+          )}
+        </td>
+      </tr>
+      {open && detail && (
+        <tr className="prov-note-row">
+          <td colSpan={5}>
+            <p className="prov-note">{detail}</p>
+            {field.reference && (
+              <p className="prov-reference">{field.reference}</p>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+/* The parameter-provenance explorer: fetches the per-number sourcing of
+   the consensus genetic-parameter set and lets the reader inspect, for
+   every trait, exactly which study each number came from. */
+function ParameterProvenanceCard() {
+  const [data, setData] = useState<ParameterProvenance | null>(null);
+  const [error, setError] = useState("");
+  const [openTrait, setOpenTrait] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .parameterProvenance()
+      .then(setData)
+      .catch((e) =>
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Could not load parameter provenance.",
+        ),
+      );
+  }, []);
+
+  return (
+    <Card title="Where each genetic parameter comes from">
+      <p className="docs-summary">
+        Every heritability, standard deviation and genetic correlation
+        NexGenIQ uses is traced to a specific published table. Each value
+        below carries a source type and a citation; open &ldquo;Why?&rdquo;
+        on any row to see the exact note and reference. Nothing in the
+        parameter set is a number typed from memory.
+      </p>
+
+      {error && <p className="form-error">{error}</p>}
+      {!data && !error && (
+        <p className="docs-body">Loading parameter provenance\u2026</p>
+      )}
+
+      {data && (
+        <>
+          <p className="docs-body">
+            Parameter set <strong>{data.name}</strong>, version{" "}
+            <strong>{data.version}</strong>.{" "}
+            {data.unsourced_count === 0 ? (
+              "Every value carries a literature or theory citation."
+            ) : (
+              <>
+                {data.unsourced_count} value
+                {data.unsourced_count === 1 ? " is" : "s are"} still
+                labelled <em>unsourced</em> &mdash; a documented
+                placeholder, not an empirical estimate, flagged by the
+                engine on every run.
+              </>
+            )}
+          </p>
+
+          <div className="prov-legend">
+            {(Object.keys(data.source_type_legend) as SourceType[]).map(
+              (t) => (
+                <span key={t} className="prov-legend-item">
+                  <SourceBadge type={t} />
+                  <span className="prov-legend-text">
+                    {data.source_type_legend[t]}
+                  </span>
+                </span>
+              ),
+            )}
+          </div>
+
+          <div className="prov-traits">
+            {Object.entries(data.traits).map(([code, tp]) => {
+              const isOpen = openTrait === code;
+              return (
+                <div key={code} className="prov-trait">
+                  <button
+                    type="button"
+                    className="prov-trait-head"
+                    onClick={() =>
+                      setOpenTrait(isOpen ? null : code)
+                    }
+                    aria-expanded={isOpen}
+                  >
+                    <span className="prov-trait-code">{code}</span>
+                    <span className="prov-trait-toggle">
+                      {isOpen ? "Hide" : "Show sourcing"}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <table className="prov-table">
+                      <thead>
+                        <tr>
+                          <th>Parameter</th>
+                          <th>Value</th>
+                          <th>Source</th>
+                          <th>Citation</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <ProvenanceRow
+                          label="Heritability (h\u00b2)"
+                          field={tp.heritability}
+                        />
+                        <ProvenanceRow
+                          label="Phenotypic SD"
+                          field={tp.phenotypic_sd}
+                        />
+                        <ProvenanceRow
+                          label="Genetic SD"
+                          field={tp.genetic_sd}
+                        />
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="docs-refs">
+            The complete per-number checklist, including every genetic
+            correlation, ships with the engine as PARAMETER_SOURCES.md;
+            the sourcing method is described in
+            METHODS_genetic_parameters.md.
+          </p>
+        </>
+      )}
+    </Card>
+  );
+}
+
 export function TechnicalDocs() {
   /* Which sections currently have their technical detail expanded. */
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -502,6 +709,8 @@ export function TechnicalDocs() {
               )}
             </Card>
           ))}
+
+          <ParameterProvenanceCard />
 
           <Card title="How to cite this tool">
             <p className="docs-body">

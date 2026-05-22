@@ -86,6 +86,86 @@ def consensus_parameters(user: User = Depends(get_current_user)) -> dict:
     }
 
 
+@router.get("/parameter-provenance")
+def parameter_provenance(user: User = Depends(get_current_user)) -> dict:
+    """Return the full per-number provenance of the consensus parameter set.
+
+    Unlike ``/parameter-set/consensus`` (which returns just the values the
+    engine uses), this reads the shipped ``genetic_parameters.json`` and
+    returns, for every heritability, phenotypic SD and genetic SD, the
+    ``source_type``, the citation code, the explanatory note and (where
+    present) the derivation. Citation codes are resolved to their full
+    reference text. This is what the Technical Docs provenance view shows,
+    so a researcher can see exactly where each number comes from.
+    """
+    import json
+    from pathlib import Path
+
+    import osit_index
+
+    data_path = (
+        Path(osit_index.__file__).parent / "data" / "genetic_parameters.json"
+    )
+    with data_path.open(encoding="utf-8") as fh:
+        raw = json.load(fh)
+
+    sources: dict = raw.get("provenance", {}).get("primary_sources", {})
+
+    def field(obj: dict) -> dict:
+        """Normalise one provenance object for the API response."""
+        code = obj.get("citation", "")
+        return {
+            "value": obj.get("value"),
+            "units": obj.get("units", ""),
+            "source_type": obj.get("source_type", "unsourced"),
+            "citation": code,
+            "reference": sources.get(code, ""),
+            "note": obj.get("note", ""),
+            "derivation": obj.get("derivation", ""),
+        }
+
+    traits = {}
+    unsourced = 0
+    for code, spec in raw.get("traits", {}).items():
+        entry = {}
+        for key in ("heritability", "phenotypic_sd", "genetic_sd"):
+            if key in spec:
+                entry[key] = field(spec[key])
+                if entry[key]["source_type"] == "unsourced":
+                    unsourced += 1
+        entry["units"] = spec.get("units", "")
+        traits[code] = entry
+
+    correlations = []
+    for c in raw.get("genetic_correlations", []):
+        code = c.get("citation", "")
+        if c.get("source_type") == "unsourced":
+            unsourced += 1
+        correlations.append(
+            {
+                "pair": c.get("pair", []),
+                "value": c.get("value"),
+                "source_type": c.get("source_type", "unsourced"),
+                "citation": code,
+                "reference": sources.get(code, ""),
+                "note": c.get("note", ""),
+            }
+        )
+
+    return {
+        "name": raw.get("name", ""),
+        "version": raw.get("version", ""),
+        "summary": raw.get("provenance", {}).get("summary", ""),
+        "source_type_legend": raw.get("provenance", {}).get(
+            "source_type_legend", {}
+        ),
+        "primary_sources": sources,
+        "traits": traits,
+        "correlations": correlations,
+        "unsourced_count": unsourced,
+    }
+
+
 @router.get("/adjustment-table/example")
 def example_table(user: User = Depends(get_current_user)) -> dict:
     """Return the official USMARC across-breed adjustment-factor table.

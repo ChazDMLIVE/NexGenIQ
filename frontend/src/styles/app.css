@@ -1001,6 +1001,171 @@ input[type="range"] {
 }
 
 /* ----------------------------------------------------------------------
+ * Parameter-provenance explorer (Technical Docs).
+ * -------------------------------------------------------------------- */
+.prov-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.prov-badge-cited {
+  background: var(--sage-600);
+  color: #fff;
+}
+
+.prov-badge-derived {
+  background: var(--sage-50);
+  color: var(--sage-900);
+  border: 1px solid var(--sage-600);
+}
+
+.prov-badge-proxy {
+  background: #f4ecd8;
+  color: #7a5d12;
+  border: 1px solid #c9a83f;
+}
+
+.prov-badge-unsourced {
+  background: #f6dede;
+  color: #8a2020;
+  border: 1px solid #c25a5a;
+}
+
+.prov-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: var(--sage-50);
+  border-radius: 6px;
+}
+
+.prov-legend-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.prov-legend-text {
+  font-size: 13px;
+  color: var(--graphite-700);
+  line-height: 1.6;
+}
+
+.prov-traits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.prov-trait {
+  border: 1px solid var(--graphite-400);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.prov-trait-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.prov-trait-head:hover {
+  background: var(--sage-50);
+}
+
+.prov-trait-code {
+  font-weight: 700;
+  color: var(--graphite-900);
+  letter-spacing: 0.04em;
+}
+
+.prov-trait-toggle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sage-600);
+}
+
+.prov-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.prov-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--graphite-400);
+  padding: 8px 14px;
+  border-top: 1px solid var(--graphite-400);
+  background: var(--sage-50);
+}
+
+.prov-table td {
+  padding: 8px 14px;
+  color: var(--graphite-700);
+  border-top: 1px solid var(--graphite-400);
+  vertical-align: top;
+}
+
+.prov-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--graphite-900);
+}
+
+.prov-why {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--sage-600);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.prov-why:hover {
+  color: var(--sage-900);
+}
+
+.prov-note-row td {
+  background: var(--sage-50);
+}
+
+.prov-note {
+  font-size: 13px;
+  color: var(--graphite-700);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.prov-reference {
+  font-size: 12px;
+  color: var(--graphite-400);
+  line-height: 1.6;
+  margin: 8px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--sage-300);
+}
+
+/* ----------------------------------------------------------------------
  * Result interpretation panel (plain-language readout of a result).
  * -------------------------------------------------------------------- */
 .interp-panel {

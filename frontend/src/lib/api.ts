@@ -295,6 +295,49 @@ export interface SensitivityResponse {
 }
 
 /* ----------------------------------------------------------------------
+ * Parameter provenance — the per-number sourcing of the genetic
+ * parameter set, shown in the Technical Docs provenance view.
+ * -------------------------------------------------------------------- */
+export type SourceType = "cited" | "derived" | "proxy" | "unsourced";
+
+export interface ProvenanceField {
+  value: number | null;
+  units: string;
+  source_type: SourceType;
+  citation: string;
+  reference: string;
+  note: string;
+  derivation: string;
+}
+
+export interface TraitProvenance {
+  heritability?: ProvenanceField;
+  phenotypic_sd?: ProvenanceField;
+  genetic_sd?: ProvenanceField;
+  units: string;
+}
+
+export interface CorrelationProvenance {
+  pair: string[];
+  value: number | null;
+  source_type: SourceType;
+  citation: string;
+  reference: string;
+  note: string;
+}
+
+export interface ParameterProvenance {
+  name: string;
+  version: string;
+  summary: string;
+  source_type_legend: Record<string, string>;
+  primary_sources: Record<string, string>;
+  traits: Record<string, TraitProvenance>;
+  correlations: CorrelationProvenance[];
+  unsourced_count: number;
+}
+
+/* ----------------------------------------------------------------------
  * Core request helper.
  * -------------------------------------------------------------------- */
 async function request<T>(
@@ -461,6 +504,11 @@ export const api = {
   /** Delete one of the current user's saved items. */
   async deleteSaved(id: string): Promise<void> {
     await request<void>(`/saved/${id}`, { method: "DELETE" });
+  },
+
+  /** Fetch the full per-number provenance of the consensus parameter set. */
+  async parameterProvenance(): Promise<ParameterProvenance> {
+    return request<ParameterProvenance>("/library/parameter-provenance");
   },
 
   /** Inspect an uploaded CSV and get a proposed column mapping. */

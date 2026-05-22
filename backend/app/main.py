@@ -68,13 +68,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS: allow any browser origin to call the API. allow_origin_regex
-# ".*" matches every origin; this is paired with allow_credentials=True
-# (the ["*"] literal form is rejected by browsers when credentials are
-# enabled, so the regex form is used instead).
+# CORS: only the configured frontend origins may make browser requests
+# to this API. Allowing any origin together with allow_credentials=True
+# would let any website a logged-in user visits call this API with their
+# credentials, so the allow-list is explicit.
+#
+# The origins come from settings.cors_origin_list, driven by the
+# NEXGENIQ_CORS_ORIGINS environment variable. Local-development origins
+# (localhost:5173 etc.) are covered by the default; a deployment sets
+# NEXGENIQ_CORS_ORIGINS to its real frontend URL (comma-separated for
+# more than one), with no trailing slash.
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=".*",
+    allow_origins=_settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
