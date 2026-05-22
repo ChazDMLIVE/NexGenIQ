@@ -190,8 +190,11 @@ export function GoalStep({
           </p>
           <p>
             <strong>The simple rule:</strong> only put a trait in the goal
-            if your animals have an EPD for it. The downloadable column
-            template on the Animals step shows exactly how to lay your
+            if you have data for it &mdash; an EPD for it if you are
+            uploading EPDs, or a measured record for it if you are
+            uploading your own performance data. On the Animals step you
+            choose which kind of data you have; each option has its own
+            downloadable column template showing exactly how to lay your
             file out.
           </p>
         </div>

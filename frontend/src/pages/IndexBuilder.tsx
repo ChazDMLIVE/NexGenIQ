@@ -208,6 +208,24 @@ export function IndexBuilder({
   /* Build the index from phenotype records instead of EPDs. The backend
    * converts the records to estimated breeding values (mass selection)
    * before ranking; the result shape is identical to an EPD build. */
+  /* Default $-per-unit economic weights, used to build a sensible goal
+   * for the phenotype example. Each producer-facing phenotype trait maps
+   * to its engine trait code (IMF->MARB, BF->FAT, LPAP->PAP_L). */
+  const PHENOTYPE_DEFAULT_WEIGHTS: Record<string, { code: string; w: number }> =
+    {
+      WW: { code: "WW", w: 1.8 },
+      YW: { code: "YW", w: 0.4 },
+      BW: { code: "BW", w: -3.0 },
+      IMF: { code: "MARB", w: 25.0 },
+      REA: { code: "REA", w: 11.0 },
+      BF: { code: "FAT", w: -8.0 },
+      DMI: { code: "DMI", w: -6.0 },
+      RFI: { code: "RFI", w: -12.0 },
+      DOC: { code: "DOC", w: 4.0 },
+      PAP: { code: "PAP", w: -2.0 },
+      LPAP: { code: "PAP_L", w: -2.0 },
+    };
+
   async function runPhenotypeBuild(
     recordsOverride?: import("../lib/api").PhenotypeRecordIn[],
   ) {
@@ -215,8 +233,45 @@ export function IndexBuilder({
     setBuilding(true);
     setBuildError("");
     try {
+      /* The goal must only contain traits the records actually carry, or
+       * every animal is excluded for a missing trait. When the example is
+       * run (recordsOverride passed) we derive a matching goal from the
+       * traits present in the uploaded records; otherwise we use the
+       * goal the user built, but still drop any trait no record has. */
+      const presentEngineCodes = new Set<string>();
+      for (const rec of recordsToBuild) {
+        for (const col of Object.keys(rec.phenotypes)) {
+          const mapped = PHENOTYPE_DEFAULT_WEIGHTS[col];
+          if (mapped) presentEngineCodes.add(mapped.code);
+        }
+      }
+      let goalComponents: GoalComponent[];
+      if (recordsOverride) {
+        /* Example run: build the goal straight from the example's traits. */
+        goalComponents = Object.values(PHENOTYPE_DEFAULT_WEIGHTS)
+          .filter((m) => presentEngineCodes.has(m.code))
+          .map((m) => ({ trait_code: m.code, economic_weight: m.w }));
+      } else {
+        /* User's own goal, but drop traits no uploaded record measures. */
+        goalComponents = components.filter((c) =>
+          presentEngineCodes.has(c.trait_code),
+        );
+      }
+      if (goalComponents.length === 0) {
+        setBuildError(
+          "None of your breeding-goal traits has a matching column in " +
+            "the uploaded records. Add columns for your goal traits, or " +
+            "adjust the goal to traits you measured.",
+        );
+        return;
+      }
       const res = await api.buildFromPhenotypes({
-        goal: { name: goalName, basis, components, source: "manual" },
+        goal: {
+          name: goalName,
+          basis,
+          components: goalComponents,
+          source: "manual",
+        },
         records: recordsToBuild,
         mode,
         missing_policy: "exclude",

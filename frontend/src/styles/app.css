@@ -1833,3 +1833,33 @@ input[type="range"] {
 .phenotype-warning-list li:last-child {
   margin-bottom: 0;
 }
+
+
+/* Styled file-upload button — hides the raw browser "Choose File". */
+.file-upload-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  background: #2f5d3a;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease;
+}
+.file-upload-button:hover {
+  background: #264c30;
+}
+.file-upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

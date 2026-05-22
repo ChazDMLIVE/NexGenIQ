@@ -243,13 +243,13 @@ export function PhenotypeStep({
         </div>
 
         <div className="builder-upload-row">
-          <label className="builder-upload-label">
-            Upload phenotype CSV
+          <label className="file-upload-button">
+            <span>Upload phenotype CSV</span>
             <input
               type="file"
               accept=".csv,text/csv"
               onChange={onUpload}
-              className="builder-upload-input"
+              className="file-upload-input"
             />
           </label>
           <Button variant="secondary" onClick={onRunExampleClick}>
