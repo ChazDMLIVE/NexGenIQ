@@ -19,13 +19,29 @@ from app.core.security import (
     verify_password,
 )
 from app.models import User
-from app.schemas import Token, UserCreate, UserOut
+from app.schemas import (
+    PasswordResetQuestionRequest,
+    PasswordResetQuestionResponse,
+    PasswordResetRequest,
+    Token,
+    UserCreate,
+    UserOut,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 _VALID_ROLES = {
     "producer", "researcher", "breeder", "assoc_admin", "site_admin",
 }
+
+
+def _normalise_answer(answer: str) -> str:
+    """Normalise a security-question answer before hashing or comparing.
+
+    Answers are matched case-insensitively and ignoring surrounding
+    whitespace, so "Big Horn" and "  big horn " count as the same answer.
+    """
+    return answer.strip().lower()
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
@@ -54,11 +70,24 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> User:
             detail="An account with this email already exists.",
         )
 
+    # The security answer, if given, is bcrypt-hashed exactly like a
+    # password -- it is never stored in plain text. The question text is
+    # stored as-is so it can be shown back during a reset.
+    answer = payload.security_answer.strip()
+    question = payload.security_question.strip()
+    answer_hash = (
+        hash_password(_normalise_answer(answer))
+        if answer and question
+        else None
+    )
+
     user = User(
         email=payload.email,
         password_hash=hash_password(payload.password),
         full_name=payload.full_name,
         role=payload.role,
+        security_question=question or None,
+        security_answer_hash=answer_hash,
     )
     db.add(user)
     db.commit()
@@ -100,3 +129,83 @@ def login(
 def me(user: User = Depends(get_current_user)) -> User:
     """Return the currently authenticated user."""
     return user
+
+
+@router.post(
+    "/password-reset/question",
+    response_model=PasswordResetQuestionResponse,
+)
+def password_reset_question(
+    payload: PasswordResetQuestionRequest,
+    db: Session = Depends(get_db),
+) -> PasswordResetQuestionResponse:
+    """Step 1 of a password reset: return the account's security question.
+
+    Self-service password reset has no email step; instead the user must
+    answer the security question they set at registration. This endpoint
+    returns that question (never the answer) so the UI can show it.
+
+    If the account does not exist, or exists but has no security question
+    on file (older accounts), ``has_question`` is false and a plain
+    message explains the situation. The answer is never returned.
+    """
+    user = (
+        db.query(User).filter(User.email == payload.email).one_or_none()
+    )
+    if user is None or not user.is_active:
+        return PasswordResetQuestionResponse(
+            has_question=False,
+            message=(
+                "If an account exists for that email, its security "
+                "question will be shown. If nothing appears, the email "
+                "may not be registered."
+            ),
+        )
+    if not user.security_question or not user.security_answer_hash:
+        return PasswordResetQuestionResponse(
+            has_question=False,
+            message=(
+                "This account has no security question on file, so it "
+                "cannot be reset this way. Please contact an "
+                "administrator to reset the password."
+            ),
+        )
+    return PasswordResetQuestionResponse(
+        has_question=True,
+        question=user.security_question,
+    )
+
+
+@router.post("/password-reset/confirm", status_code=204)
+def password_reset_confirm(
+    payload: PasswordResetRequest,
+    db: Session = Depends(get_db),
+) -> None:
+    """Step 2 of a password reset: verify the answer and set a new password.
+
+    The submitted security answer is normalised and checked against the
+    stored bcrypt hash. On a match the password is replaced; otherwise a
+    401 is returned. The error message is deliberately generic so the
+    endpoint does not reveal whether the email or the answer was wrong.
+    """
+    user = (
+        db.query(User).filter(User.email == payload.email).one_or_none()
+    )
+    answer_ok = (
+        user is not None
+        and user.is_active
+        and user.security_answer_hash is not None
+        and verify_password(
+            _normalise_answer(payload.security_answer),
+            user.security_answer_hash,
+        )
+    )
+    if not user or not answer_ok:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="That security answer did not match.",
+        )
+
+    user.password_hash = hash_password(payload.new_password)
+    db.add(user)
+    db.commit()

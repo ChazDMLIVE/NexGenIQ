@@ -22,6 +22,35 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8)
     full_name: str = ""
     role: str = "producer"
+    # Security question + answer for self-service password reset. Optional
+    # so older clients still work, but the registration UI asks for them.
+    security_question: str = Field(default="", max_length=255)
+    security_answer: str = Field(default="")
+
+
+class PasswordResetQuestionRequest(BaseModel):
+    """Step 1 of a password reset: look up an account's security question."""
+
+    email: EmailStr
+
+
+class PasswordResetQuestionResponse(BaseModel):
+    """The security question for an account (no answer is ever returned)."""
+
+    # True only if the account exists AND has a security question set.
+    has_question: bool
+    question: str = ""
+    # A plain-language message for the cases where no reset is possible
+    # (account not found, or no security question on file).
+    message: str = ""
+
+
+class PasswordResetRequest(BaseModel):
+    """Step 2 of a password reset: answer the question and set a password."""
+
+    email: EmailStr
+    security_answer: str
+    new_password: str = Field(min_length=8)
 
 
 class UserOut(BaseModel):

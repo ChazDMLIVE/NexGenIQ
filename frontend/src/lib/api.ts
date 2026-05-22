@@ -385,6 +385,8 @@ export const api = {
     password: string,
     fullName: string,
     role: string,
+    securityQuestion = "",
+    securityAnswer = "",
   ): Promise<User> {
     return request<User>("/auth/register", {
       method: "POST",
@@ -393,6 +395,34 @@ export const api = {
         password,
         full_name: fullName,
         role,
+        security_question: securityQuestion,
+        security_answer: securityAnswer,
+      }),
+    });
+  },
+
+  /** Step 1 of a password reset: fetch an account's security question. */
+  async passwordResetQuestion(
+    email: string,
+  ): Promise<{ has_question: boolean; question: string; message: string }> {
+    return request("/auth/password-reset/question", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  /** Step 2 of a password reset: answer the question and set a password. */
+  async passwordResetConfirm(
+    email: string,
+    securityAnswer: string,
+    newPassword: string,
+  ): Promise<void> {
+    await request<void>("/auth/password-reset/confirm", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        security_answer: securityAnswer,
+        new_password: newPassword,
       }),
     });
   },

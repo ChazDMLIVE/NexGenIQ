@@ -508,6 +508,36 @@ input[type="range"] {
   margin-bottom: var(--space-3);
 }
 
+.auth-reset-title {
+  font-size: var(--text-h3, 17px);
+  font-weight: 600;
+  color: var(--graphite-900);
+  margin: 0 0 var(--space-2);
+}
+
+.auth-reset-help {
+  font-size: var(--text-label);
+  color: var(--graphite-700);
+  line-height: 1.6;
+  margin: 0 0 var(--space-3);
+}
+
+.auth-notice {
+  font-size: var(--text-label);
+  color: var(--graphite-900);
+  background: var(--sage-50);
+  border: 1px solid var(--sage-300);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-input);
+  line-height: 1.6;
+  margin-bottom: var(--space-3);
+}
+
+.auth-readonly {
+  background: var(--sage-50);
+  color: var(--graphite-700);
+}
+
 /* ====================================================================
  * Wizard actions row
  * ================================================================== */

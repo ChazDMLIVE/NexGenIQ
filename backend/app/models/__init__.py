@@ -91,6 +91,18 @@ class User(Base, TimestampMixin):
     role: Mapped[str] = mapped_column(String(30), default="producer")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    # Security question for self-service password reset. The question text
+    # is stored in the clear; the answer is bcrypt-hashed exactly like a
+    # password and never stored in plain text. Both are nullable so
+    # accounts created before this feature still load -- a user with no
+    # question set is told to contact an administrator to reset.
+    security_question: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
+    security_answer_hash: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
+
     organisation_id: Mapped[str | None] = mapped_column(
         ForeignKey("organisations.id"), nullable=True
     )

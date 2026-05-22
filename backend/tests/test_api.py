@@ -58,6 +58,59 @@ def test_unknown_role_rejected(client):
     assert r.status_code == 422
 
 
+def test_password_reset_with_security_question(client):
+    """A user who set a security question can reset their password."""
+    r = client.post("/api/v1/auth/register", json={
+        "email": "carol@example.com", "password": "origpass123",
+        "role": "producer",
+        "security_question": "First ranch you worked on?",
+        "security_answer": "Big Horn"})
+    assert r.status_code == 201
+
+    q = client.post("/api/v1/auth/password-reset/question",
+                     json={"email": "carol@example.com"})
+    assert q.status_code == 200
+    assert q.json()["has_question"] is True
+    assert q.json()["question"] == "First ranch you worked on?"
+
+    bad = client.post("/api/v1/auth/password-reset/confirm", json={
+        "email": "carol@example.com", "security_answer": "wrong",
+        "new_password": "newpass456"})
+    assert bad.status_code == 401
+
+    ok = client.post("/api/v1/auth/password-reset/confirm", json={
+        "email": "carol@example.com", "security_answer": "  BIG HORN ",
+        "new_password": "newpass456"})
+    assert ok.status_code == 204
+
+    assert client.post("/api/v1/auth/token", data={
+        "username": "carol@example.com",
+        "password": "newpass456"}).status_code == 200
+    assert client.post("/api/v1/auth/token", data={
+        "username": "carol@example.com",
+        "password": "origpass123"}).status_code == 401
+
+
+def test_password_reset_without_security_question(client):
+    """An account with no security question cannot self-reset."""
+    client.post("/api/v1/auth/register", json={
+        "email": "dave@example.com", "password": "password123",
+        "role": "producer"})
+    q = client.post("/api/v1/auth/password-reset/question",
+                     json={"email": "dave@example.com"})
+    assert q.status_code == 200
+    assert q.json()["has_question"] is False
+    assert "administrator" in q.json()["message"]
+
+
+def test_password_reset_unknown_email(client):
+    """An unknown email does not reveal that the account does not exist."""
+    q = client.post("/api/v1/auth/password-reset/question",
+                     json={"email": "ghost@example.com"})
+    assert q.status_code == 200
+    assert q.json()["has_question"] is False
+
+
 # --- library ---------------------------------------------------------------
 def test_traits_require_auth(client):
     """The trait list is behind authentication."""
