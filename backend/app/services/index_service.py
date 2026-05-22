@@ -28,6 +28,10 @@ from osit_index import (
 from osit_index.adjustment import AdjustmentFactorTable
 from osit_index.animal import EpdScale, EpdValue
 from osit_index.index import IndexMode, MissingEpdPolicy
+from osit_index.phenotype import (
+    PhenotypeRecord,
+    convert_phenotypes,
+)
 
 from app import schemas
 
@@ -262,4 +266,113 @@ def run_sensitivity(
             )
             for e in result.entries
         ],
+    )
+
+
+
+def run_phenotype_index_build(
+    request: "schemas.PhenotypeBuildRequest",
+    *,
+    parameter_set: GeneticParameterSet | None = None,
+    adjustment_table: AdjustmentFactorTable | None = None,
+) -> "schemas.IndexBuildResponse":
+    """Build an index from phenotype records instead of EPDs.
+
+    The producer's raw, age-standardized performance records are converted
+    to estimated breeding values by mass selection -- within
+    contemporary-group adjustment, EBV = h2 * deviation, accuracy
+    sqrt(h2) -- and the resulting animal set is run through the same index
+    pipeline as an EPD-based build. Any warnings from the conversion (small
+    contemporary groups, skipped traits) are surfaced as validation INFO
+    notes, and a standing caution is added so the result is never mistaken
+    for an EPD-grade evaluation.
+    """
+    params = parameter_set or consensus_parameter_set()
+    goal = goal_from_schema(request.goal)
+    goal_traits = [c.trait_code for c in goal.components]
+
+    records = [
+        PhenotypeRecord(
+            animal_id=r.animal_id,
+            contemporary_group=r.contemporary_group,
+            breed=r.breed or "Angus",
+            phenotypes=dict(r.phenotypes),
+            sex=r.sex,
+        )
+        for r in request.records
+    ]
+    conversion = convert_phenotypes(records, params, goal_traits)
+
+    result = build_index(
+        goal,
+        params,
+        conversion.animal_set,
+        mode=_MODES.get(request.mode, IndexMode.ECONOMIC_WEIGHT),
+        missing_policy=_POLICIES.get(
+            request.missing_policy, MissingEpdPolicy.EXCLUDE
+        ),
+        adjustment_table=adjustment_table,
+        native_multi_breed=request.native_multi_breed,
+    )
+
+    scores = [
+        schemas.AnimalScoreOut(
+            rank=s.rank,
+            animal_id=s.animal_id,
+            breed=s.breed,
+            index_value=s.index_value,
+            std_error=s.std_error,
+            ci_low=s.ci_low,
+            ci_high=s.ci_high,
+            contributions=s.contributions,
+            is_partial=s.is_partial,
+            explanation=explain_score(s, result),
+        )
+        for s in result.scores
+    ]
+
+    interp = interpret_index_result(result)
+
+    validation = _validation_out(result.validation)
+    for w in conversion.warnings:
+        validation.append(
+            schemas.ValidationIssueOut(
+                severity="info",
+                code="phenotype_conversion",
+                message=w,
+            )
+        )
+    validation.append(
+        schemas.ValidationIssueOut(
+            severity="info",
+            code="phenotype_mode",
+            message=(
+                "This ranking was built from your own performance "
+                "records, not from EPDs. Animals are ranked on adjusted "
+                "own performance within their contemporary group "
+                "(mass selection). The accuracy of each prediction is "
+                "the square root of the trait heritability, which is "
+                "lower than a published EPD accuracy -- the confidence "
+                "intervals reflect that. It ranks the animals you "
+                "measured on their own merit; it is not a national "
+                "genetic evaluation."
+            ),
+        )
+    )
+
+    return schemas.IndexBuildResponse(
+        ok=result.validation.ok,
+        mode=result.mode.value,
+        weights=result.weights,
+        scores=scores,
+        excluded=result.excluded,
+        validation=validation,
+        adjustment_table_version=result.adjustment_table_version,
+        interpretation=schemas.InterpretationOut(
+            headline=interp.headline,
+            readout=interp.readout,
+            detail=interp.detail,
+            cautions=interp.cautions,
+            disclaimer=interp.disclaimer,
+        ),
     )

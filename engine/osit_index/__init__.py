@@ -28,6 +28,14 @@ from .parameters import (
 )
 from .goal import BreedingGoal, GoalComponent, EconomicBasis
 from .animal import Animal, AnimalSet
+from .phenotype import (
+    PhenotypeRecord,
+    PhenotypeConversion,
+    PhenotypeInputError,
+    ContemporaryGroupSummary,
+    convert_phenotypes,
+    own_performance_accuracy,
+)
 from .adjustment import AdjustmentFactorTable, apply_across_breed_adjustment
 from .index import (
     IndexMode,
@@ -66,6 +74,12 @@ from .dataloader import (
 __version__ = "0.2.0"
 
 __all__ = [
+    "PhenotypeRecord",
+    "PhenotypeConversion",
+    "PhenotypeInputError",
+    "ContemporaryGroupSummary",
+    "convert_phenotypes",
+    "own_performance_accuracy",
     "TRAIT_REGISTRY",
     "BREED_RESTRICTED_TRAITS",
     "Trait",

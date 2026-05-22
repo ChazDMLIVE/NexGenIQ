@@ -113,6 +113,53 @@ class AnimalIn(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Phenotype input (for producers with performance records but no EPDs)
+# ---------------------------------------------------------------------------
+class PhenotypeRecordIn(BaseModel):
+    """One animal's raw, age-standardized performance records.
+
+    ``phenotypes`` maps a producer-facing trait column (WW, YW, BW, IMF,
+    REA, BF, DMI, RFI, DOC, PAP, LPAP) to its measured value. Every animal
+    must carry a contemporary-group label so its performance is compared
+    only within the group it was managed and measured with.
+    """
+
+    animal_id: str
+    breed: str = "Angus"
+    sex: str = ""
+    contemporary_group: str
+    phenotypes: dict[str, float]
+
+
+class PhenotypeBuildRequest(BaseModel):
+    """Build an index from phenotype records instead of EPDs.
+
+    Identical to IndexBuildRequest except the candidate animals are given
+    as raw performance records; the backend converts them to estimated
+    breeding values (mass-selection: EBV = h2 * within-contemporary-group
+    deviation, accuracy = sqrt(h2)) before running the standard index
+    pipeline.
+    """
+
+    goal: BreedingGoalIn
+    records: list[PhenotypeRecordIn]
+    parameter_set_id: str | None = Field(
+        default=None,
+        description="Stored parameter set to use; null = built-in "
+                    "consensus library.",
+    )
+    mode: str = Field(
+        default="economic_weight",
+        description="economic_weight | blup_index",
+    )
+    missing_policy: str = Field(
+        default="exclude", description="exclude | impute"
+    )
+    adjustment_table_id: str | None = None
+    native_multi_breed: bool = False
+
+
+# ---------------------------------------------------------------------------
 # Index build request / response
 # ---------------------------------------------------------------------------
 class IndexBuildRequest(BaseModel):

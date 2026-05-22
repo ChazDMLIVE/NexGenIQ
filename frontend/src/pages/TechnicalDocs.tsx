@@ -118,6 +118,48 @@ const SECTIONS: DocSection[] = [
     ),
   },
   {
+    id: "phenotype-input",
+    title: "Ranking from phenotypes (no EPDs)",
+    summary:
+      "Producers who measure their own cattle but have no EPDs can rank " +
+      "animals on adjusted own performance. NexGenIQ converts each " +
+      "phenotype to an estimated breeding value by mass selection.",
+    detail: (
+      <>
+        <p className="docs-body">
+          A raw phenotype is not a breeding value: a heavy calf may be
+          heavy because of good genes, an easy contemporary group, or a
+          high-milking dam. To rank animals on heritable merit, NexGenIQ
+          first estimates a breeding value from each record. With no
+          pedigree, the defensible estimator is <strong>mass selection</strong>
+          {" "}&mdash; selection on adjusted own performance.
+        </p>
+        <p className="docs-body">
+          For each trait, every animal&rsquo;s record is adjusted to a
+          deviation from its <strong>contemporary-group</strong> mean (the
+          group it was managed and measured with), so a good animal in a
+          hard group is not penalised against a poor animal in an easy
+          group. The deviation is converted to an estimated breeding value
+          as <em>EBV = h&sup2; &times; (phenotype &minus; group mean)</em>,
+          and assigned a BIF accuracy of <em>&radic;h&sup2;</em> &mdash;
+          the accuracy of a single own-performance record.
+        </p>
+        <p className="docs-body">
+          That accuracy is genuinely lower than a published EPD&rsquo;s,
+          and NexGenIQ does not hide it: the confidence interval on each
+          phenotype-derived index value is correspondingly wider. This
+          method ranks the animals you measured on their own merit; it is
+          not a national genetic evaluation, and the result is labelled
+          accordingly. Input values are assumed already age-standardized.
+        </p>
+        <p className="docs-refs">
+          Falconer, D. S., and T. F. C. Mackay. 1996. Introduction to
+          Quantitative Genetics. 4th ed. Longman. Ch. 10.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "across-breed",
     title: "Across-breed adjustment",
     summary:

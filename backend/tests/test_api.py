@@ -482,3 +482,59 @@ def _fresh_auth(client):
         data={"username": email, "password": "testpass123"},
     ).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+
+def test_build_from_phenotypes(client, auth_headers):
+    """An index built from phenotype records ranks animals and flags the mode."""
+    request = {
+        "goal": {
+            "name": "Phenotype goal",
+            "components": [
+                {"trait_code": "WW", "economic_weight": 1.0},
+                {"trait_code": "YW", "economic_weight": 0.5},
+            ],
+        },
+        "records": [
+            {"animal_id": "P1", "breed": "Angus", "sex": "M",
+             "contemporary_group": "g1",
+             "phenotypes": {"WW": 520.0, "YW": 1000.0}},
+            {"animal_id": "P2", "breed": "Angus", "sex": "M",
+             "contemporary_group": "g1",
+             "phenotypes": {"WW": 560.0, "YW": 1080.0}},
+            {"animal_id": "P3", "breed": "Angus", "sex": "M",
+             "contemporary_group": "g1",
+             "phenotypes": {"WW": 540.0, "YW": 1040.0}},
+        ],
+    }
+    r = client.post("/api/v1/index/build-from-phenotypes", json=request,
+                     headers=auth_headers)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ok"] is True
+    assert len(body["scores"]) == 3
+    # P2, the highest performer in the group, ranks first.
+    assert body["scores"][0]["animal_id"] == "P2"
+    assert body["ledger_id"]
+    # The result is explicitly flagged as phenotype-derived, not EPD-based.
+    assert any(v["code"] == "phenotype_mode" for v in body["validation"])
+
+
+def test_build_from_phenotypes_requires_contemporary_group(client, auth_headers):
+    """A phenotype record with no contemporary group is rejected."""
+    request = {
+        "goal": {
+            "name": "g",
+            "components": [{"trait_code": "WW", "economic_weight": 1.0}],
+        },
+        "records": [
+            {"animal_id": "P1", "breed": "Angus",
+             "contemporary_group": "",
+             "phenotypes": {"WW": 540.0}},
+        ],
+    }
+    r = client.post("/api/v1/index/build-from-phenotypes", json=request,
+                     headers=auth_headers)
+    # Pydantic accepts the empty string; the engine rejects it -> 400/422/500
+    # surfaced as an error. Accept any non-200 with a clear failure.
+    assert r.status_code != 200 or not r.json().get("ok", True)

@@ -1785,3 +1785,51 @@ input[type="range"] {
 .saved-delete:hover {
   color: #8a3f1d;
 }
+
+
+/* Input-mode choice (EPDs vs phenotypes) in the Index Builder. */
+.input-mode-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.input-mode-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--border, #d8d8d8);
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.input-mode-option input {
+  margin-top: 3px;
+}
+
+
+/* Warning callout shown before a producer uses phenotypic data. */
+.phenotype-warning {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #d9a441;
+  border-left: 4px solid #d9a441;
+  border-radius: 6px;
+  background: #fcf6e8;
+}
+.phenotype-warning-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: #8a5a00;
+}
+.phenotype-warning-list {
+  margin: 0;
+  padding-left: 20px;
+}
+.phenotype-warning-list li {
+  margin-bottom: 8px;
+  line-height: 1.45;
+}
+.phenotype-warning-list li:last-child {
+  margin-bottom: 0;
+}

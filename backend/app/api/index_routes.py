@@ -12,7 +12,7 @@ G10) recording exactly what produced the result.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -22,10 +22,12 @@ from app.models import AdjustmentFactorTable, GeneticParameterSet, RunLedger, Us
 from app.schemas import (
     IndexBuildRequest,
     IndexBuildResponse,
+    PhenotypeBuildRequest,
     SensitivityRequest,
     SensitivityResponse,
 )
 from app.services import index_service
+from osit_index.phenotype import PhenotypeInputError
 
 router = APIRouter(prefix="/index", tags=["index"])
 _settings = get_settings()
@@ -100,6 +102,75 @@ def build(
                     for a in request.animals
                     if a.evaluation_id
                 }
+            ),
+        },
+        result_summary={
+            "ok": response.ok,
+            "ranked": len(response.scores),
+            "excluded": len(response.excluded),
+            "errors": sum(
+                1 for v in response.validation if v.severity == "error"
+            ),
+        },
+        created_by=user.id,
+    )
+    db.add(ledger)
+    db.commit()
+    db.refresh(ledger)
+
+    response.ledger_id = ledger.id
+    return response
+
+
+@router.post("/build-from-phenotypes", response_model=IndexBuildResponse)
+def build_from_phenotypes(
+    request: PhenotypeBuildRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> IndexBuildResponse:
+    """Build an index from raw performance records instead of EPDs.
+
+    For producers who measure their own animals but have no EPDs. The
+    request carries the breeding goal and a list of phenotype records
+    (each with a contemporary-group label). The backend converts the
+    records to estimated breeding values by mass selection -- within
+    contemporary-group adjustment, EBV = h2 * deviation, accuracy
+    sqrt(h2) -- then runs the standard index pipeline. The response is the
+    same shape as an EPD build, with added validation notes making clear
+    the ranking is own-performance-derived.
+    """
+    parameter_set = _load_parameter_set(db, request.parameter_set_id)
+    adjustment_table = _load_adjustment_table(
+        db, request.adjustment_table_id
+    )
+
+    try:
+        response = index_service.run_phenotype_index_build(
+            request,
+            parameter_set=parameter_set,
+            adjustment_table=adjustment_table,
+        )
+    except PhenotypeInputError as exc:
+        # Bad phenotype input (e.g. a missing contemporary group) is a
+        # client error, not a server fault: return 400 with the engine's
+        # plain-language message so the producer can fix their upload.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    ledger = RunLedger(
+        engine_version=_settings.engine_version,
+        param_set_version=(
+            parameter_set.version if parameter_set else "consensus-built-in"
+        ),
+        adjustment_table_version=response.adjustment_table_version,
+        mode=response.mode,
+        inputs_summary={
+            "goal": request.goal.name,
+            "trait_count": len(request.goal.components),
+            "animal_count": len(request.records),
+            "input_type": "phenotype",
+            "epd_evaluations": ["own-performance (phenotype)"],
+            "contemporary_groups": sorted(
+                {r.contemporary_group for r in request.records}
             ),
         },
         result_summary={

@@ -21,6 +21,7 @@ import { Button, Card, Field, Stepper } from "../components/UI";
 import { ContextPanel } from "../components/Help";
 import { GoalStep } from "../components/builder/GoalStep";
 import { AnimalsStep } from "../components/builder/AnimalsStep";
+import { PhenotypeStep } from "../components/builder/PhenotypeStep";
 import { ResultsWorkspace } from "./ResultsWorkspace";
 
 const STEPS = ["Goal", "Parameters", "Animals", "Results"];
@@ -139,8 +140,15 @@ export function IndexBuilder({
   /* Step 2: index mode (the parameter set is the built-in library in M1). */
   const [mode, setMode] = useState("economic_weight");
 
-  /* Step 3: the candidate animals. */
+  /* Step 3: the candidate animals.
+   * inputMode is how the producer supplies them: published EPDs, or raw
+   * performance records (phenotypes) that the backend converts to
+   * estimated breeding values by mass selection. */
+  const [inputMode, setInputMode] = useState<"epd" | "phenotype">("epd");
   const [animals, setAnimals] = useState<Animal[]>([]);
+  const [phenotypeRecords, setPhenotypeRecords] = useState<
+    import("../lib/api").PhenotypeRecordIn[]
+  >([]);
 
   /* Step 4: the result. */
   const [result, setResult] = useState<IndexBuildResponse | null>(null);
@@ -183,6 +191,33 @@ export function IndexBuilder({
       const res = await api.buildIndex({
         goal: { name: goalName, basis, components, source: "manual" },
         animals: animalsToBuild,
+        mode,
+        missing_policy: "exclude",
+      });
+      setResult(res);
+      setStep(4);
+    } catch (err) {
+      setBuildError(
+        err instanceof Error ? err.message : "The build failed.",
+      );
+    } finally {
+      setBuilding(false);
+    }
+  }
+
+  /* Build the index from phenotype records instead of EPDs. The backend
+   * converts the records to estimated breeding values (mass selection)
+   * before ranking; the result shape is identical to an EPD build. */
+  async function runPhenotypeBuild(
+    recordsOverride?: import("../lib/api").PhenotypeRecordIn[],
+  ) {
+    const recordsToBuild = recordsOverride ?? phenotypeRecords;
+    setBuilding(true);
+    setBuildError("");
+    try {
+      const res = await api.buildFromPhenotypes({
+        goal: { name: goalName, basis, components, source: "manual" },
+        records: recordsToBuild,
         mode,
         missing_policy: "exclude",
       });
@@ -320,30 +355,84 @@ export function IndexBuilder({
                   </p>
                 </div>
               )}
-              <AnimalsStep
-                traits={traits}
-                animals={animals}
-                onAnimals={setAnimals}
-                onRunExample={(exampleAnimals) => {
-                  /* Load the example animals into state AND build the
-                     index immediately, passing the animals explicitly
-                     so the build does not wait for the state update. */
-                  setAnimals(exampleAnimals);
-                  runBuild(exampleAnimals);
-                }}
-              />
+              <Card title="What data do you have for your animals?">
+                <div className="input-mode-choice">
+                  <label className="input-mode-option">
+                    <input
+                      type="radio"
+                      name="input-mode"
+                      checked={inputMode === "epd"}
+                      onChange={() => setInputMode("epd")}
+                    />
+                    <span>
+                      <strong>I have EPDs</strong> — published expected
+                      progeny differences from a breed association or
+                      genetic evaluation.
+                    </span>
+                  </label>
+                  <label className="input-mode-option">
+                    <input
+                      type="radio"
+                      name="input-mode"
+                      checked={inputMode === "phenotype"}
+                      onChange={() => setInputMode("phenotype")}
+                    />
+                    <span>
+                      <strong>I have phenotypic data</strong> — my own
+                      measured performance records (weights, scans, PAP,
+                      feed-test data). NexGenIQ will rank the animals on
+                      their own performance.
+                    </span>
+                  </label>
+                </div>
+              </Card>
+
+              {inputMode === "epd" ? (
+                <AnimalsStep
+                  traits={traits}
+                  animals={animals}
+                  onAnimals={setAnimals}
+                  onRunExample={(exampleAnimals) => {
+                    /* Load the example animals into state AND build the
+                       index immediately, passing them explicitly so the
+                       build does not wait for the state update. */
+                    setAnimals(exampleAnimals);
+                    runBuild(exampleAnimals);
+                  }}
+                />
+              ) : (
+                <PhenotypeStep
+                  records={phenotypeRecords}
+                  onRecords={setPhenotypeRecords}
+                  onRunExample={(exampleRecords) => {
+                    setPhenotypeRecords(exampleRecords);
+                    runPhenotypeBuild(exampleRecords);
+                  }}
+                />
+              )}
               <div className="wizard-actions">
                 <Button variant="secondary" onClick={() => setStep(2)}>
                   Back
                 </Button>
-                <Button
-                  variant="primary"
-                  busy={building}
-                  disabled={!animalsValid}
-                  onClick={() => runBuild()}
-                >
-                  Build my index →
-                </Button>
+                {inputMode === "epd" ? (
+                  <Button
+                    variant="primary"
+                    busy={building}
+                    disabled={!animalsValid}
+                    onClick={() => runBuild()}
+                  >
+                    Build my index →
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    busy={building}
+                    disabled={phenotypeRecords.length === 0}
+                    onClick={() => runPhenotypeBuild()}
+                  >
+                    Build my index →
+                  </Button>
+                )}
               </div>
               {buildError && (
                 <p className="auth-error" style={{ marginTop: 12 }}>

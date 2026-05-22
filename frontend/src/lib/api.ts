@@ -88,6 +88,28 @@ export interface IndexBuildRequest {
   native_multi_breed?: boolean;
 }
 
+/** One animal's raw, age-standardized performance records. */
+export interface PhenotypeRecordIn {
+  animal_id: string;
+  breed: string;
+  sex?: string;
+  contemporary_group: string;
+  /* Producer-facing trait column -> measured value
+     (WW, YW, BW, IMF, REA, BF, DMI, RFI, DOC, PAP, LPAP). */
+  phenotypes: Record<string, number>;
+}
+
+/** Build an index from phenotype records instead of EPDs. */
+export interface PhenotypeBuildRequest {
+  goal: BreedingGoal;
+  records: PhenotypeRecordIn[];
+  parameter_set_id?: string | null;
+  mode: string;
+  missing_policy?: string;
+  adjustment_table_id?: string | null;
+  native_multi_breed?: boolean;
+}
+
 export interface ValidationIssue {
   severity: "error" | "warn" | "info";
   code: string;
@@ -361,6 +383,18 @@ export const api = {
     req: IndexBuildRequest,
   ): Promise<IndexBuildResponse> {
     return request<IndexBuildResponse>("/index/build", {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+  },
+
+  /** Build a selection index from phenotype records (producers with no
+   *  EPDs). The backend converts the records to estimated breeding
+   *  values by mass selection before ranking. */
+  async buildFromPhenotypes(
+    req: PhenotypeBuildRequest,
+  ): Promise<IndexBuildResponse> {
+    return request<IndexBuildResponse>("/index/build-from-phenotypes", {
       method: "POST",
       body: JSON.stringify(req),
     });
