@@ -254,6 +254,40 @@ class GeneticParameterSet:
         """
         return not is_positive_definite(self._raw_correlation_matrix(codes))
 
+    def correlation_repair_magnitude(self, codes: list[str]) -> float:
+        """Return the largest absolute change the PD repair makes.
+
+        Compares the elicited (raw) correlation matrix for ``codes`` with
+        its nearest positive-definite repair and returns the maximum
+        absolute element-wise difference. Zero if no repair is needed.
+
+        The validation layer reports this number so the user sees *how
+        far* the repaired matrix departs from the literature values --
+        a repair is not always "small", and the reproducibility record
+        must state the actual magnitude rather than assume it.
+        """
+        raw = self._raw_correlation_matrix(codes)
+        if is_positive_definite(raw):
+            return 0.0
+        repaired = nearest_pd_correlation(raw)
+        return float(np.abs(repaired - raw).max())
+
+    def correlation_matrices(
+        self, codes: list[str]
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Return both the raw elicited and the repaired correlation matrices.
+
+        Returns ``(raw, repaired)`` for ``codes``. When the elicited
+        matrix is already positive-definite the two are identical. The
+        reproducibility ledger stores both so any PD repair is fully
+        auditable -- a reviewer can see exactly what the engine solved on
+        versus what the literature supplied.
+        """
+        raw = self._raw_correlation_matrix(codes)
+        if is_positive_definite(raw):
+            return raw, raw.copy()
+        return raw, nearest_pd_correlation(raw)
+
     def genetic_correlation_matrix(
         self, codes: list[str], repair: bool = True
     ) -> np.ndarray:

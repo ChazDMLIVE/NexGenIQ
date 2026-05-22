@@ -39,11 +39,26 @@ standard deviations and genetic correlations for the beef trait set.
 
 Unlike the across-breed factors, beef-cattle genetic parameters have **no
 single official table**: published estimates vary by population, model and
-study. The shipped values are mid-range literature-consensus figures
-suitable as a default, with their sources cited in the file's
-`provenance` block. A researcher should override them with
-population-specific estimates where available — the engine accepts a
-user-supplied parameter set for exactly this reason.
+study. The shipped set therefore assembles values from several
+peer-reviewed sources (Angus Genetics Inc. Fall 2026; Koots et al. 1994
+parts 1 and 2; Crawford et al. 2016; Rolfe et al. 2011; Torres-Vázquez &
+Spangler 2016; Otteman 2012; and the Markel et al. latent-PAP manuscript).
+
+**Every number carries its own provenance object** — a `value`, a
+`source_type` (`cited`, `derived`, `proxy`, or `unsourced`), a `citation`,
+and a `note`. Genetic standard deviations are `derived` as
+`phenotypic_sd * sqrt(heritability)` from a cited phenotypic SD, with the
+formula recorded. A value marked `unsourced` is a documented placeholder,
+not an empirical estimate; the loader emits a warning naming every such
+value on each run.
+
+The companion file `PARAMETER_SOURCES.md` is a per-number verification
+checklist — every value, its citation, and a column to confirm against
+the original publication.
+
+A researcher should still override these with population-specific
+estimates where available — the engine accepts a user-supplied parameter
+set for exactly this reason.
 
 ## Format
 

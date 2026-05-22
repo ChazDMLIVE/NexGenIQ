@@ -471,16 +471,34 @@ def build_index(
     # (parameters.nearest_pd_correlation) so the index is always solvable;
     # this note records that the repair was applied.
     if params.correlation_was_repaired(info_codes):
+        shift = params.correlation_repair_magnitude(info_codes)
+        # Report the actual magnitude. A repair is not always small: when
+        # the elicited correlations are badly inconsistent the largest
+        # change can be substantial, and the user must be told the real
+        # number rather than a blanket reassurance.
+        if shift >= 0.10:
+            magnitude = (
+                f"This adjustment is NOT small: the largest single "
+                f"correlation changed by {shift:.2f}. The repaired matrix "
+                f"the index solves on departs meaningfully from the "
+                f"published values"
+            )
+        else:
+            magnitude = (
+                f"The adjustment is small (largest correlation change "
+                f"{shift:.2f})"
+            )
         report.add(
             Severity.INFO,
             "correlation_matrix_repaired",
             "The genetic correlations supplied for the traits in this "
             "index were not jointly consistent (their matrix was not "
             "positive-definite). NexGenIQ adjusted them to the nearest "
-            "valid set so the index could be solved. The adjustment is "
-            "small; results are reliable, but for a published analysis "
-            "consider supplying a population-specific, jointly estimated "
-            "parameter set.",
+            "valid set so the index could be solved. "
+            f"{magnitude}. Both the elicited and the repaired matrices "
+            "are kept in the reproducibility record. For a published "
+            "analysis, consider supplying a population-specific, jointly "
+            "estimated parameter set.",
             fix_hint="Provide a genetic-parameter set whose correlations "
                      "were estimated jointly (e.g. from a single "
                      "multivariate analysis) to avoid the repair.",

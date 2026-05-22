@@ -31,17 +31,27 @@ Genetic parameter set — ``nexgeniq.genetic_parameter_set.v1``::
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
+
 from .adjustment import AdjustmentFactorTable
-from .parameters import GeneticParameterSet, TraitParameters
+from .parameters import GeneticParameterSet, TraitParameters, is_positive_definite
+
+_log = logging.getLogger(__name__)
 
 # The directory holding the shipped reference-data files.
 _DATA_DIR = Path(__file__).parent / "data"
 
 _ADJ_SCHEMA = "nexgeniq.across_breed_factor_table.v1"
 _PARAM_SCHEMA = "nexgeniq.genetic_parameter_set.v1"
+
+# Recognised provenance source types (see genetic_parameters.json
+# provenance.source_type_legend). Any value carrying a provenance object
+# must declare one of these.
+_SOURCE_TYPES = {"cited", "derived", "proxy", "unsourced"}
 
 
 class DataFileError(Exception):
@@ -200,6 +210,56 @@ def load_parameter_set(
             f"non-empty 'traits' object."
         )
 
+    # ``unsourced`` collects a plain-language description of every number
+    # that carries no empirical citation, so the loader can emit one
+    # consolidated warning at the end (see below). This keeps un-sourced
+    # placeholders visible on every run rather than silently trusted.
+    unsourced: list[str] = []
+
+    def _read_value(field_obj, where: str) -> float:
+        """Read one parameter as either a bare number or a provenance object.
+
+        New-format files (schema provenance objects) give each number as
+        ``{"value": x, "source_type": ..., "citation": ..., "note": ...}``.
+        Old-format files give a bare number. Both are accepted so existing
+        data files keep loading; but if a provenance object is present it
+        must be well-formed, and an ``unsourced`` source_type is recorded.
+        """
+        if isinstance(field_obj, dict):
+            if "value" not in field_obj:
+                raise DataFileError(
+                    f"{file_path.name}: {where} is a provenance object but "
+                    f"has no 'value' field."
+                )
+            stype = field_obj.get("source_type")
+            if stype not in _SOURCE_TYPES:
+                raise DataFileError(
+                    f"{file_path.name}: {where} has source_type "
+                    f"{stype!r}; must be one of {sorted(_SOURCE_TYPES)}."
+                )
+            if stype != "unsourced" and not field_obj.get("citation"):
+                raise DataFileError(
+                    f"{file_path.name}: {where} is marked {stype!r} but "
+                    f"carries no 'citation'. Every cited/derived/proxy "
+                    f"number must name its source."
+                )
+            if stype == "unsourced":
+                unsourced.append(where)
+            try:
+                return float(field_obj["value"])
+            except (TypeError, ValueError):
+                raise DataFileError(
+                    f"{file_path.name}: {where} value is not a number "
+                    f"({field_obj['value']!r})."
+                ) from None
+        # Bare-number (legacy) form.
+        try:
+            return float(field_obj)
+        except (TypeError, ValueError):
+            raise DataFileError(
+                f"{file_path.name}: {where} is not a number ({field_obj!r})."
+            ) from None
+
     # Per-trait parameters. TraitParameters validates ranges on construction
     # (heritability in (0, 1], genetic_sd > 0), so a bad value raises here
     # with a clear message.
@@ -207,56 +267,109 @@ def load_parameter_set(
     generic_citation = (
         f"{name} ({version}); see provenance in {file_path.name}."
     )
-    # An optional per-trait source map ("trait_sources") lets a data file
-    # cite each trait individually; a trait without an entry falls back to
-    # the generic, file-level citation.
+    # Optional file-level per-trait source map (legacy "trait_sources").
     trait_sources = blob.get("trait_sources", {})
     for code, spec in raw_traits.items():
-        per_trait = trait_sources.get(code)
-        citation = (
-            f"{per_trait} [{name}, {version}]"
-            if per_trait else generic_citation
-        )
+        if "heritability" not in spec or "genetic_sd" not in spec:
+            raise DataFileError(
+                f"{file_path.name}: trait {code!r} must define both "
+                f"'heritability' and 'genetic_sd'."
+            )
+        h2 = _read_value(spec["heritability"], f"trait {code} heritability")
+        g_sd = _read_value(spec["genetic_sd"], f"trait {code} genetic_sd")
+        # A phenotypic_sd field is optional, but if present its provenance
+        # is still validated (and counted toward 'unsourced').
+        if "phenotypic_sd" in spec:
+            _read_value(spec["phenotypic_sd"], f"trait {code} phenotypic_sd")
+        # Prefer a per-number citation from the new-format heritability
+        # provenance object; fall back to the legacy trait_sources map.
+        h2_obj = spec["heritability"]
+        if isinstance(h2_obj, dict) and h2_obj.get("citation"):
+            citation = f"{h2_obj['citation']} [{name}, {version}]"
+        else:
+            per_trait = trait_sources.get(code)
+            citation = (
+                f"{per_trait} [{name}, {version}]"
+                if per_trait else generic_citation
+            )
         try:
             trait_params[code] = TraitParameters(
                 trait_code=code,
-                heritability=float(spec["heritability"]),
-                genetic_sd=float(spec["genetic_sd"]),
+                heritability=h2,
+                genetic_sd=g_sd,
                 citation=citation,
             )
-        except KeyError as exc:
-            raise DataFileError(
-                f"{file_path.name}: trait {code!r} is missing field "
-                f"{exc}."
-            ) from None
         except ValueError as exc:
             raise DataFileError(
                 f"{file_path.name}: trait {code!r} has an invalid value "
                 f"- {exc}."
             ) from None
 
-    # Genetic correlations.
+    # Genetic correlations. Each entry is either a legacy
+    # [trait_a, trait_b, r_g] triple or a new-format provenance object
+    # {"pair": [a, b], "value": r, "source_type": ..., "citation": ...}.
     correlations: dict[frozenset[str], float] = {}
     for entry in blob.get("genetic_correlations", []):
-        if not isinstance(entry, list) or len(entry) != 3:
+        if isinstance(entry, dict):
+            pair = entry.get("pair")
+            if not isinstance(pair, list) or len(pair) != 2:
+                raise DataFileError(
+                    f"{file_path.name}: a correlation object must have a "
+                    f"'pair' of two trait codes; found {pair!r}."
+                )
+            a, b = pair
+            r = _read_value(entry, f"correlation {a}/{b}")
+        elif isinstance(entry, list) and len(entry) == 3:
+            a, b, raw_r = entry
+            r = _read_value(raw_r, f"correlation {a}/{b}")
+        else:
             raise DataFileError(
                 f"{file_path.name}: each genetic correlation must be a "
-                f"[trait_a, trait_b, r_g] triple; found {entry!r}."
+                f"[trait_a, trait_b, r_g] triple or a provenance object; "
+                f"found {entry!r}."
             )
-        a, b, r = entry
-        try:
-            r = float(r)
-        except (TypeError, ValueError):
-            raise DataFileError(
-                f"{file_path.name}: correlation for {a}/{b} is not a "
-                f"number ({r!r})."
-            ) from None
         if not -1.0 <= r <= 1.0:
             raise DataFileError(
                 f"{file_path.name}: correlation for {a}/{b} is {r}, "
                 f"outside the valid range [-1, 1]."
             )
         correlations[frozenset({a, b})] = r
+
+    # Emit one consolidated warning naming every un-sourced placeholder.
+    # The engine still runs (the matrix math needs a value in every cell),
+    # but an un-sourced number is never silently trusted.
+    if unsourced:
+        _log.warning(
+            "%s: %d parameter value(s) carry NO empirical citation "
+            "(source_type 'unsourced') and are documented placeholders, "
+            "not literature estimates: %s. See PARAMETER_SOURCES.md.",
+            file_path.name, len(unsourced), "; ".join(sorted(unsourced)),
+        )
+
+    # Positive-definiteness check on the genetic correlation matrix.
+    # A correlation matrix assembled pairwise from the literature need not
+    # be jointly consistent; if it is indefinite the BLUP-index solve
+    # (b = P^-1 G a) is built on an invalid covariance structure. We log a
+    # warning if so; the engine's nearest_pd_correlation() repair is
+    # applied downstream, but the load-time check makes the problem visible.
+    codes = sorted(trait_params)
+    if len(codes) >= 2:
+        idx = {c: i for i, c in enumerate(codes)}
+        mat = np.eye(len(codes))
+        for pair, r in correlations.items():
+            members = [c for c in pair if c in idx]
+            if len(members) == 2:
+                i, j = idx[members[0]], idx[members[1]]
+                mat[i, j] = mat[j, i] = r
+        if not is_positive_definite(mat):
+            eigmin = float(np.linalg.eigvalsh(mat).min())
+            _log.warning(
+                "%s: the genetic correlation matrix is NOT positive-"
+                "definite (minimum eigenvalue %.4g). The pairwise "
+                "literature estimates are not jointly consistent; the "
+                "engine will apply a nearest-PD repair before solving.",
+                file_path.name, eigmin,
+            )
 
     param_set = GeneticParameterSet(
         name=name,

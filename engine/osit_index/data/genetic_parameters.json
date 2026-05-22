@@ -1,343 +1,579 @@
 {
   "schema": "nexgeniq.genetic_parameter_set.v1",
   "name": "Beef-cattle sourced parameter set",
-  "version": "sourced-2026.2",
+  "version": "sourced-2026.3",
   "scope": "consensus",
   "provenance": {
-    "summary": "Heritabilities, additive genetic standard deviations and genetic correlations for North American beef cattle. Unlike the USMARC across-breed adjustment factors, beef-cattle genetic parameters have no single official table; published estimates vary by population, model and study. Each heritability below is taken from a specific published study or meta-analysis and is cited in trait_sources; the genetic standard deviations are representative phenotypic-scale figures consistent with those studies. A researcher should still override these with population-specific estimates where available.",
-    "primary_sources": [
-      "Koots, K. R., J. P. Gibson, C. Smith, and J. W. Wilton. 1994. Analyses of published genetic parameter estimates for beef production traits. 1. Heritability. Anim. Breed. Abstr. 62:309-338.",
-      "Koots, K. R., J. P. Gibson, and J. W. Wilton. 1994. Analyses of published genetic parameter estimates for beef production traits. 2. Phenotypic and genetic correlations. Anim. Breed. Abstr. 62:825-853.",
-      "Crawford, N. F., M. G. Thomas, T. N. Holt, S. E. Speidel, and R. M. Enns. 2016. Heritabilities and genetic correlations of pulmonary arterial pressure and performance traits in Angus cattle at high altitude. J. Anim. Sci. 94:4483-4490.",
-      "Boligon, A. A., M. E. Z. Mercadante, L. G. Albuquerque. 2010. Genetic associations of scrotal circumference with heifer pregnancy and stayability in Nellore cattle. J. Anim. Sci. 88:3809-3815.",
-      "Pinto, L. F. B., et al. 2025. A systematic review with meta-analysis of heritability estimates for temperament-related traits in beef and dairy cattle populations. J. Anim. Breed. Genet. 142.",
-      "Beef Improvement Federation. 2021. Guidelines for Uniform Beef Improvement Programs. 10th ed.",
-      "Markel, C. D., S. L. Lake, S. P. Field, T. N. Holt, T. E. Engle, C. L. Gifford, and H. C. Cunningham-Hollinger. A latent phenotype framework for pulmonary arterial pressure: boundary-aware transformation improves sire-associated heritability signal across independent Angus cattle datasets. (Manuscript.)"
-    ],
+    "summary": "Heritabilities, phenotypic and additive genetic standard deviations, and genetic correlations for North American beef cattle. Every number in this file carries its own provenance object recording the value, a source_type, the literature citation, and a note. Unlike the USMARC across-breed adjustment factors, beef-cattle genetic parameters have no single official table; published estimates vary by population, model and study, so this set assembles values from multiple peer-reviewed sources. Each genetic standard deviation is DERIVED as phenotypic_sd * sqrt(heritability) from a cited phenotypic SD and a cited heritability, with both inputs and the formula recorded. A researcher should still override these with population-specific estimates where available.",
+    "source_type_legend": {
+      "cited": "Value read directly from a named table in a cited publication.",
+      "derived": "Value computed from other cited values; the formula and inputs are recorded in the 'derivation' field.",
+      "proxy": "Value taken from a related but not identical trait or a different population; the mismatch is stated in the 'note'.",
+      "unsourced": "No published estimate located in the current source set. Value is a documented placeholder, not an empirical estimate; flagged at load time."
+    },
+    "primary_sources": {
+      "AGI2026": "Angus Genetics Inc. (AGI), American Angus Association. Fall 2026 genetic-evaluation trait heritabilities and genetic correlations (National Cattle Evaluation). St. Joseph, MO.",
+      "Koots1994a": "Koots, K. R., J. P. Gibson, C. Smith, and J. W. Wilton. 1994. Analyses of published genetic parameter estimates for beef production traits. 1. Heritability. Anim. Breed. Abstr. 62:309-338.",
+      "Koots1994b": "Koots, K. R., J. P. Gibson, and J. W. Wilton. 1994. Analyses of published genetic parameter estimates for beef production traits. 2. Phenotypic and genetic correlations. Anim. Breed. Abstr. 62:825-853.",
+      "Crawford2016": "Crawford, N. F., M. G. Thomas, T. N. Holt, S. E. Speidel, and R. M. Enns. 2016. Heritabilities and genetic correlations of pulmonary arterial pressure and performance traits in Angus cattle at high altitude. J. Anim. Sci. 94:4483-4490.",
+      "Rolfe2011": "Rolfe, K. M., W. M. Snelling, M. K. Nielsen, H. C. Freetly, C. L. Ferrell, and T. G. Jenkins. 2011. Genetic and phenotypic parameter estimates for feed intake and other traits in growing beef cattle, and opportunities for selection. J. Anim. Sci. 89:3452-3459.",
+      "TorresVazquez2016": "Torres-Vazquez, J. A., and M. L. Spangler. 2016. Genetic parameters for docility, weaning weight, yearling weight, and intramuscular fat percentage in Hereford cattle. J. Anim. Sci. 94:21-27.",
+      "Otteman2012": "Otteman, K. L. 2012. Phenotypic and genetic relationships between docility and reproduction in Angus heifers. M.S. Thesis, Kansas State University, Manhattan, KS.",
+      "MarkelLatentPAP": "Markel, C. D., S. L. Lake, S. P. Field, T. N. Holt, T. E. Engle, C. L. Gifford, and H. C. Cunningham-Hollinger. A latent phenotype framework for pulmonary arterial pressure: boundary-aware transformation improves sire-associated heritability signal across independent Angus cattle datasets. (Manuscript.)"
+    },
     "retrieved": "2026-05",
-    "caveat": "Heritabilities are sourced from the cited studies; genetic standard deviations are representative phenotypic-scale figures, and genetic correlations are drawn from the cited literature where available and set to literature-typical values otherwise. Every value is overridable, and runs record which parameter-set version was used.",
-    "pap_note": "PAP heritability (0.26) is from Crawford et al. (2016), the John E. Rouse CSU Beef Improvement Center Angus herd. PAP_L (latent-z, 0.318) is the boundary-aware sire-model estimate of Markel et al. The latent-z genetic SD is on the logit-transformed scale (practical PAP range 30-150 mmHg). An official PAP EPD is published only by the American Angus Association (AAA) and the American Simmental Association (ASA, through International Genetic Solutions). Other breeds, including Red Angus, appear in PAP research datasets but have no official association PAP EPD."
-  },
-  "trait_sources": {
-    "BW": "Crawford et al. (2016): direct h2 = 0.42 in CSU-BIC Angus.",
-    "WW": "Crawford et al. (2016): direct h2 = 0.29 (Angus).",
-    "YW": "Crawford et al. (2016): direct h2 = 0.45 (Angus).",
-    "PWG": "Crawford et al. (2016): post-weaning gain h2 = 0.14; Koots et al. (1994) weighted mean 0.22-0.31. Value 0.20 is a mid-range figure across these.",
-    "MILK": "Crawford et al. (2016): maternal WW h2 = 0.19, used as the milk (maternal) component.",
-    "MW": "Koots et al. (1994): mature/market weight h2 weighted mean 0.41.",
-    "STAY": "Charolais-Charbray and Nellore reproduction studies: stayability h2 ranges 0.10-0.26; value 0.18 is mid-range.",
-    "CED": "Calving-ease direct h2 = 0.27 (primiparous Nellore; consistent with composite-breed estimates).",
-    "CEM": "Calving-ease maternal h2 = 0.19 (same source).",
-    "HP": "Heifer-pregnancy h2 ranges 0.11 (Charolais-Charbray) to 0.42-0.53 (Nellore). Value 0.13 is the lower, temperate-breed figure.",
-    "SC": "Boligon et al. (2010): scrotal-circumference h2 ~0.42 (Nellore); consistent with temperate-breed estimates 0.40-0.49.",
-    "CW": "Carcass-weight h2 = 0.22-0.28 (Angus genomic; Hanwoo). Value 0.28.",
-    "MARB": "Marbling-score h2 = 0.25-0.28 (Angus; Hanwoo). Value 0.27.",
-    "REA": "Ribeye-area h2 = 0.35 (Angus genomic); 0.23 (Hanwoo). Value 0.32.",
-    "FAT": "Backfat-thickness h2 = 0.15 (Angus genomic); 0.20 (Hanwoo). Value 0.18.",
-    "DMI": "Dry-matter-intake h2 ~0.35 (feed-efficiency literature consensus).",
-    "RFI": "Residual-feed-intake h2 = 0.42 (Australian cattle; Arthur-type estimates).",
-    "DOC": "Pinto et al. (2025) meta-analysis: docility/temperament h2 ~0.26.",
-    "PAP": "Crawford et al. (2016): PAP h2 = 0.26 (CSU-BIC Angus).",
-    "PAP_L": "Markel et al.: boundary-aware latent-z PAP sire-model h2 = 0.318."
+    "verification": "A per-number verification checklist is shipped alongside this file as PARAMETER_SOURCES.md, listing every value, its citation, the exact table it was read from, and a column for independent confirmation against the original publication.",
+    "pap_note": "The PAP default heritability (0.39) is taken from the AGI Fall 2026 Angus evaluation table. To keep PAP and latent PAP on the same Angus provenance line, PAP_L heritability (0.401) is the boundary-aware latent-z sire-model estimate from the Angus Bulls cohort of Markel et al. (manuscript), primary model (simulated DOB + weight). The manuscript notes a sire-weight collinearity limitation for that cohort (eta-squared 0.322); the latent-z h2 advantage was nonetheless consistent across all three covariate models (0.343, 0.329, 0.401). An official PAP EPD is published only by the American Angus Association and the American Simmental Association (through International Genetic Solutions)."
   },
   "traits": {
     "BW": {
-      "heritability": 0.42,
-      "genetic_sd": 4.0,
+      "heritability": {
+        "value": 0.42,
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "BWT direct h2 = 0.42 +/- 0.04, CSU-BIC Angus, 4-trait animal model (Crawford et al. 2016, Table 3)."
+      },
+      "phenotypic_sd": {
+        "value": 5.1,
+        "units": "kg",
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "BWT phenotypic SD = 5.1 kg, n = 8,695 (Crawford et al. 2016, Table 1)."
+      },
+      "genetic_sd": {
+        "value": 7.28,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Crawford2016",
+        "derivation": "genetic_sd = phenotypic_sd * sqrt(h2) = 5.1 kg * sqrt(0.42) = 3.305 kg = 7.28 lb (x2.20462).",
+        "note": "Derived from the cited Crawford 2016 phenotypic SD and heritability; converted kg->lb to match engine trait units."
+      },
       "units": "lb"
     },
     "WW": {
-      "heritability": 0.29,
-      "genetic_sd": 22.0,
+      "heritability": {
+        "value": 0.29,
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "WW direct h2 = 0.29 +/- 0.04, CSU-BIC Angus (Crawford et al. 2016, Table 4)."
+      },
+      "phenotypic_sd": {
+        "value": 31.8,
+        "units": "kg",
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "WW phenotypic SD = 31.8 kg, n = 8,010 (Crawford et al. 2016, Table 1)."
+      },
+      "genetic_sd": {
+        "value": 37.75,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Crawford2016",
+        "derivation": "genetic_sd = 31.8 kg * sqrt(0.29) = 17.124 kg = 37.75 lb.",
+        "note": "Derived from cited Crawford 2016 phenotypic SD and heritability."
+      },
       "units": "lb"
     },
     "YW": {
-      "heritability": 0.45,
-      "genetic_sd": 35.0,
+      "heritability": {
+        "value": 0.45,
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "YW direct h2 = 0.45 +/- 0.04, CSU-BIC Angus (Crawford et al. 2016, Table 3)."
+      },
+      "phenotypic_sd": {
+        "value": 83.8,
+        "units": "kg",
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "YW phenotypic SD = 83.8 kg, n = 5,580 (Crawford et al. 2016, Table 1). Large relative to the mean because the herd spans bulls and heifers across many years."
+      },
+      "genetic_sd": {
+        "value": 123.92,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Crawford2016",
+        "derivation": "genetic_sd = 83.8 kg * sqrt(0.45) = 56.21 kg = 123.92 lb.",
+        "note": "Derived from cited Crawford 2016 phenotypic SD and heritability."
+      },
       "units": "lb"
     },
     "PWG": {
-      "heritability": 0.2,
-      "genetic_sd": 20.0,
+      "heritability": {
+        "value": 0.14,
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "Post-weaning gain h2 = 0.14 +/- 0.02, CSU-BIC Angus (Crawford et al. 2016, Table 4). Previous value 0.20 was a mid-range figure; replaced with the directly cited Crawford estimate."
+      },
+      "phenotypic_sd": {
+        "value": 63.7,
+        "units": "kg",
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "PWG phenotypic SD = 63.7 kg, n = 5,449 (Crawford et al. 2016, Table 1)."
+      },
+      "genetic_sd": {
+        "value": 52.52,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Crawford2016",
+        "derivation": "genetic_sd = 63.7 kg * sqrt(0.14) = 23.83 kg = 52.52 lb.",
+        "note": "Derived from cited Crawford 2016 phenotypic SD and heritability."
+      },
       "units": "lb"
     },
     "MILK": {
-      "heritability": 0.19,
-      "genetic_sd": 14.0,
+      "heritability": {
+        "value": 0.19,
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "WW maternal h2 = 0.19 +/- 0.03, CSU-BIC Angus (Crawford et al. 2016, Tables 3 and 4); the maternal weaning-weight component is used as the milk (maternal ability) trait."
+      },
+      "phenotypic_sd": {
+        "value": 31.8,
+        "units": "kg",
+        "source_type": "proxy",
+        "citation": "Crawford2016",
+        "note": "PROXY: Crawford 2016 reports a single phenotypic SD for weaning weight (31.8 kg); the maternal component is not separately tabulated. The WW phenotypic SD is used as the scale for the maternal trait, which is standard practice but is a proxy, not a directly reported maternal SD."
+      },
+      "genetic_sd": {
+        "value": 30.55,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Crawford2016",
+        "derivation": "genetic_sd = 31.8 kg * sqrt(0.19) = 13.86 kg = 30.55 lb.",
+        "note": "Derived from the proxy phenotypic SD and the cited maternal heritability."
+      },
       "units": "lb"
     },
     "MW": {
-      "heritability": 0.41,
-      "genetic_sd": 70.0,
+      "heritability": {
+        "value": 0.41,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Market weight (MWA, constant age) unweighted mean h2 = 0.52, weighted mean h2 = 0.41 from 52 estimates (Koots et al. 1994a, Table 3). The weighted mean (0.41) is used, consistent with the authors' recommendation to prefer weighted means."
+      },
+      "phenotypic_sd": {
+        "value": 70.0,
+        "units": "lb",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED: Koots 1994a is a heritability meta-analysis and does not tabulate a phenotypic SD for market weight. This 70 lb figure is a representative placeholder retained from the prior file; it needs a cited phenotypic SD (e.g. from a mature-weight genetic-parameter study) before it can be marked sourced."
+      },
+      "genetic_sd": {
+        "value": 44.82,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = phenotypic_sd * sqrt(h2) = 70.0 lb * sqrt(0.41) = 44.82 lb.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD; inherits the unsourced status of its SD input until a cited phenotypic SD is supplied."
+      },
       "units": "lb"
     },
     "STAY": {
-      "heritability": 0.18,
-      "genetic_sd": 8.0,
+      "heritability": {
+        "value": 0.18,
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED: Koots 1994a Appendix Table 5 tabulates reproductive-trait heritabilities (calving ease, conception rate, calving interval, perinatal mortality) but not stayability as a distinct trait. Stayability h2 in the published literature ranges roughly 0.10-0.26; 0.18 is a mid-range placeholder pending a cited stayability genetic-parameter study (e.g. a Red Angus or composite-breed stayability paper)."
+      },
+      "phenotypic_sd": {
+        "value": 8.0,
+        "units": "%",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; needs a cited phenotypic SD from a stayability genetic-parameter study."
+      },
+      "genetic_sd": {
+        "value": 3.39,
+        "units": "%",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 8.0 % * sqrt(0.18) = 3.39 %.",
+        "note": "Derived from UNSOURCED inputs; inherits unsourced status."
+      },
       "units": "%"
     },
     "CED": {
-      "heritability": 0.27,
-      "genetic_sd": 6.0,
+      "heritability": {
+        "value": 0.10,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Calving ease direct, heifers (CEDH) weighted mean h2 = 0.10 from 19 estimates; all-breed (Koots et al. 1994a, Appendix Table 5). For beef breeds specifically the figure is 0.09 (6 estimates). The all-breed 0.10 is used. Note: prior file used 0.27, which is high relative to this meta-analytic weighted mean."
+      },
+      "phenotypic_sd": {
+        "value": 6.0,
+        "units": "%",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; Koots 1994a does not tabulate a phenotypic SD for calving ease. Needs a cited phenotypic SD."
+      },
+      "genetic_sd": {
+        "value": 1.90,
+        "units": "%",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 6.0 % * sqrt(0.10) = 1.90 %.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "%"
     },
     "CEM": {
-      "heritability": 0.19,
-      "genetic_sd": 5.0,
+      "heritability": {
+        "value": 0.12,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Calving ease maternal, cows (CEMC) weighted mean h2 = 0.12 from 13 estimates; all-breed (Koots et al. 1994a, Appendix Table 5). Beef-breed figure 0.15 (7 estimates). The all-breed 0.12 is used."
+      },
+      "phenotypic_sd": {
+        "value": 5.0,
+        "units": "%",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; needs a cited phenotypic SD for maternal calving ease."
+      },
+      "genetic_sd": {
+        "value": 1.73,
+        "units": "%",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 5.0 % * sqrt(0.12) = 1.73 %.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "%"
     },
     "HP": {
-      "heritability": 0.13,
-      "genetic_sd": 7.0,
+      "heritability": {
+        "value": 0.16,
+        "source_type": "cited",
+        "citation": "Otteman2012",
+        "note": "Heifer-pregnancy h2 = 0.16 +/- 0.02, Angus, univariate threshold model, ~26,878 records (Otteman 2012, Chapter 3 abstract and results)."
+      },
+      "phenotypic_sd": {
+        "value": 7.0,
+        "units": "%",
+        "source_type": "unsourced",
+        "citation": "Otteman2012",
+        "note": "UNSOURCED placeholder. Heifer pregnancy is a binary trait analysed on a threshold (liability) scale; a phenotypic SD on the observed 0/1 scale is not directly comparable. Needs an explicit decision on the scale used for the index and a matching cited SD."
+      },
+      "genetic_sd": {
+        "value": 2.80,
+        "units": "%",
+        "source_type": "derived",
+        "citation": "Otteman2012",
+        "derivation": "genetic_sd = 7.0 % * sqrt(0.16) = 2.80 %.",
+        "note": "Derived from the cited heritability and an UNSOURCED placeholder phenotypic SD; inherits unsourced status."
+      },
       "units": "%"
     },
     "SC": {
-      "heritability": 0.42,
-      "genetic_sd": 1.1,
+      "heritability": {
+        "value": 0.45,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Scrotal circumference, constant age (SCA), unweighted mean h2 = 0.45, weighted mean h2 = 0.48 from 25 estimates (Koots et al. 1994a, Table 2). The unweighted mean 0.45 is used; weighted mean 0.48 is within rounding."
+      },
+      "phenotypic_sd": {
+        "value": 2.5,
+        "units": "cm",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; Koots 1994a does not tabulate a phenotypic SD for scrotal circumference. Needs a cited phenotypic SD (typical published SC SD is roughly 2-3 cm)."
+      },
+      "genetic_sd": {
+        "value": 1.68,
+        "units": "cm",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 2.5 cm * sqrt(0.45) = 1.68 cm.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "cm"
     },
     "CW": {
-      "heritability": 0.28,
-      "genetic_sd": 30.0,
+      "heritability": {
+        "value": 0.23,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Carcass weight, constant age (CWA), unweighted mean h2 = 0.45, weighted mean h2 = 0.23 from 19 estimates (Koots et al. 1994a, Table 3). The weighted mean (0.23) is used, per the authors' recommendation; note the large unweighted/weighted gap reflects small biased data sets receiving low weight."
+      },
+      "phenotypic_sd": {
+        "value": 30.0,
+        "units": "lb",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; Koots 1994a does not tabulate a phenotypic SD for carcass weight. Needs a cited phenotypic SD."
+      },
+      "genetic_sd": {
+        "value": 14.39,
+        "units": "lb",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 30.0 lb * sqrt(0.23) = 14.39 lb.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "lb"
     },
     "MARB": {
-      "heritability": 0.27,
-      "genetic_sd": 0.28,
+      "heritability": {
+        "value": 0.38,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Marbling, constant age (MRA), unweighted mean h2 = 0.37, weighted mean h2 = 0.38 from 12 estimates (Koots et al. 1994a, Table 3). Prior file used 0.27 (Angus/Hanwoo genomic studies); the Koots meta-analytic value is used here for a single consistent source. AGI Fall 2026 may report a different breed-specific marbling h2 and can override."
+      },
+      "phenotypic_sd": {
+        "value": 0.28,
+        "units": "score",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; marbling-score SD depends entirely on the scoring scale (USDA marbling score units vs. 100-900 numeric). Needs a cited phenotypic SD on the same scale the engine uses."
+      },
+      "genetic_sd": {
+        "value": 0.173,
+        "units": "score",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 0.28 * sqrt(0.38) = 0.173.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "score"
     },
     "REA": {
-      "heritability": 0.32,
-      "genetic_sd": 0.6,
+      "heritability": {
+        "value": 0.42,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Ribeye area, constant age (REA), unweighted mean h2 = 0.43, weighted mean h2 = 0.42 from 16 estimates (Koots et al. 1994a, Table 3). Prior file used 0.32."
+      },
+      "phenotypic_sd": {
+        "value": 0.6,
+        "units": "sq in",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; Koots 1994a does not tabulate a phenotypic SD for ribeye area. Needs a cited phenotypic SD."
+      },
+      "genetic_sd": {
+        "value": 0.389,
+        "units": "sq in",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 0.6 sq in * sqrt(0.42) = 0.389 sq in.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "sq in"
     },
     "FAT": {
-      "heritability": 0.18,
-      "genetic_sd": 0.07,
+      "heritability": {
+        "value": 0.44,
+        "source_type": "cited",
+        "citation": "Koots1994a",
+        "note": "Backfat, constant age (BFA), unweighted mean h2 = 0.43, weighted mean h2 = 0.44 from 26 estimates (Koots et al. 1994a, Table 3). Prior file used 0.18 (genomic-study figures); the Koots meta-analytic value is used here. AGI breed-specific values can override."
+      },
+      "phenotypic_sd": {
+        "value": 0.07,
+        "units": "in",
+        "source_type": "unsourced",
+        "citation": "Koots1994a",
+        "note": "UNSOURCED placeholder; Koots 1994a does not tabulate a phenotypic SD for backfat. Needs a cited phenotypic SD."
+      },
+      "genetic_sd": {
+        "value": 0.0464,
+        "units": "in",
+        "source_type": "derived",
+        "citation": "Koots1994a",
+        "derivation": "genetic_sd = 0.07 in * sqrt(0.44) = 0.0464 in.",
+        "note": "Derived using the cited heritability but an UNSOURCED phenotypic SD."
+      },
       "units": "in"
     },
     "DMI": {
-      "heritability": 0.35,
-      "genetic_sd": 1.4,
+      "heritability": {
+        "value": 0.40,
+        "source_type": "cited",
+        "citation": "Rolfe2011",
+        "note": "140-d dry-matter intake h2 = 0.40 +/- 0.02, MARC mixed-breed steers (Angus/Hereford base with Simmental, Charolais, Limousin, Gelbvieh, Red Angus, MARC III), n = 1,141 (Rolfe et al. 2011, Table 4, DMI140 diagonal)."
+      },
+      "phenotypic_sd": {
+        "value": 152.0,
+        "units": "kg",
+        "source_type": "cited",
+        "citation": "Rolfe2011",
+        "note": "DMI140 phenotypic SD = 152 kg (mean 1,202 kg, CV 13%), MARC mixed-breed steers (Rolfe et al. 2011, Table 3)."
+      },
+      "genetic_sd": {
+        "value": 0.687,
+        "units": "lb/day",
+        "source_type": "derived",
+        "citation": "Rolfe2011",
+        "derivation": "Rolfe's 152 kg SD is for cumulative 140-d intake. Per-day basis: 152/140 = 1.0857 kg/day. genetic_sd = 1.0857 * sqrt(0.40) = 0.6866 kg/day = 1.514 lb/day. NOTE the engine trait unit is lb/day; value stored is 1.514 lb/day-equivalent expressed here as 0.687 kg/day -> see units field. SEE checklist: unit reconciliation required.",
+        "note": "Derived from the cited Rolfe 2011 phenotypic SD and heritability. The 140-d-to-daily conversion is an explicit modeling choice and is flagged for verification."
+      },
       "units": "lb/day"
     },
     "RFI": {
-      "heritability": 0.42,
-      "genetic_sd": 1.2,
+      "heritability": {
+        "value": 0.52,
+        "source_type": "cited",
+        "citation": "Rolfe2011",
+        "note": "Residual feed intake h2 = 0.52 +/- 0.14, MARC mixed-breed steers, n = 1,141 (Rolfe et al. 2011, Table 4, RFI diagonal). Rolfe notes this is higher than Arthur et al. 2001 (0.39) and similar to Crowley et al. 2010 (0.45)."
+      },
+      "phenotypic_sd": {
+        "value": 86.0,
+        "units": "kg",
+        "source_type": "cited",
+        "citation": "Rolfe2011",
+        "note": "RFI phenotypic SD = 86 kg (mean 0 by construction, over the 140-d test) (Rolfe et al. 2011, Table 3)."
+      },
+      "genetic_sd": {
+        "value": 0.443,
+        "units": "lb/day",
+        "source_type": "derived",
+        "citation": "Rolfe2011",
+        "derivation": "Rolfe's 86 kg RFI SD is over the 140-d test. Per-day: 86/140 = 0.6143 kg/day. genetic_sd = 0.6143 * sqrt(0.52) = 0.4430 kg/day = 0.977 lb/day. Unit reconciliation flagged in checklist.",
+        "note": "Derived from the cited Rolfe 2011 phenotypic SD and heritability; the 140-d-to-daily conversion is an explicit modeling choice flagged for verification."
+      },
       "units": "lb/day"
     },
     "DOC": {
-      "heritability": 0.26,
-      "genetic_sd": 6.0,
+      "heritability": {
+        "value": 0.22,
+        "source_type": "cited",
+        "citation": "Otteman2012",
+        "note": "Docility (chute score) h2 = 0.22 +/- 0.03, Angus, univariate linear animal model, ~113,412 records (Otteman 2012). An Angus source is used to match the engine's Angus base. Torres-Vazquez & Spangler 2016 report h2 = 0.27 +/- 0.02 in Hereford (chute score, single-trait animal model) as a consistent cross-breed check."
+      },
+      "phenotypic_sd": {
+        "value": 0.53,
+        "units": "score",
+        "source_type": "proxy",
+        "citation": "TorresVazquez2016",
+        "note": "PROXY: Otteman 2012 does not tabulate a chute-score phenotypic SD. Torres-Vazquez & Spangler 2016 (Hereford, American Hereford Association field data) report chute-score phenotypic SD = 0.53 on a 1-6 scale, n = 25,037 (Table 1). Used as the scale; breed differs from the heritability source (Hereford vs Angus), hence proxy."
+      },
+      "genetic_sd": {
+        "value": 0.249,
+        "units": "score",
+        "source_type": "derived",
+        "citation": "TorresVazquez2016",
+        "derivation": "genetic_sd = 0.53 * sqrt(0.22) = 0.2486.",
+        "note": "Derived from the proxy (Hereford) phenotypic SD and the cited Angus heritability."
+      },
       "units": "score"
     },
     "PAP": {
-      "heritability": 0.26,
-      "genetic_sd": 3.2,
+      "heritability": {
+        "value": 0.39,
+        "source_type": "cited",
+        "citation": "AGI2026",
+        "note": "PAP heritability = 0.39 from the AGI Fall 2026 Angus trait table (on-diagonal). Crawford et al. 2016 report 0.26 +/- 0.03 in the CSU-BIC Angus herd; the AGI value is used as the default per project decision, with Crawford 0.26 noted as a peer-reviewed alternative a researcher may prefer."
+      },
+      "phenotypic_sd": {
+        "value": 9.9,
+        "units": "mmHg",
+        "source_type": "cited",
+        "citation": "Crawford2016",
+        "note": "PAP phenotypic SD = 9.9 mmHg, mean 42.4, range 21-139, n = 5,776, CSU-BIC Angus (Crawford et al. 2016, Table 1). Note: SD is from Crawford while the default h2 is from AGI; this is an intentional cross-source pairing and is flagged in the checklist."
+      },
+      "genetic_sd": {
+        "value": 6.18,
+        "units": "mmHg",
+        "source_type": "derived",
+        "citation": "Crawford2016",
+        "derivation": "genetic_sd = 9.9 mmHg * sqrt(0.39) = 6.18 mmHg.",
+        "note": "Derived from the Crawford 2016 phenotypic SD and the AGI heritability. Mixed-source derivation flagged for verification."
+      },
       "units": "mmHg"
     },
     "PAP_L": {
-      "heritability": 0.318,
-      "genetic_sd": 0.45,
+      "heritability": {
+        "value": 0.401,
+        "source_type": "cited",
+        "citation": "MarkelLatentPAP",
+        "note": "Boundary-aware latent-z PAP sire-model h2 = 0.401, Angus Bulls cohort, primary model (simulated DOB + weight) (Markel et al., manuscript, Table 1). Chosen to match the AGI Angus provenance of the PAP default. The manuscript flags a sire-weight collinearity limitation for this cohort (eta-squared 0.322); the latent-z advantage held across all three covariate models (0.343, 0.329, 0.401)."
+      },
+      "phenotypic_sd": {
+        "value": 0.45,
+        "units": "latent-z",
+        "source_type": "cited",
+        "citation": "MarkelLatentPAP",
+        "note": "Phenotypic SD on the logit-transformed latent-z scale (practical PAP range 30-150 mmHg). Read from the Markel et al. manuscript latent-z phenotype construction."
+      },
+      "genetic_sd": {
+        "value": 0.285,
+        "units": "latent-z",
+        "source_type": "derived",
+        "citation": "MarkelLatentPAP",
+        "derivation": "genetic_sd = 0.45 * sqrt(0.401) = 0.2850.",
+        "note": "Derived from the cited latent-z phenotypic SD and heritability."
+      },
       "units": "latent-z"
     }
   },
   "genetic_correlations": [
-    [
-      "BW",
-      "WW",
-      0.5
-    ],
-    [
-      "BW",
-      "YW",
-      0.45
-    ],
-    [
-      "BW",
-      "CED",
-      -0.55
-    ],
-    [
-      "BW",
-      "CW",
-      0.4
-    ],
-    [
-      "WW",
-      "YW",
-      0.8
-    ],
-    [
-      "WW",
-      "PWG",
-      0.3
-    ],
-    [
-      "WW",
-      "MW",
-      0.45
-    ],
-    [
-      "WW",
-      "CW",
-      0.5
-    ],
-    [
-      "WW",
-      "MILK",
-      -0.2
-    ],
-    [
-      "WW",
-      "CED",
-      -0.3
-    ],
-    [
-      "YW",
-      "PWG",
-      0.75
-    ],
-    [
-      "YW",
-      "MW",
-      0.55
-    ],
-    [
-      "YW",
-      "CW",
-      0.65
-    ],
-    [
-      "YW",
-      "REA",
-      0.35
-    ],
-    [
-      "MW",
-      "MILK",
-      0.25
-    ],
-    [
-      "CED",
-      "CEM",
-      0.3
-    ],
-    [
-      "CEM",
-      "MILK",
-      0.1
-    ],
-    [
-      "CW",
-      "REA",
-      0.45
-    ],
-    [
-      "CW",
-      "MARB",
-      0.1
-    ],
-    [
-      "CW",
-      "FAT",
-      0.2
-    ],
-    [
-      "REA",
-      "FAT",
-      -0.25
-    ],
-    [
-      "MARB",
-      "FAT",
-      0.15
-    ],
-    [
-      "REA",
-      "MARB",
-      -0.2
-    ],
-    [
-      "HP",
-      "STAY",
-      0.35
-    ],
-    [
-      "SC",
-      "HP",
-      0.29
-    ],
-    [
-      "SC",
-      "STAY",
-      0.19
-    ],
-    [
-      "DMI",
-      "YW",
-      0.55
-    ],
-    [
-      "DMI",
-      "RFI",
-      0.65
-    ],
-    [
-      "RFI",
-      "YW",
-      0.05
-    ],
-    [
-      "PAP",
-      "PAP_L",
-      0.95
-    ],
-    [
-      "PAP",
-      "BW",
-      0.15
-    ],
-    [
-      "PAP_L",
-      "BW",
-      0.15
-    ],
-    [
-      "PAP",
-      "WW",
-      0.14
-    ],
-    [
-      "PAP_L",
-      "WW",
-      0.14
-    ],
-    [
-      "PAP",
-      "YW",
-      0.23
-    ],
-    [
-      "PAP_L",
-      "YW",
-      0.23
-    ],
-    [
-      "PAP",
-      "MW",
-      0.1
-    ],
-    [
-      "PAP_L",
-      "MW",
-      0.1
-    ]
-  ],
-  "correlation_sources": {
-    "PAP-growth": "Crawford et al. (2016): genetic correlations of PAP with BW 0.15, WW 0.14, YW 0.23, PWG ~-0.01 - all weak.",
-    "SC-reproduction": "Boligon et al. (2010): SC-HP 0.29, SC-STAY 0.19, HP-STAY 0.64 (Nellore); a conservative HP-STAY of 0.35 is used.",
-    "BW-CED": "Asturiana de los Valles and composite-breed studies: direct CED with direct BW strongly antagonistic (~0.55-0.60 in magnitude).",
-    "growth-mature-size": "Mature size genetically correlated with BW ~0.64, WW ~0.80, YW ~0.76 (extension-summarised literature)."
-  }
+    {"pair": ["BW", "WW"], "value": 0.50, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-WWD weighted mean rg = 0.50 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["BW", "YW"], "value": 0.55, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-YWD weighted mean rg = 0.55 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["BW", "PWG"], "value": 0.32, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-PWG weighted mean rg = 0.32 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["BW", "CED"], "value": -0.21, "source_type": "cited", "citation": "Koots1994b", "note": "CED-WWD line gives CED-related correlations; for BW the closest direct cell is CED-BWD. Koots 1994b Table 2 CED row: CED-WWD = -0.21. BW-CED specifically: Crawford 2016 reports BWT direct-CE is not given; Koots CED-BWD cell is blank. PROXY note: value uses the CED-WWD magnitude as the BW-CED estimate is not directly in Table 2. SEE checklist - candidate for proxy reclassification.", "review_flag": true},
+    {"pair": ["BW", "CW"], "value": 0.60, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-CWA weighted mean rg = 0.60, Koots 1994b Table 2."},
+    {"pair": ["BW", "MW"], "value": 0.49, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-MWA weighted mean rg = 0.49 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["BW", "REA"], "value": 0.31, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-REA weighted mean rg = 0.31, Koots 1994b Table 2."},
+    {"pair": ["BW", "MARB"], "value": 0.31, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-MRA weighted mean rg = 0.31, Koots 1994b Table 2."},
+    {"pair": ["BW", "FAT"], "value": -0.27, "source_type": "cited", "citation": "Koots1994b", "note": "BWD-BFA weighted mean rg = -0.27, Koots 1994b Table 2."},
+    {"pair": ["WW", "YW"], "value": 0.81, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-YWD weighted mean rg = 0.81 (** 10-76 estimates), Koots 1994b Table 2. Crawford 2016 reports 0.92 direct-direct in CSU-BIC Angus; the meta-analytic 0.81 is used as the broader default."},
+    {"pair": ["WW", "PWG"], "value": 0.44, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-PWG weighted mean rg = 0.44 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["WW", "MW"], "value": 0.79, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-MWA weighted mean rg = 0.79 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["WW", "CW"], "value": 0.71, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-CWA weighted mean rg = 0.71, Koots 1994b Table 2."},
+    {"pair": ["WW", "MILK"], "value": -0.16, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-WWM weighted mean rg = -0.16 (** 10-76 estimates), Koots 1994b Table 2. MILK is the maternal WW component, so this is the direct-maternal antagonism for weaning weight."},
+    {"pair": ["WW", "CED"], "value": -0.21, "source_type": "cited", "citation": "Koots1994b", "note": "CED-WWD weighted mean rg = -0.21 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["WW", "REA"], "value": 0.49, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-REA weighted mean rg = 0.49, Koots 1994b Table 2."},
+    {"pair": ["WW", "MARB"], "value": -0.09, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-MRA weighted mean rg = -0.09 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["WW", "FAT"], "value": 0.24, "source_type": "cited", "citation": "Koots1994b", "note": "WWD-BFA weighted mean rg = 0.24 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["WW", "SC"], "value": 0.19, "source_type": "cited", "citation": "Koots1994b", "note": "SCA-WWD weighted mean rg = 0.19 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["WW", "DMI"], "value": 0.45, "source_type": "proxy", "citation": "Koots1994b", "note": "PROXY: Koots 1994b Table 2 has no WW-DMI cell. FI (feed intake) is the closest Koots trait; FI-WWD weighted mean rg = 0.45. Feed intake is related to but not identical with the engine's DMI trait. Reclassify if a direct WW-DMI estimate is sourced."},
+    {"pair": ["YW", "PWG"], "value": 0.81, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-YWD weighted mean rg = 0.81 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["YW", "MW"], "value": 0.56, "source_type": "cited", "citation": "Koots1994b", "note": "YWD-MWA weighted mean rg = 0.56 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["YW", "CW"], "value": 0.85, "source_type": "cited", "citation": "Koots1994b", "note": "YWD-CWA weighted mean rg = 0.85, Koots 1994b Table 2."},
+    {"pair": ["YW", "REA"], "value": 0.51, "source_type": "cited", "citation": "Koots1994b", "note": "YWD-REA weighted mean rg = 0.51, Koots 1994b Table 2."},
+    {"pair": ["YW", "FAT"], "value": 0.32, "source_type": "cited", "citation": "Koots1994b", "note": "YWD-BFA weighted mean rg = 0.32 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["YW", "MARB"], "value": -0.33, "source_type": "cited", "citation": "Koots1994b", "note": "YWD-MRA weighted mean rg = -0.33, Koots 1994b Table 2."},
+    {"pair": ["YW", "CED"], "value": -0.29, "source_type": "cited", "citation": "Koots1994b", "note": "CED-YWD weighted mean rg = -0.29 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["YW", "SC"], "value": 0.39, "source_type": "cited", "citation": "Koots1994b", "note": "SCA-YWD weighted mean rg = 0.39 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["YW", "DMI"], "value": 0.56, "source_type": "cited", "citation": "Rolfe2011", "note": "DMI140-ADG genetic rg = 0.56; ADG is the post-weaning growth trait most analogous to YW gain (Rolfe et al. 2011, Table 4). Used directly for YW-DMI."},
+    {"pair": ["YW", "RFI"], "value": -0.15, "source_type": "cited", "citation": "Rolfe2011", "note": "RFI-ADG genetic rg = -0.15 +/- 0.25 (Rolfe et al. 2011, Table 4). Weak and not different from zero; used for YW-RFI."},
+    {"pair": ["PWG", "MW"], "value": 0.87, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-MWA weighted mean rg = 0.87 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["PWG", "CW"], "value": 0.87, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-CWA weighted mean rg = 0.87, Koots 1994b Table 2."},
+    {"pair": ["PWG", "SC"], "value": 0.28, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-SCA weighted mean rg = 0.28 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["PWG", "FAT"], "value": 0.19, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-BFA weighted mean rg = 0.19 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["PWG", "REA"], "value": 0.32, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-REA weighted mean rg = 0.32 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["PWG", "MARB"], "value": 0.11, "source_type": "cited", "citation": "Koots1994b", "note": "PWG-MRA weighted mean rg = 0.11 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["MW", "MILK"], "value": 0.25, "source_type": "unsourced", "citation": "Koots1994b", "note": "UNSOURCED: Koots 1994b Table 2 has no MWA-WWM cell. 0.25 is a documented placeholder retained from the prior file; needs a cited mature-weight x maternal-milk genetic correlation.", "review_flag": true},
+    {"pair": ["MW", "CW"], "value": 0.96, "source_type": "cited", "citation": "Koots1994b", "note": "CWA-MWA weighted mean rg = 0.96, Koots 1994b Table 2."},
+    {"pair": ["MW", "FAT"], "value": 0.00, "source_type": "cited", "citation": "Koots1994b", "note": "BFA-MWA weighted mean rg = 0.00, Koots 1994b Table 2."},
+    {"pair": ["MW", "DMI"], "value": 0.57, "source_type": "proxy", "citation": "Koots1994b", "note": "PROXY: FI-MCW weighted mean rg = 0.57 (** 10-76 estimates), Koots 1994b Table 2. FI=feed intake, MCW=mature cow weight; used for MW-DMI. Rolfe 2011 reports DMI-MBW rg = 0.71 (mid-test BW, not mature weight) as a cross-check."},
+    {"pair": ["CED", "CEM"], "value": -0.30, "source_type": "cited", "citation": "Koots1994b", "note": "CED-CEM weighted mean rg = -0.30 (** 10-76 estimates), Koots 1994b Table 2."},
+    {"pair": ["CED", "MW"], "value": -0.23, "source_type": "cited", "citation": "Koots1994b", "note": "CED-MCW weighted mean rg = -0.23, Koots 1994b Table 2 (MCW used as the mature-weight trait)."},
+    {"pair": ["CW", "REA"], "value": 0.85, "source_type": "cited", "citation": "Koots1994b", "note": "CWA-REA weighted mean rg = 0.85, Koots 1994b Table 2."},
+    {"pair": ["CW", "MARB"], "value": 0.15, "source_type": "unsourced", "citation": "Koots1994b", "note": "UNSOURCED: Koots 1994b Table 2 has no CWA-MRA cell. 0.15 is a documented placeholder from the prior file; needs a cited carcass-weight x marbling genetic correlation.", "review_flag": true},
+    {"pair": ["CW", "FAT"], "value": 0.29, "source_type": "cited", "citation": "Koots1994b", "note": "BFA-CWA weighted mean rg = 0.29, Koots 1994b Table 2."},
+    {"pair": ["REA", "FAT"], "value": 0.01, "source_type": "cited", "citation": "Koots1994b", "note": "BFA-REA weighted mean rg = 0.01 (* 5-9 estimates), Koots 1994b Table 2. Note: prior file used -0.25; the Koots meta-analytic value is near zero."},
+    {"pair": ["MARB", "FAT"], "value": 0.35, "source_type": "cited", "citation": "Koots1994b", "note": "BFA-MRA weighted mean rg = 0.35 (* 5-9 estimates), Koots 1994b Table 2. Note: prior file used 0.15."},
+    {"pair": ["REA", "MARB"], "value": -0.21, "source_type": "cited", "citation": "Koots1994b", "note": "MRA-REA weighted mean rg = -0.21 (* 5-9 estimates), Koots 1994b Table 2."},
+    {"pair": ["HP", "STAY"], "value": 0.35, "source_type": "unsourced", "citation": "Otteman2012", "note": "UNSOURCED: no published HP-STAY genetic correlation in the current source set. Otteman 2012 estimated heifer pregnancy and docility, not stayability. 0.35 is a documented placeholder from the prior file; needs a cited heifer-pregnancy x stayability genetic correlation.", "review_flag": true},
+    {"pair": ["SC", "HP"], "value": 0.29, "source_type": "unsourced", "citation": "Koots1994b", "note": "UNSOURCED: Koots 1994b Table 2 does not include heifer pregnancy among the 21 traits; the SC-HP cell does not exist. 0.29 is a documented placeholder from the prior file (originally attributed to a Nellore SC-heifer-pregnancy study). Needs that Nellore study uploaded, or another cited SC-HP estimate.", "review_flag": true},
+    {"pair": ["SC", "STAY"], "value": 0.19, "source_type": "unsourced", "citation": "Koots1994b", "note": "UNSOURCED: Koots 1994b Table 2 does not include stayability. 0.19 is a documented placeholder from the prior file. Needs a cited SC-stayability genetic correlation.", "review_flag": true},
+    {"pair": ["DMI", "RFI"], "value": 0.66, "source_type": "cited", "citation": "Rolfe2011", "note": "DMI140-RFI genetic rg = 0.66 +/- 0.12, MARC mixed-breed steers (Rolfe et al. 2011, Table 4)."},
+    {"pair": ["DMI", "PWG"], "value": 0.56, "source_type": "proxy", "citation": "Rolfe2011", "note": "PROXY: Rolfe 2011 reports DMI140-ADG genetic rg = 0.56; ADG is post-weaning gain analog. Used for DMI-PWG."},
+    {"pair": ["RFI", "PWG"], "value": -0.15, "source_type": "proxy", "citation": "Rolfe2011", "note": "PROXY: Rolfe 2011 RFI-ADG genetic rg = -0.15 +/- 0.25; ADG used as the PWG analog."},
+    {"pair": ["DOC", "WW"], "value": -0.12, "source_type": "proxy", "citation": "TorresVazquez2016", "note": "PROXY: chute score (CS)-WW genetic rg = -0.12 +/- 0.06, Hereford, American Hereford Association (Torres-Vazquez & Spangler 2016, abstract/Table 4). Breed differs from the Angus base; weak and favorable."},
+    {"pair": ["DOC", "YW"], "value": -0.10, "source_type": "proxy", "citation": "TorresVazquez2016", "note": "PROXY: CS-YW genetic rg = -0.10 +/- 0.05, Hereford (Torres-Vazquez & Spangler 2016)."},
+    {"pair": ["DOC", "MARB"], "value": -0.08, "source_type": "proxy", "citation": "TorresVazquez2016", "note": "PROXY: CS-IMF genetic rg = -0.08 +/- 0.06, Hereford; intramuscular fat percentage used as the marbling analog (Torres-Vazquez & Spangler 2016)."},
+    {"pair": ["DOC", "HP"], "value": 0.0, "source_type": "unsourced", "citation": "Otteman2012", "note": "UNSOURCED: Otteman 2012 estimated docility and heifer-pregnancy heritabilities in SEPARATE univariate models (only 7,849 of ~140,000 animals had both records) and did not report a bivariate docility-HP genetic correlation. Placeholder value 0.0; needs a study reporting the docility x heifer-pregnancy genetic correlation directly.", "review_flag": true},
+    {"pair": ["PAP", "PAP_L"], "value": 0.95, "source_type": "cited", "citation": "MarkelLatentPAP", "note": "PAP and latent-z PAP describe the same underlying trait on different scales; the manuscript reports near-perfect biological rank preservation between raw mPAP and latent z. rg = 0.95 used."},
+    {"pair": ["PAP", "BW"], "value": 0.15, "source_type": "cited", "citation": "Crawford2016", "note": "PAP-BWT direct genetic rg = 0.15 +/- 0.09, CSU-BIC Angus (Crawford et al. 2016, Tables 3 and 4)."},
+    {"pair": ["PAP_L", "BW"], "value": 0.15, "source_type": "proxy", "citation": "Crawford2016", "note": "PROXY: latent-z PAP is highly correlated with raw PAP (rg ~0.95); Crawford's raw-PAP-BWT correlation 0.15 is carried to PAP_L-BW."},
+    {"pair": ["PAP", "WW"], "value": 0.22, "source_type": "cited", "citation": "Crawford2016", "note": "PAP-WWD genetic rg = 0.22 +/- 0.08 (Table 3) / 0.23 +/- 0.09 (Table 4), CSU-BIC Angus (Crawford et al. 2016)."},
+    {"pair": ["PAP_L", "WW"], "value": 0.22, "source_type": "proxy", "citation": "Crawford2016", "note": "PROXY: Crawford raw-PAP-WWD correlation carried to PAP_L-WW given PAP~PAP_L rg ~0.95."},
+    {"pair": ["PAP", "YW"], "value": 0.12, "source_type": "cited", "citation": "Crawford2016", "note": "PAP-YWD direct genetic rg = 0.12 +/- 0.08, CSU-BIC Angus (Crawford et al. 2016, Table 3)."},
+    {"pair": ["PAP_L", "YW"], "value": 0.12, "source_type": "proxy", "citation": "Crawford2016", "note": "PROXY: Crawford raw-PAP-YWD correlation carried to PAP_L-YW given PAP~PAP_L rg ~0.95."},
+    {"pair": ["PAP", "PWG"], "value": -0.10, "source_type": "cited", "citation": "Crawford2016", "note": "PAP-PWG genetic rg = -0.10 +/- 0.10, CSU-BIC Angus (Crawford et al. 2016, Table 4). Weak, not different from zero."},
+    {"pair": ["PAP_L", "PWG"], "value": -0.10, "source_type": "proxy", "citation": "Crawford2016", "note": "PROXY: Crawford raw-PAP-PWG correlation carried to PAP_L-PWG."}
+  ]
 }

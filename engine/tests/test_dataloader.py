@@ -65,11 +65,16 @@ def test_usmarc_carcass_traits_absent_for_some_breeds():
 def test_consensus_parameters_load():
     """The shipped consensus genetic-parameter set loads and is cited."""
     param_set, source = load_parameter_set()
-    assert param_set.version == "sourced-2026.2"
+    assert param_set.version == "sourced-2026.3"
     assert len(param_set.trait_params) >= 15
     assert source.detail.get("primary_sources")
     # Every trait carries a citation.
     assert all(tp.citation for tp in param_set.trait_params.values())
+    # The rebuilt file pulls each heritability from a named study; spot-check
+    # that the sourced values (not the old round-number placeholders) loaded.
+    assert param_set.trait_params["PAP"].heritability == 0.39
+    assert param_set.trait_params["PAP_L"].heritability == 0.401
+    assert param_set.trait_params["DMI"].heritability == 0.40
 
 
 def test_available_data_files_lists_shipped_data():
@@ -149,3 +154,115 @@ def test_default_table_is_current_version():
     """The default across-breed table is the current (2026) release."""
     table, _ = load_adjustment_table()
     assert table.version == "USMARC-2026"
+
+
+# --- provenance enforcement (new-format parameter files) ------------------
+def _write_param_file(tmp_path, traits, correlations):
+    """Helper: write a minimal new-format parameter file and return its path."""
+    blob = {
+        "schema": "nexgeniq.genetic_parameter_set.v1",
+        "name": "test set",
+        "version": "test-1",
+        "traits": traits,
+        "genetic_correlations": correlations,
+    }
+    fp = tmp_path / "params.json"
+    fp.write_text(json.dumps(blob))
+    return fp
+
+
+def test_provenance_object_value_loads(tmp_path):
+    """A heritability given as a provenance object loads its 'value'."""
+    fp = _write_param_file(
+        tmp_path,
+        {
+            "BW": {
+                "heritability": {"value": 0.40, "source_type": "cited",
+                                 "citation": "SomeStudy 2020"},
+                "genetic_sd": {"value": 5.0, "source_type": "cited",
+                               "citation": "SomeStudy 2020"},
+            },
+            "WW": {
+                "heritability": {"value": 0.25, "source_type": "cited",
+                                 "citation": "SomeStudy 2020"},
+                "genetic_sd": {"value": 20.0, "source_type": "cited",
+                               "citation": "SomeStudy 2020"},
+            },
+        },
+        [{"pair": ["BW", "WW"], "value": 0.5, "source_type": "cited",
+          "citation": "SomeStudy 2020"}],
+    )
+    param_set, _ = load_parameter_set(fp)
+    assert param_set.trait_params["BW"].heritability == 0.40
+    assert param_set.genetic_correlations[frozenset({"BW", "WW"})] == 0.5
+
+
+def test_cited_value_without_citation_rejected(tmp_path):
+    """A value marked 'cited' but carrying no citation is rejected."""
+    fp = _write_param_file(
+        tmp_path,
+        {
+            "BW": {
+                "heritability": {"value": 0.40, "source_type": "cited"},
+                "genetic_sd": {"value": 5.0, "source_type": "cited",
+                               "citation": "S"},
+            },
+        },
+        [],
+    )
+    with pytest.raises(DataFileError, match="no 'citation'"):
+        load_parameter_set(fp)
+
+
+def test_bad_source_type_rejected(tmp_path):
+    """An unrecognised source_type is rejected with a clear message."""
+    fp = _write_param_file(
+        tmp_path,
+        {
+            "BW": {
+                "heritability": {"value": 0.40, "source_type": "guessed",
+                                 "citation": "S"},
+                "genetic_sd": {"value": 5.0, "source_type": "cited",
+                               "citation": "S"},
+            },
+        },
+        [],
+    )
+    with pytest.raises(DataFileError, match="source_type"):
+        load_parameter_set(fp)
+
+
+def test_unsourced_value_warns(tmp_path, caplog):
+    """An 'unsourced' value still loads but triggers a load-time warning."""
+    fp = _write_param_file(
+        tmp_path,
+        {
+            "BW": {
+                "heritability": {"value": 0.40, "source_type": "unsourced",
+                                 "citation": ""},
+                "genetic_sd": {"value": 5.0, "source_type": "cited",
+                               "citation": "S"},
+            },
+        },
+        [],
+    )
+    import logging
+    with caplog.at_level(logging.WARNING):
+        load_parameter_set(fp)
+    assert any("unsourced" in r.message or "NO empirical citation" in r.message
+               for r in caplog.records)
+
+
+def test_legacy_flat_format_still_loads(tmp_path):
+    """Old-style bare-number parameter files still load (backward compat)."""
+    fp = _write_param_file(
+        tmp_path,
+        {
+            "BW": {"heritability": 0.40, "genetic_sd": 5.0},
+            "WW": {"heritability": 0.25, "genetic_sd": 20.0},
+        },
+        [["BW", "WW", 0.5]],
+    )
+    param_set, _ = load_parameter_set(fp)
+    assert param_set.trait_params["BW"].heritability == 0.40
+    assert param_set.genetic_correlations[frozenset({"BW", "WW"})] == 0.5
