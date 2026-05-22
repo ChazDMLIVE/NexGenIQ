@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -85,15 +85,63 @@ def get_db() -> Iterator[Session]:
         db.close()
 
 
-def init_db() -> None:
-    """Create all tables. Idempotent - safe to call on every startup.
+# Columns added to existing tables after their first release. SQLAlchemy's
+# create_all() only creates MISSING TABLES -- it never alters a table that
+# already exists -- so a database created before one of these columns was
+# added needs the column added explicitly. Each entry is
+# (table, column, column DDL type). The DDL type uses portable SQL that
+# works on both SQLite (development) and PostgreSQL (deployment).
+_ADDED_COLUMNS: list[tuple[str, str, str]] = [
+    ("users", "security_question", "VARCHAR(255)"),
+    ("users", "security_answer_hash", "VARCHAR(255)"),
+]
 
-    A production deployment would use Alembic migrations instead; for the
-    MVP, create-all keeps local setup to zero steps. Any database problem
-    raises here, where the caller (the app lifespan handler) catches it.
+
+def _add_missing_columns(engine: Engine) -> None:
+    """Add any post-release columns that an existing database is missing.
+
+    This is a lightweight stand-in for a full migration tool: it inspects
+    each table and issues an ``ALTER TABLE ... ADD COLUMN`` only for
+    columns that are not already present. It is idempotent -- on a
+    database that already has every column it does nothing -- so it is
+    safe to run on every startup. New columns are added nullable, so
+    existing rows are unaffected.
+    """
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table, column, ddl_type in _ADDED_COLUMNS:
+            if table not in existing_tables:
+                # The table does not exist yet; create_all() will have
+                # made it with the column already, so nothing to do.
+                continue
+            columns = {c["name"] for c in inspector.get_columns(table)}
+            if column in columns:
+                continue
+            conn.execute(
+                text(
+                    f"ALTER TABLE {table} "
+                    f"ADD COLUMN {column} {ddl_type}"
+                )
+            )
+
+
+def init_db() -> None:
+    """Create all tables and add any missing columns. Idempotent.
+
+    ``create_all`` creates tables that do not exist; it does NOT alter a
+    table that already exists. So after it runs, :func:`_add_missing_columns`
+    brings an older database up to date by adding any columns introduced
+    after that database was first created. Both steps are safe to run on
+    every startup. A production deployment would use Alembic migrations
+    instead; for the MVP this keeps setup to zero steps while still
+    letting the schema evolve. Any database problem raises here, where the
+    caller (the app lifespan handler) catches it.
     """
     # Import models so they are registered on the metadata before
     # create_all runs.
     from app import models  # noqa: F401
 
-    Base.metadata.create_all(bind=get_engine())
+    engine = get_engine()
+    Base.metadata.create_all(bind=engine)
+    _add_missing_columns(engine)
